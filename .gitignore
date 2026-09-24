@@ -16,7 +16,7 @@
 /portfolio/private/
 
 # Reference material and disposable local work
-/blueprint/*
+/blueprint/
 /workspace/
 /workdir/
 /worktrees/
