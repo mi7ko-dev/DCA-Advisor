@@ -14,15 +14,18 @@ sys.path.insert(0, str(TOOLS_DIRECTORY))
 import repository_safety  # noqa: E402
 import run_repository_checks  # noqa: E402
 
-def test_blueprint_paths_are_forbidden(self) -> None:
-    self.assertTrue(
-        repository_safety.is_explicitly_forbidden("blueprint/BLUEPRINT_SOURCES.md")
-    )
-    self.assertTrue(
-        repository_safety.is_explicitly_forbidden("blueprint/cofolio/README.md")
-    )
-    
+
 class RepositorySafetyTests(unittest.TestCase):
+    def test_blueprint_paths_are_forbidden(self) -> None:
+        self.assertTrue(
+            repository_safety.is_explicitly_forbidden(
+                "blueprint/BLUEPRINT_SOURCES.md"
+            )
+        )
+        self.assertTrue(
+            repository_safety.is_explicitly_forbidden("blueprint/cofolio/README.md")
+        )
+
     def test_sensitive_and_runtime_paths_are_ignored(self) -> None:
         for relative_path in repository_safety.IGNORED_PATHS:
             with self.subTest(path=relative_path):
@@ -40,16 +43,6 @@ class RepositorySafetyTests(unittest.TestCase):
     def test_index_contains_no_forbidden_or_ignored_paths(self) -> None:
         report = repository_safety.inspect_index(REPOSITORY_ROOT)
         self.assertTrue(report.is_safe)
-
-    def test_blueprint_public_index_exception_is_narrow(self) -> None:
-        self.assertFalse(
-            repository_safety.is_explicitly_forbidden(
-                "blueprint/BLUEPRINT_SOURCES.md"
-            )
-        )
-        self.assertTrue(
-            repository_safety.is_explicitly_forbidden("blueprint/cofolio/README.md")
-        )
 
     def test_force_added_synthetic_private_file_is_detected(self) -> None:
         with tempfile.TemporaryDirectory(prefix="steadyfolio-safety-test-") as temporary:
