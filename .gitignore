@@ -17,7 +17,6 @@
 
 # Reference material and disposable local work
 /blueprint/*
-!/blueprint/BLUEPRINT_SOURCES.md
 /workspace/
 /workdir/
 /worktrees/
