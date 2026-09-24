@@ -11,7 +11,7 @@ Phase 2 - Architecture and Foundation Decision is complete and awaiting approval
 - Added a Git-backed repository-safety checker, synthetic tests, and a minimal-permission CI workflow.
 - Added a redacted local Gitleaks workflow that scans Git history and public candidate files without scanning ignored private state.
 - Added optional pre-commit and pre-push hook templates without changing local or global Git configuration.
-- Shallow-cloned all six reference repositories into ignored `blueprint/` subdirectories and recorded their public metadata in `blueprint/BLUEPRINT_SOURCES.md`.
+- Shallow-cloned all six reference repositories into ignored `blueprint/` subdirectories and recorded their metadata in the local ignored reference workspace.
 - Recorded each reference URL, checkout state, commit, license location, preliminary license, and relevance.
 - Audited the six recorded reference commits and documented verified capabilities, calculation and test quality, privacy conflicts, scope fit, and licensing constraints in `docs/BLUEPRINT_REVIEW.md`.
 - Compared adapting CoFolio, building a clean skill from reviewed concepts, and retaining CoFolio with a separate extension; selected the clean repository-owned foundation as the proposed baseline.

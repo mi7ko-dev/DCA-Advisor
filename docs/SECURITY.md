@@ -10,7 +10,7 @@ Ignore rules are a safety net, not a storage design. Application-owned private s
 
 ## Local and external processing
 
-The repository-safety checker, tests, and Gitleaks run locally. The Gitleaks wrapper scans Git history and a temporary snapshot containing only files that Git currently considers public candidates. Tracked files are copied from their exact Git index blobs, so partially staged or subsequently edited working-tree copies cannot hide the content about to be committed; untracked public candidates are copied from the working tree. The wrapper does not scan ignored `private/` state or cloned blueprint repository content, follow symlinks, upload scan results, or retain the temporary snapshot. The public `blueprint/BLUEPRINT_SOURCES.md` metadata index remains part of the scan.
+The repository-safety checker, tests, and Gitleaks run locally. The Gitleaks wrapper scans Git history and a temporary snapshot containing only files that Git currently considers public candidates. Tracked files are copied from their exact Git index blobs, so partially staged or subsequently edited working-tree copies cannot hide the content about to be committed; untracked public candidates are copied from the working tree. The wrapper does not scan ignored `private/` state or any local `blueprint/` content, follow symlinks, upload scan results, or retain the temporary snapshot.
 
 GitHub Actions receives only committed repository content. The repository-safety workflow uses synthetic path checks and read-only repository permissions. No private state, local scan report, or environment dump should be uploaded as an artifact.
 

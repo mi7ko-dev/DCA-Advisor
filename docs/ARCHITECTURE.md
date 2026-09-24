@@ -137,8 +137,7 @@ examples/
 docs/
 tools/
 private/                 # ignored; real state and derived output
-blueprint/               # ignored clones
-  BLUEPRINT_SOURCES.md   # tracked public metadata index
+blueprint/               # entirely ignored local reference material
 ```
 
 Only files needed by the approved phase should be added. An `agents/openai.yaml`

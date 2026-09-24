@@ -2,8 +2,8 @@
 
 ## Scope and evidence
 
-This Phase 1 review evaluates the six read-only reference repositories recorded in
-`blueprint/BLUEPRINT_SOURCES.md`. It is an implementation audit, not a product
+This Phase 1 review evaluates the six local read-only reference repositories and
+the audited commits listed below. It is an implementation audit, not a product
 architecture decision. The review focuses on the parts that could inform a small
 conversational portfolio-maintenance skill for long-term, contribution-based
 investing.
