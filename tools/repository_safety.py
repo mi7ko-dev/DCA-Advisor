@@ -145,8 +145,6 @@ def is_explicitly_forbidden(relative_path: str) -> bool:
     path = PurePosixPath(relative_path.replace("\\", "/"))
     if not path.parts:
         return False
-    if path.as_posix() in PUBLIC_BLUEPRINT_PATHS:
-        return False
     if path.parts[0] in FORBIDDEN_TRACKED_ROOTS:
         return True
     if relative_path == ".env" or relative_path.startswith(".env."):
