@@ -33,8 +33,17 @@ if ($ActualSha256 -ne $ExpectedSha256) {
 }
 
 $ExecutablePath = Join-Path $InstallDirectory 'gitleaks.exe'
-if (-not (Test-Path -LiteralPath $ExecutablePath)) {
-    Expand-Archive -LiteralPath $ArchivePath -DestinationPath $InstallDirectory
+Expand-Archive -LiteralPath $ArchivePath -DestinationPath $InstallDirectory -Force
+
+if (-not (Test-Path -LiteralPath $ExecutablePath -PathType Leaf)) {
+    throw 'The verified Gitleaks archive did not contain gitleaks.exe.'
 }
 
-& $ExecutablePath version
+$InstalledVersion = (& $ExecutablePath version | Out-String).Trim()
+$VersionExitCode = $LASTEXITCODE
+$VersionPattern = '(^|\s)v?{0}($|\s)' -f [regex]::Escape($GitleaksVersion)
+if ($VersionExitCode -ne 0 -or $InstalledVersion -notmatch $VersionPattern) {
+    throw "The installed Gitleaks executable is not the pinned version $GitleaksVersion."
+}
+
+Write-Output $InstalledVersion

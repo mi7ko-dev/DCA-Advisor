@@ -12,6 +12,7 @@ TOOLS_DIRECTORY = REPOSITORY_ROOT / "tools"
 sys.path.insert(0, str(TOOLS_DIRECTORY))
 
 import repository_safety  # noqa: E402
+import run_repository_checks  # noqa: E402
 
 
 class RepositorySafetyTests(unittest.TestCase):
@@ -79,6 +80,70 @@ class RepositorySafetyTests(unittest.TestCase):
             self.assertEqual(report.tracked_count, 2)
             self.assertEqual(report.ignored_tracked_count, 1)
             self.assertEqual(report.forbidden_tracked_count, 1)
+
+
+class PublicScanSnapshotTests(unittest.TestCase):
+    def test_snapshot_uses_index_blob_for_a_modified_staged_file(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="steadyfolio-snapshot-test-") as temporary:
+            repository = Path(temporary) / "repository"
+            snapshot = Path(temporary) / "snapshot"
+            repository.mkdir()
+            snapshot.mkdir()
+            subprocess.run(
+                ["git", "init", "--quiet"],
+                cwd=repository,
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+
+            candidate = repository / "candidate.txt"
+            candidate.write_text("staged-version", encoding="utf-8")
+            subprocess.run(
+                ["git", "add", "--", "candidate.txt"],
+                cwd=repository,
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            candidate.write_text("working-tree-version", encoding="utf-8")
+
+            copied = run_repository_checks.create_public_scan_snapshot(
+                repository, snapshot
+            )
+
+            self.assertEqual(copied, 1)
+            self.assertEqual(
+                (snapshot / "candidate.txt").read_text(encoding="utf-8"),
+                "staged-version",
+            )
+
+    def test_snapshot_includes_untracked_public_file(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="steadyfolio-snapshot-test-") as temporary:
+            repository = Path(temporary) / "repository"
+            snapshot = Path(temporary) / "snapshot"
+            repository.mkdir()
+            snapshot.mkdir()
+            subprocess.run(
+                ["git", "init", "--quiet"],
+                cwd=repository,
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            (repository / "candidate.txt").write_text(
+                "untracked-version", encoding="utf-8"
+            )
+
+            copied = run_repository_checks.create_public_scan_snapshot(
+                repository, snapshot
+            )
+
+            self.assertEqual(copied, 1)
+            self.assertEqual(
+                (snapshot / "candidate.txt").read_text(encoding="utf-8"),
+                "untracked-version",
+            )
 
 
 if __name__ == "__main__":
