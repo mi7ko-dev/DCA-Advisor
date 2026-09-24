@@ -16,6 +16,7 @@ IGNORED_PATHS: tuple[str, ...] = (
     "private/reports/review.md",
     "private/sessions/session.json",
     "blueprint/cofolio/README.md",
+    "blueprint/BLUEPRINT_SOURCES.md",
     "workspace/scratch.txt",
     ".env",
     ".env.production",
@@ -30,7 +31,6 @@ TRACKABLE_PATHS: tuple[str, ...] = (
     "AGENTS.md",
     ".gitignore",
     ".env.example",
-    "blueprint/BLUEPRINT_SOURCES.md",
     ".agents/skills/steadyfolio/SKILL.md",
     ".agents/skills/steadyfolio/agents/openai.yaml",
     "schemas/portfolio.schema.json",
@@ -39,8 +39,6 @@ TRACKABLE_PATHS: tuple[str, ...] = (
     "tests/fixtures/synthetic-portfolio.json",
     "docs/ARCHITECTURE.md",
 )
-
-PUBLIC_BLUEPRINT_PATHS = frozenset({"blueprint/BLUEPRINT_SOURCES.md"})
 
 FORBIDDEN_TRACKED_ROOTS = frozenset(
     {
