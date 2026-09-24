@@ -9,7 +9,9 @@
 /session/
 /history/
 /agent-memory/
+/agent_memory/
 /conversation-history/
+/conversation_history/
 /.memory/
 /.llm/
 /context/private/
@@ -41,6 +43,7 @@
 .env
 .env.*
 !/.env.example
+*.env.local
 *.local.*
 *.private.*
 *.report.local.md
@@ -140,5 +143,3 @@ pnpm-debug.log*
 .DS_Store
 Thumbs.db
 desktop.ini
-/blueprint
-docs/BLUEPRINT_REVIEW.md

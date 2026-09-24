@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import argparse
+from dataclasses import dataclass
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -15,12 +17,31 @@ from typing import Sequence
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 
 
+@dataclass(frozen=True)
+class PublicCandidate:
+    """A public path backed by either an index blob or an untracked file."""
+
+    relative_path: Path
+    index_blob: str | None
+
+
 def _run(arguments: Sequence[str], cwd: Path) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         list(arguments),
         cwd=cwd,
         capture_output=True,
         text=True,
+        check=False,
+    )
+
+
+def _run_bytes(
+    arguments: Sequence[str], cwd: Path
+) -> subprocess.CompletedProcess[bytes]:
+    return subprocess.run(
+        list(arguments),
+        cwd=cwd,
+        capture_output=True,
         check=False,
     )
 
@@ -71,27 +92,98 @@ def find_gitleaks(repo_root: Path) -> Path | None:
     return Path(path_candidate) if path_candidate else None
 
 
-def public_candidate_files(repo_root: Path) -> list[Path]:
-    result = _run(
-        ("git", "ls-files", "--cached", "--others", "--exclude-standard", "-z"),
+def _relative_git_path(raw_path: bytes) -> Path:
+    relative_path = Path(os.fsdecode(raw_path))
+    if relative_path.is_absolute() or ".." in relative_path.parts:
+        raise RuntimeError("Git returned a path outside the repository.")
+    return relative_path
+
+
+def public_candidate_files(repo_root: Path) -> list[PublicCandidate]:
+    """Return exact staged blobs plus public untracked working-tree files."""
+
+    indexed = _run_bytes(("git", "ls-files", "--stage", "-z"), repo_root)
+    if indexed.returncode != 0:
+        raise RuntimeError("Git could not enumerate indexed public files.")
+
+    candidates: list[PublicCandidate] = []
+    indexed_paths: set[Path] = set()
+    for entry in indexed.stdout.split(b"\0"):
+        if not entry:
+            continue
+        try:
+            metadata, raw_path = entry.split(b"\t", 1)
+            mode, object_id, stage = metadata.split()
+        except ValueError as error:
+            raise RuntimeError("Git returned malformed index metadata.") from error
+
+        if stage != b"0":
+            raise RuntimeError("The Git index contains unresolved merge entries.")
+
+        relative_path = _relative_git_path(raw_path)
+        indexed_paths.add(relative_path)
+        if mode == b"120000":
+            raise RuntimeError(
+                "A public indexed candidate is a symlink; refusing to follow it."
+            )
+        if mode == b"160000":
+            continue
+        if mode not in (b"100644", b"100755"):
+            raise RuntimeError("Git returned an unsupported public index entry.")
+
+        blob = object_id.decode("ascii")
+        candidates.append(
+            PublicCandidate(
+                relative_path=relative_path,
+                index_blob=None if set(blob) == {"0"} else blob,
+            )
+        )
+
+    untracked = _run_bytes(
+        ("git", "ls-files", "--others", "--exclude-standard", "-z"),
         repo_root,
     )
-    if result.returncode != 0:
-        raise RuntimeError("Git could not enumerate public candidate files.")
-    return [repo_root / value for value in result.stdout.split("\0") if value]
+    if untracked.returncode != 0:
+        raise RuntimeError("Git could not enumerate public untracked files.")
+    for raw_path in untracked.stdout.split(b"\0"):
+        if not raw_path:
+            continue
+        relative_path = _relative_git_path(raw_path)
+        if relative_path not in indexed_paths:
+            candidates.append(PublicCandidate(relative_path, None))
+
+    return sorted(candidates, key=lambda candidate: candidate.relative_path.as_posix())
+
+
+def _reject_worktree_symlink(repo_root: Path, relative_path: Path) -> None:
+    current = repo_root
+    for part in relative_path.parts:
+        current /= part
+        if current.is_symlink():
+            raise RuntimeError(
+                "A public untracked candidate is a symlink; refusing to follow it."
+            )
 
 
 def create_public_scan_snapshot(repo_root: Path, destination: Path) -> int:
     copied = 0
-    for source in public_candidate_files(repo_root):
-        if source.is_symlink():
-            raise RuntimeError("A public candidate is a symlink; refusing to follow it.")
-        if not source.is_file():
-            continue
-        relative_path = source.relative_to(repo_root)
-        target = destination / relative_path
+    for candidate in public_candidate_files(repo_root):
+        target = destination / candidate.relative_path
         target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(source, target, follow_symlinks=False)
+
+        if candidate.index_blob is not None:
+            blob = _run_bytes(
+                ("git", "cat-file", "blob", candidate.index_blob), repo_root
+            )
+            if blob.returncode != 0:
+                raise RuntimeError("Git could not read an indexed public file.")
+            target.write_bytes(blob.stdout)
+        else:
+            _reject_worktree_symlink(repo_root, candidate.relative_path)
+            source = repo_root / candidate.relative_path
+            if not source.is_file():
+                continue
+            shutil.copyfile(source, target, follow_symlinks=False)
         copied += 1
     return copied
 
