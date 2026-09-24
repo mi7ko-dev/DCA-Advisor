@@ -13,7 +13,14 @@ sys.path.insert(0, str(TOOLS_DIRECTORY))
 
 import repository_safety  # noqa: E402
 
-
+def test_blueprint_paths_are_forbidden(self) -> None:
+    self.assertTrue(
+        repository_safety.is_explicitly_forbidden("blueprint/BLUEPRINT_SOURCES.md")
+    )
+    self.assertTrue(
+        repository_safety.is_explicitly_forbidden("blueprint/cofolio/README.md")
+    )
+    
 class RepositorySafetyTests(unittest.TestCase):
     def test_sensitive_and_runtime_paths_are_ignored(self) -> None:
         for relative_path in repository_safety.IGNORED_PATHS:
