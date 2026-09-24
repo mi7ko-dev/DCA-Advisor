@@ -1,0 +1,162 @@
+# Architecture Decision Record
+
+## Status and use
+
+The decisions below are proposed by Phase 2 and are pending the Phase 2 approval
+checkpoint. They describe the implementation baseline for Phase 3; they do not
+authorize implementation, committing, pushing, packaging, or publishing.
+
+## D-001: Use a clean repository-owned foundation
+
+- **Status:** Proposed
+- **Decision:** Select Option B: a clean SteadyFolio skill and deterministic engine
+  that adopt reviewed concepts, not an upstream application's structure.
+- **Why:** This is the smallest option that satisfies the public/private boundary,
+  explicit schema, deterministic testing, and narrow MVP without a compatibility
+  layer or application-scale dependencies.
+- **Rejected:** Adapting CoFolio directly would require replacing important state
+  and schema assumptions. Keeping it intact plus an extension would produce two
+  overlapping product models and the highest maintenance cost.
+- **Consequence:** Phase 3 must implement only approved behavior and cannot copy
+  source merely because a reference repository is public.
+
+## D-002: Support local Codex first
+
+- **Status:** Proposed
+- **Decision:** The first supported runtime is local Codex in the repository, with
+  Python 3.11+ for deterministic operations.
+- **Why:** It gives the MVP an explicit, testable execution environment while
+  keeping the core independent of the conversational host.
+- **Consequence:** General ChatGPT or plugin compatibility is not claimed until a
+  generated package is tested in that target host.
+
+## D-003: Keep one canonical public skill
+
+- **Status:** Proposed
+- **Decision:** Store the canonical skill at
+  `.agents/skills/steadyfolio/SKILL.md`, with narrowly loaded public references and
+  scripts below that directory.
+- **Why:** Official OpenAI guidance documents `.agents/skills/` for repo-local
+  skills and progressive loading of `SKILL.md` and supporting resources.
+- **Consequence:** Do not maintain a second tracked copy for another host. A future
+  plugin must be generated from the canonical sources under an explicit packaging
+  operation.
+
+## D-004: Use one small Python calculation engine
+
+- **Status:** Proposed
+- **Decision:** Implement domain records, validation, calculations, storage rules,
+  and structured results in a host-independent Python package. Use the standard
+  library and `decimal.Decimal` unless a dependency has a demonstrated need.
+- **Why:** Pure Python functions are deterministic, portable, inspectable, and easy
+  to test. They prevent prompt logic from becoming an unversioned second engine.
+- **Consequence:** NumPy, pandas, CVXPY, PyPortfolioOpt, LangGraph, AutoGen, and a
+  server framework are outside the MVP.
+
+## D-005: Use JSON and Markdown private storage in the MVP
+
+- **Status:** Proposed
+- **Decision:** Use versioned JSON for private state/source records and structured
+  results, and Markdown for human-readable reviews. Resolve all real data below the
+  selected workspace root's ignored `private/` directory.
+- **Why:** The MVP is local and small, so transparent, diffable formats are easier
+  to inspect and migrate than an early database.
+- **Consequence:** SQLite is deferred until concurrent access, query complexity,
+  scale, integrity, or migration evidence justifies it. Storage writes must validate
+  first, be atomic, and avoid overwriting existing state during initialization.
+
+## D-006: Make arithmetic and currency semantics explicit
+
+- **Status:** Proposed
+- **Decision:** Persist numeric financial fields as decimal strings and calculate
+  with `Decimal`. Identify trading and economic currencies separately. Require dated
+  FX provenance for cross-currency totals. Define drift as current weight minus
+  approved target weight.
+- **Why:** Binary floating-point, ticker-only identity, and implicit FX are unsafe
+  foundations for explainable allocation output.
+- **Consequence:** Positive drift always means overweight. Missing FX creates an
+  incomplete result rather than a guessed conversion or mixed-currency total.
+
+## D-007: Separate policy, reality, and proposals
+
+- **Status:** Proposed
+- **Decision:** Keep approved target versions separate from proposed targets;
+  recorded transactions separate from contribution plans; public schemas separate
+  from private instances; instructions separate from memory; and source records
+  separate from generated interpretation.
+- **Why:** These boundaries prevent a recommendation from masquerading as user
+  approval, an execution, or a sourced fact.
+- **Consequence:** Changes of status require explicit operations and history.
+  Analysis outputs reference immutable input versions and never mutate them.
+
+## D-008: Use a bounded, conditional review committee
+
+- **Status:** Proposed
+- **Decision:** The orchestrator may request an allocation/diversification lens, a
+  risk/cost/constraints lens, current-source research, and a critic review only when
+  consequence or evidence needs justify them. Default maximum: one research pass,
+  one critic pass, and one revision.
+- **Why:** Routine DCA calculations need determinism, not an expensive agent graph.
+  Consequential recommendations benefit from distinct questions and explicit
+  criticism.
+- **Consequence:** Same-model sequential calls are labeled review lenses, not
+  independent agents or verification. Native subagents are optional host behavior,
+  not a dependency of the calculation engine.
+
+## D-009: Preserve provider provenance through ports
+
+- **Status:** Proposed
+- **Decision:** Model price, FX, and research retrieval behind provider interfaces.
+  Every source record carries provider/source identity, value time, retrieval time,
+  units/currency, and quality or coverage status.
+- **Why:** Reproducibility and stale/missing-data handling matter more than a broad
+  initial integration list.
+- **Consequence:** Phase 3 uses offline synthetic fixtures. Live providers, broker
+  connections, and autonomous research are deferred.
+
+## D-010: Freeze a narrow Phase 3 MVP
+
+- **Status:** Proposed
+- **Decision:** Phase 3 covers schemas, safe private initialization, core portfolio
+  records, valuation/current weights/signed drift, simple and drift-aware buy-only
+  DCA, fees and trading constraints, basic concentration, structured output, an
+  English synthetic report, and tests.
+- **Why:** This is the smallest end-to-end slice that proves the model, privacy
+  boundary, and calculation invariants.
+- **Consequence:** The acceptance scenario is a synthetic EUR 400 monthly
+  contribution supporting whole or fractional shares, fees, minimum trades, and
+  residual cash, with no selling, overspending, source mutation, or missing-FX
+  guesses. Live integrations, UI, tax logic, optimization, databases, and servers
+  remain deferred.
+
+## D-011: Propose MIT and require clean-room provenance
+
+- **Status:** Proposed
+- **Decision:** Use MIT for SteadyFolio after explicit approval and addition of a
+  license file. Prefer concepts and independently authored code. Record required
+  notices before any file-level upstream reuse.
+- **Why:** MIT fits a small portable public skill, but the audited references have
+  different obligations: MIT, Apache-2.0 plus notice/trademark terms, AGPL-3.0, and
+  source-viewing-only terms.
+- **Consequence:** Finnie code and AGPL application code from Wealthfolio or
+  Ghostfolio are excluded. CoFolio, PyPortfolioOpt, FinRobot, or a separately
+  licensed component may be reused only after a specific provenance and notice
+  review. This is an engineering policy, not legal advice.
+
+## D-012: Package by allowlist only
+
+- **Status:** Proposed
+- **Decision:** Any future distributable plugin is generated into a temporary
+  directory from an explicit list of canonical public files.
+- **Why:** Copying the repository and then applying exclusions risks publishing
+  ignored state, reference clones, caches, or Git history.
+- **Consequence:** Packaging needs its own approval, inventory test, host test, and
+  license-notice check. `private/`, `blueprint/` clones, `.git/`, caches, and local
+  outputs are never package inputs.
+
+## Approval effects
+
+Approval of Phase 2 would accept D-001 through D-012 as the Phase 3 baseline. Any
+material change to privacy boundaries, runtime, licensing, schema semantics, or MVP
+scope must be recorded here and returned to an approval checkpoint before it is
+implemented.
