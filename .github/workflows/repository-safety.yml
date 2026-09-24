@@ -1,0 +1,27 @@
+name: Repository safety
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  repository-safety:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository without persisted credentials
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Run repository safety tests
+        run: python -m unittest discover -s tests -p "test_*.py"
+
+      - name: Inspect ignore rules and the Git index
+        run: python tools/repository_safety.py
+
+      - name: Check patch whitespace
+        run: git show --check --format= HEAD
