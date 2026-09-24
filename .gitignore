@@ -1,0 +1,179 @@
+# ============================================================
+# SteadyFolio - PUBLIC REPOSITORY
+# Local/private/user-specific data must NEVER be committed.
+# ============================================================
+
+# ------------------------------------------------------------
+# Personal financial data / persistent user context
+# ------------------------------------------------------------
+
+private/
+local/
+user-data/
+user_data/
+personal/
+state/
+sessions/
+session/
+history/
+context/private/
+portfolio/private/
+
+# ------------------------------------------------------------
+# Local working directories
+# ------------------------------------------------------------
+
+workspace/
+workdir/
+scratch/
+tmp/
+temp/
+.cache/
+cache/
+downloads/
+logs/
+run/
+runtime/
+
+# ------------------------------------------------------------
+# Generated output / reports that may contain personal data
+# ------------------------------------------------------------
+
+outputs/
+reports/private/
+generated/
+artifacts/
+
+*.report.local.md
+*.private.md
+*.local.md
+
+# ------------------------------------------------------------
+# Reference repositories
+# ------------------------------------------------------------
+
+blueprint/
+
+# ------------------------------------------------------------
+# Environment variables / secrets
+# ------------------------------------------------------------
+
+.env
+.env.*
+!.env.example
+
+*.env.local
+*.secret
+*.secrets
+
+secrets/
+credentials/
+credentials.json
+credentials*.json
+
+client_secret*.json
+token.json
+tokens.json
+auth.json
+
+# ------------------------------------------------------------
+# API keys / certificates / private keys
+# ------------------------------------------------------------
+
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+
+id_rsa
+id_rsa.*
+id_ed25519
+id_ed25519.*
+
+# ------------------------------------------------------------
+# Local databases
+# ------------------------------------------------------------
+
+*.db
+*.sqlite
+*.sqlite3
+*.duckdb
+
+databases/
+
+# ------------------------------------------------------------
+# Agent / LLM local state
+# ------------------------------------------------------------
+
+.agent/
+.agents/
+.codex/
+.chatgpt/
+.llm/
+.memory/
+
+agent-memory/
+agent_memory/
+conversation-history/
+conversation_history/
+
+# ------------------------------------------------------------
+# Python
+# ------------------------------------------------------------
+
+__pycache__/
+*.py[cod]
+*.pyo
+
+.venv/
+venv/
+env/
+
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# ------------------------------------------------------------
+# Node / JS if ever used
+# ------------------------------------------------------------
+
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ------------------------------------------------------------
+# IDE / editor
+# ------------------------------------------------------------
+
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ------------------------------------------------------------
+# OS
+# ------------------------------------------------------------
+
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ------------------------------------------------------------
+# Backups
+# ------------------------------------------------------------
+
+*.bak
+*.backup
+*.old
+*.orig
+*.tmp
+
+backup/
+backups/
