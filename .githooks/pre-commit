@@ -1,0 +1,4 @@
+#!/bin/sh
+set -eu
+
+python tools/run_repository_checks.py --require-gitleaks
