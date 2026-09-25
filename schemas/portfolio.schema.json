@@ -1,0 +1,205 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://steadyfolio.example/schemas/portfolio.schema.json",
+  "title": "SteadyFolio Portfolio State",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "investor_profile",
+    "goals",
+    "instruments",
+    "listings",
+    "accounts",
+    "holdings",
+    "transactions",
+    "target_allocations",
+    "investment_theses",
+    "data_sources",
+    "review_history"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "investor_profile": {"$ref": "#/$defs/investor_profile"},
+    "goals": {"type": "array", "items": {"$ref": "#/$defs/goal"}},
+    "instruments": {"type": "array", "items": {"$ref": "#/$defs/instrument"}},
+    "listings": {"type": "array", "items": {"$ref": "#/$defs/listing"}},
+    "accounts": {"type": "array", "items": {"$ref": "#/$defs/account"}},
+    "holdings": {"type": "array", "items": {"$ref": "#/$defs/holding"}},
+    "transactions": {"type": "array", "items": {"$ref": "#/$defs/transaction"}},
+    "target_allocations": {"type": "array", "items": {"$ref": "#/$defs/target_allocation"}},
+    "investment_theses": {"type": "array", "items": {"$ref": "#/$defs/investment_thesis"}},
+    "data_sources": {"type": "array", "items": {"$ref": "#/$defs/data_source"}},
+    "review_history": {"type": "array", "items": {"$ref": "#/$defs/review_history"}}
+  },
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"},
+    "currency": {"type": "string", "pattern": "^[A-Z]{3}$"},
+    "decimal": {"type": "string", "pattern": "^-?(0|[1-9][0-9]*)(\\.[0-9]+)?$"},
+    "nonnegative_decimal": {"type": "string", "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$"},
+    "date": {"type": "string", "format": "date"},
+    "date_time": {"type": "string", "format": "date-time"},
+    "investor_profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "base_currency", "jurisdiction", "goal_ids"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "base_currency": {"$ref": "#/$defs/currency"},
+        "jurisdiction": {"type": "string", "minLength": 1},
+        "goal_ids": {"type": "array", "items": {"$ref": "#/$defs/id"}, "uniqueItems": true}
+      }
+    },
+    "goal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "priority"],
+      "dependentRequired": {
+        "target_amount": ["currency"],
+        "currency": ["target_amount"]
+      },
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "name": {"type": "string", "minLength": 1},
+        "target_date": {"$ref": "#/$defs/date"},
+        "target_amount": {"$ref": "#/$defs/nonnegative_decimal"},
+        "currency": {"$ref": "#/$defs/currency"},
+        "priority": {"type": "integer", "minimum": 1}
+      }
+    },
+    "instrument": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "kind", "economic_currency", "annual_fee_rate"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "name": {"type": "string", "minLength": 1},
+        "kind": {"type": "string", "enum": ["etf", "stock"]},
+        "economic_currency": {"$ref": "#/$defs/currency"},
+        "isin": {"type": "string", "pattern": "^[A-Z]{2}[A-Z0-9]{9}[0-9]$"},
+        "annual_fee_rate": {"$ref": "#/$defs/nonnegative_decimal"}
+      }
+    },
+    "listing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "instrument_id", "mic", "ticker", "trading_currency", "fractional_allowed", "quantity_increment"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "instrument_id": {"$ref": "#/$defs/id"},
+        "mic": {"type": "string", "pattern": "^[A-Z0-9]{4}$"},
+        "ticker": {"type": "string", "minLength": 1},
+        "trading_currency": {"$ref": "#/$defs/currency"},
+        "fractional_allowed": {"type": "boolean"},
+        "quantity_increment": {"$ref": "#/$defs/nonnegative_decimal"}
+      }
+    },
+    "account": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "kind", "currency"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "name": {"type": "string", "minLength": 1},
+        "kind": {"type": "string", "minLength": 1},
+        "currency": {"$ref": "#/$defs/currency"}
+      }
+    },
+    "holding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "account_id", "listing_id", "quantity"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "account_id": {"$ref": "#/$defs/id"},
+        "listing_id": {"$ref": "#/$defs/id"},
+        "quantity": {"$ref": "#/$defs/nonnegative_decimal"}
+      }
+    },
+    "transaction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "account_id", "listing_id", "kind", "trade_date", "quantity", "unit_price", "price_currency", "fees"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "account_id": {"$ref": "#/$defs/id"},
+        "listing_id": {"$ref": "#/$defs/id"},
+        "kind": {"type": "string", "enum": ["buy", "sell", "dividend", "fee", "transfer"]},
+        "trade_date": {"$ref": "#/$defs/date"},
+        "quantity": {"$ref": "#/$defs/nonnegative_decimal"},
+        "unit_price": {"$ref": "#/$defs/nonnegative_decimal"},
+        "price_currency": {"$ref": "#/$defs/currency"},
+        "fees": {"$ref": "#/$defs/nonnegative_decimal"},
+        "fee_currency": {"$ref": "#/$defs/currency"}
+      }
+    },
+    "allocation_target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["instrument_id", "weight"],
+      "properties": {
+        "instrument_id": {"$ref": "#/$defs/id"},
+        "weight": {"$ref": "#/$defs/nonnegative_decimal"}
+      }
+    },
+    "target_allocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "status", "effective_date", "targets", "rationale"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "status": {"type": "string", "enum": ["approved", "proposed", "superseded"]},
+        "effective_date": {"$ref": "#/$defs/date"},
+        "targets": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/allocation_target"}},
+        "rationale": {"type": "string"}
+      }
+    },
+    "investment_thesis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "instrument_id", "status", "role", "rationale", "risks"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "instrument_id": {"$ref": "#/$defs/id"},
+        "status": {"type": "string", "minLength": 1},
+        "role": {"type": "string", "minLength": 1},
+        "rationale": {"type": "string", "minLength": 1},
+        "risks": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "review_date": {"$ref": "#/$defs/date"},
+        "target_weight": {"$ref": "#/$defs/nonnegative_decimal"},
+        "target_range_min": {"$ref": "#/$defs/nonnegative_decimal"},
+        "target_range_max": {"$ref": "#/$defs/nonnegative_decimal"},
+        "benchmark_instrument_id": {"$ref": "#/$defs/id"},
+        "review_triggers": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "last_review_date": {"$ref": "#/$defs/date"}
+      }
+    },
+    "data_source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "provider", "source_type", "value_time", "retrieved_at", "reference", "quality"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "provider": {"type": "string", "minLength": 1},
+        "source_type": {"type": "string", "minLength": 1},
+        "value_time": {"$ref": "#/$defs/date_time"},
+        "retrieved_at": {"$ref": "#/$defs/date_time"},
+        "reference": {"type": "string", "minLength": 1},
+        "quality": {"type": "string", "minLength": 1}
+      }
+    },
+    "review_history": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "object_id", "reviewer_kind", "decision", "reviewed_at", "findings"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "object_id": {"$ref": "#/$defs/id"},
+        "reviewer_kind": {"type": "string", "minLength": 1},
+        "decision": {"type": "string", "minLength": 1},
+        "reviewed_at": {"$ref": "#/$defs/date_time"},
+        "findings": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  }
+}

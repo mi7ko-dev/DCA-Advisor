@@ -2,13 +2,13 @@
 
 ## Status and use
 
-The decisions below are proposed by Phase 2 and are pending the Phase 2 approval
-checkpoint. They describe the implementation baseline for Phase 3; they do not
-authorize implementation, committing, pushing, packaging, or publishing.
+The decisions below were approved as the Phase 3 baseline on 2026-09-25. That
+approval authorizes the bounded implementation scope, but not committing, pushing,
+packaging, publishing, later phases, or tracked real user data.
 
 ## D-001: Use a clean repository-owned foundation
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Decision:** Select Option B: a clean SteadyFolio skill and deterministic engine
   that adopt reviewed concepts, not an upstream application's structure.
 - **Why:** This is the smallest option that satisfies the public/private boundary,
@@ -22,7 +22,7 @@ authorize implementation, committing, pushing, packaging, or publishing.
 
 ## D-002: Support local Codex first
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Decision:** The first supported runtime is local Codex in the repository, with
   Python 3.11+ for deterministic operations.
 - **Why:** It gives the MVP an explicit, testable execution environment while
@@ -32,7 +32,7 @@ authorize implementation, committing, pushing, packaging, or publishing.
 
 ## D-003: Keep one canonical public skill
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Decision:** Store the canonical skill at
   `.agents/skills/steadyfolio/SKILL.md`, with narrowly loaded public references and
   scripts below that directory.
@@ -44,7 +44,7 @@ authorize implementation, committing, pushing, packaging, or publishing.
 
 ## D-004: Use one small Python calculation engine
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Decision:** Implement domain records, validation, calculations, storage rules,
   and structured results in a host-independent Python package. Use the standard
   library and `decimal.Decimal` unless a dependency has a demonstrated need.
@@ -55,7 +55,7 @@ authorize implementation, committing, pushing, packaging, or publishing.
 
 ## D-005: Use JSON and Markdown private storage in the MVP
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Decision:** Use versioned JSON for private state/source records and structured
   results, and Markdown for human-readable reviews. Resolve all real data below the
   selected workspace root's ignored `private/` directory.
@@ -67,7 +67,7 @@ authorize implementation, committing, pushing, packaging, or publishing.
 
 ## D-006: Make arithmetic and currency semantics explicit
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Decision:** Persist numeric financial fields as decimal strings and calculate
   with `Decimal`. Identify trading and economic currencies separately. Require dated
   FX provenance for cross-currency totals. Define drift as current weight minus
@@ -79,7 +79,7 @@ authorize implementation, committing, pushing, packaging, or publishing.
 
 ## D-007: Separate policy, reality, and proposals
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Decision:** Keep approved target versions separate from proposed targets;
   recorded transactions separate from contribution plans; public schemas separate
   from private instances; instructions separate from memory; and source records
@@ -91,7 +91,7 @@ authorize implementation, committing, pushing, packaging, or publishing.
 
 ## D-008: Use a bounded, conditional review committee
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Decision:** The orchestrator may request an allocation/diversification lens, a
   risk/cost/constraints lens, current-source research, and a critic review only when
   consequence or evidence needs justify them. Default maximum: one research pass,
@@ -105,7 +105,7 @@ authorize implementation, committing, pushing, packaging, or publishing.
 
 ## D-009: Preserve provider provenance through ports
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Decision:** Model price, FX, and research retrieval behind provider interfaces.
   Every source record carries provider/source identity, value time, retrieval time,
   units/currency, and quality or coverage status.
@@ -116,7 +116,7 @@ authorize implementation, committing, pushing, packaging, or publishing.
 
 ## D-010: Freeze a narrow Phase 3 MVP
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Decision:** Phase 3 covers schemas, safe private initialization, core portfolio
   records, valuation/current weights/signed drift, simple and drift-aware buy-only
   DCA, fees and trading constraints, basic concentration, structured output, an
@@ -131,10 +131,10 @@ authorize implementation, committing, pushing, packaging, or publishing.
 
 ## D-011: Propose MIT and require clean-room provenance
 
-- **Status:** Proposed
-- **Decision:** Use MIT for SteadyFolio after explicit approval and addition of a
-  license file. Prefer concepts and independently authored code. Record required
-  notices before any file-level upstream reuse.
+- **Status:** Accepted
+- **Decision:** Use MIT for SteadyFolio with the repository license file added in
+  Phase 3. Prefer concepts and independently authored code. Record required notices
+  before any file-level upstream reuse.
 - **Why:** MIT fits a small portable public skill, but the audited references have
   different obligations: MIT, Apache-2.0 plus notice/trademark terms, AGPL-3.0, and
   source-viewing-only terms.
@@ -145,7 +145,7 @@ authorize implementation, committing, pushing, packaging, or publishing.
 
 ## D-012: Package by allowlist only
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Decision:** Any future distributable plugin is generated into a temporary
   directory from an explicit list of canonical public files.
 - **Why:** Copying the repository and then applying exclusions risks publishing
@@ -154,9 +154,48 @@ authorize implementation, committing, pushing, packaging, or publishing.
   license-notice check. `private/`, `blueprint/` clones, `.git/`, caches, and local
   outputs are never package inputs.
 
-## Approval effects
+## Phase 3 approval effects
 
-Approval of Phase 2 would accept D-001 through D-012 as the Phase 3 baseline. Any
-material change to privacy boundaries, runtime, licensing, schema semantics, or MVP
-scope must be recorded here and returned to an approval checkpoint before it is
-implemented.
+Phase 2 approval accepted D-001 through D-012 as the Phase 3 baseline. Any material
+change to privacy boundaries, runtime, licensing, schema semantics, or MVP scope
+must be recorded here and returned to an approval checkpoint before implementation.
+
+## D-013: Use structured, replaceable research providers
+
+- **Status:** Accepted
+- **Decision:** Provider requests carry only public instrument/listing identifiers
+  and an as-of date. Providers return validated structured snapshots with source,
+  methodology, freshness, limitations, terms, and cache/redistribution metadata.
+- **Why:** This keeps the deterministic engine independent of a vendor and avoids
+  sending portfolio quantities, balances, accounts, goals, or theses to a data
+  provider.
+- **Consequence:** Phase 4 implements an offline synthetic provider only. Live
+  adapters and their explicit integration tests require a separate provider and
+  terms review.
+
+## D-014: Preserve partial coverage instead of extrapolating
+
+- **Status:** Accepted
+- **Decision:** Holdings overlap, company concentration, and classified exposures
+  use only supplied records and report covered plus unclassified portfolio weight.
+- **Why:** Top holdings are not complete fund holdings, and missing exposure is not
+  evidence of zero exposure.
+- **Consequence:** Observed look-through metrics are lower-bound descriptions. They
+  cannot be presented as complete exposure without complete provider coverage.
+
+## D-015: Require compatible historical series
+
+- **Status:** Accepted
+- **Decision:** Joint historical analysis requires aligned dates, one base
+  currency, frequency, return convention, distribution treatment, and
+  corporate-action treatment. Benchmark comparisons use the same contract.
+- **Why:** Mixing incompatible inputs produces precise-looking but invalid risk and
+  performance metrics.
+- **Consequence:** Missing or incompatible series fail or remain explicitly
+  unavailable. Historical metrics are descriptive and never forecasts.
+
+## Phase 4 approval effects
+
+Approval to execute Phase 4 accepted D-013 through D-015 for the bounded offline
+implementation. It did not authorize a live provider, external data transfer,
+tracked real research data, policy mutation, Phase 5 work, or publication.

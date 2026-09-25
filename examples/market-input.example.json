@@ -1,0 +1,19 @@
+{
+  "fx_rates": [],
+  "prices": [
+    {
+      "amount": "100",
+      "as_of": "2026-01-31",
+      "currency": "EUR",
+      "listing_id": "listing-global-xetr",
+      "source_id": "synthetic-prices-2026-01-31"
+    },
+    {
+      "amount": "50",
+      "as_of": "2026-01-31",
+      "currency": "EUR",
+      "listing_id": "listing-bond-xetr",
+      "source_id": "synthetic-prices-2026-01-31"
+    }
+  ]
+}

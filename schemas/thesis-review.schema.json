@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://steadyfolio.example/schemas/thesis-review.schema.json",
+  "title": "SteadyFolio Thesis Review Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "calculation_version", "thesis_id", "instrument_id", "reviewed_at", "role", "rationale", "risks", "configured_review_triggers", "evidence_facts", "interpretations", "triggered_review_conditions", "proposed_action", "proposed_changes", "source_assessments", "source_ids", "limitations"],
+  "properties": {
+    "id": {"$ref": "#/$defs/id"},
+    "calculation_version": {"type": "string", "minLength": 1},
+    "thesis_id": {"$ref": "#/$defs/id"},
+    "instrument_id": {"$ref": "#/$defs/id"},
+    "reviewed_at": {"$ref": "#/$defs/date"},
+    "role": {"type": "string", "minLength": 1},
+    "rationale": {"type": "string", "minLength": 1},
+    "target_weight": {"$ref": "#/$defs/nonnegative_decimal"},
+    "target_range_min": {"$ref": "#/$defs/nonnegative_decimal"},
+    "target_range_max": {"$ref": "#/$defs/nonnegative_decimal"},
+    "benchmark_instrument_id": {"$ref": "#/$defs/id"},
+    "risks": {"$ref": "#/$defs/strings"},
+    "last_review_date": {"$ref": "#/$defs/date"},
+    "next_review_date": {"$ref": "#/$defs/date"},
+    "configured_review_triggers": {"$ref": "#/$defs/strings"},
+    "evidence_facts": {"$ref": "#/$defs/strings"},
+    "interpretations": {"$ref": "#/$defs/strings"},
+    "triggered_review_conditions": {"$ref": "#/$defs/strings"},
+    "proposed_action": {"enum": ["retain", "review", "investigate"]},
+    "proposed_changes": {"$ref": "#/$defs/strings"},
+    "source_assessments": {"type": "array", "items": {"$ref": "#/$defs/source_assessment"}},
+    "source_ids": {"type": "array", "items": {"$ref": "#/$defs/id"}, "uniqueItems": true},
+    "limitations": {"$ref": "#/$defs/strings"}
+  },
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"},
+    "date": {"type": "string", "format": "date"},
+    "nonnegative_decimal": {"type": "string", "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$"},
+    "strings": {"type": "array", "items": {"type": "string"}},
+    "source_assessment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_id", "provider", "reference", "as_of", "retrieved_at", "age_days", "freshness", "methodology", "limitations", "terms_reference", "cache_permitted", "redistribution_permitted"],
+      "properties": {
+        "source_id": {"$ref": "#/$defs/id"},
+        "provider": {"type": "string", "minLength": 1},
+        "reference": {"type": "string", "minLength": 1},
+        "as_of": {"$ref": "#/$defs/date"},
+        "retrieved_at": {"type": "string", "format": "date-time"},
+        "age_days": {"type": "integer", "minimum": 0},
+        "freshness": {"enum": ["fresh", "stale"]},
+        "methodology": {"type": "string", "minLength": 1},
+        "limitations": {"$ref": "#/$defs/strings"},
+        "terms_reference": {"type": "string", "minLength": 1},
+        "cache_permitted": {"type": "boolean"},
+        "redistribution_permitted": {"type": "boolean"}
+      }
+    }
+  }
+}
