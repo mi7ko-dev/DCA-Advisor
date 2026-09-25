@@ -2,7 +2,7 @@
 
 ## Active phase
 
-Phase 2 - Architecture and Foundation Decision is complete and awaiting approval.
+Phase 5 - Conversational Skill and Investment Committee is complete and awaiting approval to continue.
 
 ## Completed technical work
 
@@ -19,16 +19,39 @@ Phase 2 - Architecture and Foundation Decision is complete and awaiting approval
 - Recorded the proposed foundation, runtime, storage, schema, committee, provenance, license, Phase 3 scope, and packaging decisions in `docs/DECISIONS.md`.
 - Verified the proposed repo-local skill and future plugin portability path against current official OpenAI skill and plugin documentation; target-host compatibility remains something to test, not assume.
 - Addressed repository-safety review findings by restoring legacy private-path patterns, scanning staged index blobs rather than edited working-tree copies, and forcing the pinned Gitleaks installer to replace and verify its local executable.
+- Accepted the Phase 2 architecture and decision record as the Phase 3 baseline.
+- Implemented a dependency-free Python 3.11 portfolio core with immutable domain models, strict validation, Decimal arithmetic, dated prices and FX rates, current weights, signed drift, weighted fees, and direct-concentration metrics.
+- Implemented simple target-weight and drift-aware buy-only contribution planning with whole or fractional quantities, trading increments, minimum trades, fixed and variable fees, upward fee rounding, downward quantity rounding, and exact cash conservation.
+- Added safe private JSON and Markdown persistence with validation before write, path and symlink checks, atomic creation, and non-overwrite defaults.
+- Added public JSON Schemas, fully synthetic examples, structured result fixtures, an English contribution report, and a reproducible EUR 400 scenario generator.
+- Added deterministic tests covering portfolio analysis, missing prices and FX, multi-currency valuation, invalid inputs, whole and fractional trading, fees, residual cash, contribution sizes, non-mutation, persistence safety, and repository safety.
+- Added a replaceable research-provider protocol and a static offline provider whose requests contain only public instrument/listing identifiers and an as-of date.
+- Added validated research snapshots with source dates, retrieval times, freshness, methodology, limitations, provider terms, and cache/redistribution permissions.
+- Added coverage-aware ETF metadata, holdings overlap, observed company/issuer concentration, and sector/geography/currency exposure without treating missing data as zero.
+- Added compatible-series cumulative return, annualized volatility, maximum drawdown, correlation, benchmark comparison, and explicit stress-window analysis.
+- Extended holding theses with approved target references, ranges, benchmarks, risks, triggers, and review dates; added evidence-separated, non-mutating review proposals.
+- Added public synthetic Phase 4 inputs, structured outputs, reports, schemas, and deterministic failure/invariant tests.
+- Added the canonical repo-local SteadyFolio skill with clear discovery metadata, bounded workflow instructions, approval gates, and progressively loaded references.
+- Added deterministic routing for contribution, portfolio-review, overlap-review, thesis-review, and clarification paths.
+- Added structured committee results that separate facts, sources/dates/limitations, assumptions, specialist interpretations, disagreements, synthesis, approval requirements, and the actual execution trace.
+- Added selective sequential review lenses with at most one research pass, one critic pass, one revision, and no live external calls; the output does not claim independent agent verification.
+- Added non-mutating committee-review persistence under `private/reviews/` and explicit approval boundaries for transactions and target or policy changes.
+- Added six fully synthetic end-to-end demonstrations covering EUR 400 contribution, portfolio review, ETF thesis review, partial overlap, residual drift, and missing/stale evidence with contradictory conclusions.
+- Validated the public skill structure with the bundled skill validator and added routing, integration, privacy, output, and repository-safety coverage.
 
 ## Open technical issues
 
 - AI Finance Assistant does not grant general code-reuse permission and must remain architecture-only reference material.
 - Wealthfolio and Ghostfolio are AGPL-3.0 at the repository root; main-code reuse is not recommended without an explicit later license decision.
-- The proposed MIT license and all Phase 2 architecture decisions remain pending explicit user approval.
-- Local Codex is the only first supported runtime. A future generated plugin may provide a portability path, but no general ChatGPT/plugin compatibility has been tested or claimed.
+- Local Codex remains the only supported host. The repo-local skill was statically validated, but a fresh-host discovery test, global installation, generated plugin, and general ChatGPT compatibility have not been tested or claimed.
 - No upstream test suite was executed during the static audit; the review distinguishes inspected test coverage from locally reproduced results.
 - Hook templates are not enabled automatically because an existing local hook workflow must not be replaced without review.
+- The MVP supports ETF and stock positions only, direct or inverse FX pairs only, and does not model an existing portfolio cash balance.
+- Live market-data retrieval, broker connectivity, true independent research agents, tax optimization, rebalancing sales, user interface, and host skill packaging remain outside the implemented boundary.
+- No live research provider is implemented; provider-specific authentication, terms validation, rate limits, caching, and optional live integration tests remain deferred.
+- Look-through data is deliberately partial, historical samples are illustrative, and all metrics are descriptive rather than predictive.
+- Tax and regulatory questions remain unresolved without current jurisdiction-specific primary sources.
 
 ## Next approval gate
 
-Phase 3 - Core MVP Implementation requires explicit approval of the Phase 2 architecture and scope. No approval is inferred from this file.
+Phase 6 - Final Hardening and Documentation requires explicit approval. No approval is inferred from this file.

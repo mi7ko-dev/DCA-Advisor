@@ -1,0 +1,81 @@
+{
+  "benchmark_instrument_id": "instrument-policy-benchmark",
+  "calculation_version": "1.0",
+  "configured_review_triggers": [
+    "Index methodology changes",
+    "TER exceeds 0.30%",
+    "Fund closure or merger"
+  ],
+  "evidence_facts": [
+    "The synthetic index and replication method remain unchanged. (source synthetic-fund-facts, observed 2026-01-15)",
+    "The synthetic listing declined during one monthly observation. (source synthetic-total-return-history, observed 2025-11-30)"
+  ],
+  "id": "thesis-review:thesis-global:2026-01-31",
+  "instrument_id": "instrument-global",
+  "interpretations": [
+    "Evidence evidence-fund-structure supports the current rationale.",
+    "Evidence evidence-price-decline is a price change; price movement alone is not thesis failure."
+  ],
+  "last_review_date": "2026-01-15",
+  "limitations": [
+    "This is a synthetic demonstration fact.",
+    "The facts do not describe a real fund.",
+    "A single price move does not test the long-term rationale.",
+    "Five observations are insufficient for investment forecasting."
+  ],
+  "next_review_date": "2027-01-31",
+  "proposed_action": "retain",
+  "proposed_changes": [
+    "Retain the current thesis pending its next review; no portfolio mutation is proposed."
+  ],
+  "rationale": "Synthetic broad equity exposure for a long horizon.",
+  "reviewed_at": "2026-01-31",
+  "risks": [
+    "Equity drawdown",
+    "Foreign-currency exposure"
+  ],
+  "role": "growth",
+  "source_assessments": [
+    {
+      "age_days": 16,
+      "as_of": "2026-01-15",
+      "cache_permitted": true,
+      "freshness": "fresh",
+      "limitations": [
+        "The facts do not describe a real fund."
+      ],
+      "methodology": "Project-authored synthetic fund facts for deterministic tests.",
+      "provider": "SteadyFolio Synthetic Research Provider",
+      "redistribution_permitted": true,
+      "reference": "synthetic://fund-facts/2026-01-15",
+      "retrieved_at": "2026-01-31T18:05:00+00:00",
+      "source_id": "synthetic-fund-facts",
+      "terms_reference": "project-generated-synthetic-data"
+    },
+    {
+      "age_days": 0,
+      "as_of": "2026-01-31",
+      "cache_permitted": true,
+      "freshness": "fresh",
+      "limitations": [
+        "Five observations are insufficient for investment forecasting."
+      ],
+      "methodology": "Synthetic month-end total-return index levels in EUR with distributions and corporate actions included.",
+      "provider": "SteadyFolio Synthetic Research Provider",
+      "redistribution_permitted": true,
+      "reference": "synthetic://total-return-history/2026-01-31",
+      "retrieved_at": "2026-01-31T18:08:00+00:00",
+      "source_id": "synthetic-total-return-history",
+      "terms_reference": "project-generated-synthetic-data"
+    }
+  ],
+  "source_ids": [
+    "synthetic-fund-facts",
+    "synthetic-total-return-history"
+  ],
+  "target_range_max": "0.6",
+  "target_range_min": "0.4",
+  "target_weight": "0.5",
+  "thesis_id": "thesis-global",
+  "triggered_review_conditions": []
+}

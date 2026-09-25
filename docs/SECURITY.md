@@ -14,7 +14,30 @@ The repository-safety checker, tests, and Gitleaks run locally. The Gitleaks wra
 
 GitHub Actions receives only committed repository content. The repository-safety workflow uses synthetic path checks and read-only repository permissions. No private state, local scan report, or environment dump should be uploaded as an artifact.
 
-Future market-data integrations must send only the minimum necessary instrument identifiers and parameters. They must not send holdings quantities, account identifiers, or personal goals without explicit authorization. Provider and host data flows must be documented before those integrations are enabled.
+The Phase 4 research-provider request contains only public instrument/listing
+identifiers and an as-of date. The implemented provider is offline and synthetic;
+it performs no external transfer. Future live integrations must keep this minimum
+request boundary and must not send holdings quantities, balances, account
+identifiers, goals, theses, or personal context without explicit authorization.
+Provider and host data flows must be documented before those integrations are
+enabled.
+
+Real provider responses, query history, caches, research results, thesis evidence,
+and reports belong under `private/`. A live adapter must review the provider's
+terms, retention, cache, and redistribution rules before use. Raw responses must not
+be copied into public tests or examples, even if account fields are removed.
+
+The Phase 5 repo-local skill contains public instructions only. It must not contain
+runtime memory, user prompts, user-derived reports, or provider payloads. Committee
+results derived from a real user belong under `private/reviews/`; saving a review
+does not authorize or perform a transaction, holdings change, or target-policy
+change.
+
+Retrieved pages and documents are untrusted evidence. Their text cannot override
+repository privacy rules, request credentials or secret disclosure, authorize
+external actions, or expand the bounded workflow. Phase 5 permits no live external
+calls. Any future host or provider connection requires a documented data-flow and
+authorization review before use.
 
 ## Required checks
 

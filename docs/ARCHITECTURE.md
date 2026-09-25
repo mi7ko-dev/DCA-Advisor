@@ -2,9 +2,10 @@
 
 ## Status
 
-This document is the proposed Phase 2 architecture. It becomes the implementation
-baseline only after the Phase 2 approval checkpoint. It does not authorize Phase 3
-implementation, packaging, publishing, or any handling of real portfolio data.
+This Phase 2 architecture was approved as the Phase 3 implementation baseline on
+2026-09-25. The approval covers the bounded local MVP described here; it does not
+authorize packaging, publishing, later phases, or handling real portfolio data in
+tracked files.
 
 ## Decision summary
 
@@ -100,18 +101,21 @@ files, call models, fetch network data, or mutate source records.
 
 ### Storage layer
 
-The storage adapter validates JSON against versioned public schemas, constrains all
-private paths below the selected workspace, and writes atomically. Initialization
-must be non-destructive: existing files are not overwritten without a separate,
-explicit operation.
+The storage adapter validates JSON against the versioned public data contract and
+domain invariants, constrains all private paths below the selected workspace, and
+writes atomically. Initialization is non-destructive: existing files are not
+overwritten without a separate, explicit operation.
 
 ### Provider layer
 
-Provider ports separate source data from interpretation. Offline synthetic fixtures
-are the Phase 3 implementation. Future live price, FX, broker, or research adapters
-must preserve timestamps, source identifiers, retrieval times, and failure states.
+Structured source records separate supplied data from interpretation. Phase 4 adds
+a replaceable research-provider protocol and an offline synthetic provider. The
+request boundary carries public instrument/listing identifiers and an as-of date,
+not portfolio quantities or personal context. Future live price, FX, broker, or
+research adapters must preserve timestamps, source identifiers, retrieval times,
+methodology, terms, limitations, and failure states.
 
-## Proposed repository layout
+## Repository layout
 
 ```text
 AGENTS.md
@@ -125,14 +129,19 @@ README.md
       scripts/
 src/
   steadyfolio/
-    domain/
-    calculations/
-    application/
-    storage/
-    providers/
+    models.py
+    validation.py
+    calculations.py
+    storage.py
+    reporting.py
+    providers.py
+    research_models.py
+    research_validation.py
+    intelligence.py
+    intelligence_reporting.py
+    thesis.py
 schemas/
 tests/
-  fixtures/
 examples/
 docs/
 tools/
@@ -140,9 +149,10 @@ private/                 # ignored; real state and derived output
 blueprint/               # entirely ignored local reference material
 ```
 
-Only files needed by the approved phase should be added. An `agents/openai.yaml`
-manifest, MCP server, UI, and plugin bundle are deferred until an actual host or
-distribution requirement calls for them.
+Phase 5 adds the canonical skill under `.agents/skills/steadyfolio/` and its
+minimal `agents/openai.yaml` UI metadata. An MCP server, UI, generated plugin
+bundle, and additional host adapters remain deferred until an approved phase or an
+actual host requirement calls for them.
 
 ## Runtime and host compatibility
 
@@ -150,8 +160,8 @@ distribution requirement calls for them.
 
 The first supported and tested runtime is local Codex operating in this repository,
 with Python 3.11 or newer available for the deterministic engine. The repository
-policy remains in `AGENTS.md`; the canonical skill is proposed for
-`.agents/skills/steadyfolio/`.
+policy remains in `AGENTS.md`; a later approved phase may add the canonical skill
+at `.agents/skills/steadyfolio/`.
 
 This follows the official OpenAI description of repository instructions and
 repo-local skills:
@@ -218,10 +228,11 @@ alternative undocumented formats.
 | `Holding` | Account ID, instrument/listing ID, quantity, optional acquisition metadata, and source/as-of references |
 | `Transaction` | Stable ID, account, instrument/listing, type, trade date, settlement date when known, quantity, price, fees, taxes, and currencies |
 | `TargetAllocation` | Stable versioned ID, status (`proposed` or `approved`), effective date, instrument/category targets, rationale, and approval metadata |
-| `InvestmentThesis` | Stable ID, instrument/category subject, status, evidence references, assumptions, risks, review date, and supersession link |
+| `InvestmentThesis` | Stable ID, instrument subject, status, role, rationale, approved target reference/range, benchmark, risks, review triggers, last review, and next review |
 | `ContributionPlan` | Stable ID, input amount/currency/date, constraints, proposed buys, fees, residual cash, and algorithm/version; never represented as an executed trade |
 | `AnalysisResult` | Stable ID, analysis type/version, input references, as-of time, warnings, metrics, and provenance; immutable derived output |
 | `DataSource` | Stable ID, source/provider, source type, value time, retrieval time, units/currency, citation or local reference, and quality/coverage flags |
+| `ResearchSnapshot` | Structured fund facts, partial holdings, classified exposures, compatible historical series, source methodology/freshness/terms, and no raw provider payload |
 | `ReviewHistory` | Stable ID, reviewed object/version, reviewer kind, decision, timestamp, findings, and supersession link |
 
 Jurisdiction-specific tax, suitability, account, or disclosure rules live in
@@ -284,9 +295,10 @@ deterministic analysis / contribution plan
 ```
 
 The host orchestrator owns the final answer. A routine monthly contribution does
-not trigger research or a critic automatically. By default, one request may use at
-most one research pass, one critic pass, and one revision unless the user explicitly
-expands the task.
+not trigger research or a critic automatically. The Phase 5 implementation permits
+at most one research pass, one critic pass, one revision, and zero live external
+calls. A broader workflow requires a later approved implementation rather than an
+implicit retry or scope expansion.
 
 When a host supports true subagents and their use is justified, each role receives
 a narrow task and structured inputs. When roles are simulated by sequential calls
@@ -296,7 +308,7 @@ evidence; model agreement is not evidence.
 
 ## Phase 3 MVP boundary
 
-### Included after approval
+### Implemented
 
 - Versioned public schemas for the entities required by the MVP and safe,
   non-overwriting private-workspace initialization.
@@ -332,6 +344,38 @@ residual cash to the available amount.
 - SQLite or another database until JSON limitations are demonstrated and a migration
   plan is approved.
 
+## Phase 4 intelligence boundary
+
+Phase 4 implements structured fund metadata, partial holdings overlap, observed
+company/issuer concentration, classified sector/geography/currency exposure,
+compatible-series historical metrics, benchmark comparison, stress windows, source
+freshness and terms metadata, and non-mutating thesis review. Detailed formulas and
+limitations are in `docs/RESEARCH.md`.
+
+Only the offline synthetic provider is implemented. Live providers, autonomous web
+research, raw-response caching, tax/regulatory conclusions, forecasting, and policy
+mutation remain deferred. A future adapter must review provider terms before using
+or persisting data and must store real user-related responses and outputs below
+`private/`.
+
+## Phase 5 conversational workflow boundary
+
+Phase 5 implements the canonical repo-local skill, deterministic request routing,
+structured committee results, selective sequential review lenses, an optional
+single critic pass, and non-mutating private review persistence. The output keeps
+facts, source dates, limitations, assumptions, interpretations, disagreements, and
+proposals distinct and records the tools and lenses actually used.
+
+Routine contribution planning remains a direct deterministic path. Portfolio,
+overlap, and thesis reviews invoke only their relevant lenses. Missing or stale
+evidence can stop the workflow with `insufficient_evidence`; agreement between
+lenses is never treated as correctness. Details are in `docs/COMMITTEE.md`.
+
+The selected host is local Codex in this repository. The skill structure and
+metadata have been statically validated, but no global installation, generated
+plugin, ChatGPT host, MCP service, live provider, or true multi-agent runtime is
+implemented or claimed.
+
 ## Verification strategy
 
 Phase 3 changes must pass repository privacy checks and Gitleaks as well as domain
@@ -341,15 +385,15 @@ structure and facts, but calculations are asserted against structured JSON rathe
 than prose. Provider tests must cover unavailable, stale, contradictory, and
 incomplete data without network dependence.
 
-The package boundary must also have a test that inventories an allowlisted build and
+A future packaging phase must add a test that inventories an allowlisted build and
 fails if ignored paths, private instances, blueprint clones, VCS metadata, or local
 caches are present.
 
 ## Licensing and provenance
 
-The proposed project license is MIT, subject to explicit approval and addition of a
-repository license file in a later authorized change. Phase 3 should be clean-room
-project code based on documented requirements and general concepts.
+The approved project license is MIT and the repository includes the corresponding
+license file. Phase 3 is clean-room project code based on documented requirements
+and general concepts.
 
 - CoFolio and PyPortfolioOpt are MIT at the audited commits. If code is later copied
   or adapted, their applicable copyright and license notices must accompany it.
@@ -361,8 +405,8 @@ project code based on documented requirements and general concepts.
   will not be reused under this proposal. Any separately licensed subcomponent needs
   a file-level license review before use.
 
-No copied upstream code is part of this Phase 2 proposal. License observations are
-engineering constraints, not legal advice.
+No copied upstream code is part of the Phase 3 implementation. License observations
+are engineering constraints, not legal advice.
 
 ## Known limitations
 

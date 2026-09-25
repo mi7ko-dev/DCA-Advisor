@@ -1,0 +1,30 @@
+{
+  "constraints": [
+    {
+      "fixed_fee": "1",
+      "fractional_allowed": true,
+      "listing_id": "listing-global-xetr",
+      "minimum_fee": "1",
+      "minimum_trade_value": "10",
+      "quantity_increment": "0.001",
+      "variable_fee_rate": "0.001"
+    },
+    {
+      "fixed_fee": "1",
+      "fractional_allowed": true,
+      "listing_id": "listing-bond-xetr",
+      "minimum_fee": "1",
+      "minimum_trade_value": "10",
+      "quantity_increment": "0.001",
+      "variable_fee_rate": "0.001"
+    }
+  ],
+  "contribution_amount": "400",
+  "currency": "EUR",
+  "method": "drift_aware",
+  "preferred_listings": {
+    "instrument-bond": "listing-bond-xetr",
+    "instrument-global": "listing-global-xetr"
+  },
+  "valuation_date": "2026-01-31"
+}

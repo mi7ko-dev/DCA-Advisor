@@ -1,0 +1,207 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://steadyfolio.example/schemas/intelligence-result.schema.json",
+  "title": "SteadyFolio Portfolio Intelligence Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "calculation_version", "analysis_date", "base_currency", "instrument_summaries", "overlaps", "company_concentration", "exposures", "historical_metrics", "correlations", "stress_metrics", "source_assessments", "source_ids", "warnings"],
+  "properties": {
+    "id": {"$ref": "#/$defs/id"},
+    "calculation_version": {"type": "string", "minLength": 1},
+    "analysis_date": {"$ref": "#/$defs/date"},
+    "base_currency": {"$ref": "#/$defs/currency"},
+    "instrument_summaries": {"type": "array", "items": {"$ref": "#/$defs/instrument_summary"}},
+    "overlaps": {"type": "array", "items": {"$ref": "#/$defs/overlap"}},
+    "company_concentration": {"$ref": "#/$defs/company_concentration"},
+    "exposures": {"type": "array", "items": {"$ref": "#/$defs/exposure_analysis"}},
+    "historical_metrics": {"type": "array", "items": {"$ref": "#/$defs/historical_metric"}},
+    "correlations": {"type": "array", "items": {"$ref": "#/$defs/correlation"}},
+    "stress_metrics": {"type": "array", "items": {"$ref": "#/$defs/stress"}},
+    "source_assessments": {"type": "array", "items": {"$ref": "#/$defs/source_assessment"}},
+    "source_ids": {"type": "array", "items": {"$ref": "#/$defs/id"}, "uniqueItems": true},
+    "warnings": {"type": "array", "items": {"type": "string"}}
+  },
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"},
+    "date": {"type": "string", "format": "date"},
+    "date_time": {"type": "string", "format": "date-time"},
+    "currency": {"type": "string", "pattern": "^[A-Z]{3}$"},
+    "decimal": {"type": "string", "pattern": "^-?(0|[1-9][0-9]*)(\\.[0-9]+)?$"},
+    "nonnegative_decimal": {"type": "string", "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$"},
+    "strings": {"type": "array", "items": {"type": "string"}},
+    "ids": {"type": "array", "items": {"$ref": "#/$defs/id"}, "uniqueItems": true},
+    "listing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["listing_id", "mic", "ticker", "trading_currency"],
+      "properties": {
+        "listing_id": {"$ref": "#/$defs/id"},
+        "mic": {"type": "string", "minLength": 4},
+        "ticker": {"type": "string", "minLength": 1},
+        "trading_currency": {"$ref": "#/$defs/currency"}
+      }
+    },
+    "instrument_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["instrument_id", "name", "kind", "economic_currency", "listings", "limitations"],
+      "properties": {
+        "instrument_id": {"$ref": "#/$defs/id"},
+        "name": {"type": "string", "minLength": 1},
+        "kind": {"enum": ["etf", "stock"]},
+        "isin": {"type": "string", "minLength": 12, "maxLength": 12},
+        "economic_currency": {"$ref": "#/$defs/currency"},
+        "listings": {"type": "array", "items": {"$ref": "#/$defs/listing"}},
+        "domicile": {"type": "string", "minLength": 1},
+        "distribution_policy": {"enum": ["accumulating", "distributing", "unknown"]},
+        "index_name": {"type": "string", "minLength": 1},
+        "replication_method": {"type": "string", "minLength": 1},
+        "ter": {"$ref": "#/$defs/nonnegative_decimal"},
+        "fund_size": {"$ref": "#/$defs/nonnegative_decimal"},
+        "fund_size_currency": {"$ref": "#/$defs/currency"},
+        "facts_as_of": {"$ref": "#/$defs/date"},
+        "source_id": {"$ref": "#/$defs/id"},
+        "limitations": {"$ref": "#/$defs/strings"}
+      }
+    },
+    "overlap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["left_instrument_id", "right_instrument_id", "observed_overlap_weight", "left_holdings_coverage", "right_holdings_coverage", "holdings_as_of_dates", "source_ids", "limitations"],
+      "properties": {
+        "left_instrument_id": {"$ref": "#/$defs/id"},
+        "right_instrument_id": {"$ref": "#/$defs/id"},
+        "observed_overlap_weight": {"$ref": "#/$defs/nonnegative_decimal"},
+        "left_holdings_coverage": {"$ref": "#/$defs/nonnegative_decimal"},
+        "right_holdings_coverage": {"$ref": "#/$defs/nonnegative_decimal"},
+        "holdings_as_of_dates": {"type": "array", "items": {"$ref": "#/$defs/date"}},
+        "source_ids": {"$ref": "#/$defs/ids"},
+        "limitations": {"$ref": "#/$defs/strings"}
+      }
+    },
+    "company_exposure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["constituent_id", "name", "observed_portfolio_weight"],
+      "properties": {
+        "constituent_id": {"$ref": "#/$defs/id"},
+        "name": {"type": "string", "minLength": 1},
+        "observed_portfolio_weight": {"$ref": "#/$defs/nonnegative_decimal"}
+      }
+    },
+    "company_concentration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["exposures", "covered_portfolio_weight", "unclassified_portfolio_weight", "maximum_observed_company_weight", "holdings_as_of_dates", "source_ids", "limitations"],
+      "properties": {
+        "exposures": {"type": "array", "items": {"$ref": "#/$defs/company_exposure"}},
+        "covered_portfolio_weight": {"$ref": "#/$defs/nonnegative_decimal"},
+        "unclassified_portfolio_weight": {"$ref": "#/$defs/nonnegative_decimal"},
+        "maximum_observed_company_weight": {"$ref": "#/$defs/nonnegative_decimal"},
+        "holdings_as_of_dates": {"type": "array", "items": {"$ref": "#/$defs/date"}},
+        "source_ids": {"$ref": "#/$defs/ids"},
+        "limitations": {"$ref": "#/$defs/strings"}
+      }
+    },
+    "exposure_entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "observed_portfolio_weight"],
+      "properties": {
+        "label": {"type": "string", "minLength": 1},
+        "observed_portfolio_weight": {"$ref": "#/$defs/nonnegative_decimal"}
+      }
+    },
+    "exposure_analysis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["dimension", "entries", "covered_portfolio_weight", "unclassified_portfolio_weight", "as_of_dates", "source_ids", "methodologies", "limitations"],
+      "properties": {
+        "dimension": {"enum": ["sector", "geography", "currency"]},
+        "entries": {"type": "array", "items": {"$ref": "#/$defs/exposure_entry"}},
+        "covered_portfolio_weight": {"$ref": "#/$defs/nonnegative_decimal"},
+        "unclassified_portfolio_weight": {"$ref": "#/$defs/nonnegative_decimal"},
+        "as_of_dates": {"type": "array", "items": {"$ref": "#/$defs/date"}},
+        "source_ids": {"$ref": "#/$defs/ids"},
+        "methodologies": {"$ref": "#/$defs/strings"},
+        "limitations": {"$ref": "#/$defs/strings"}
+      }
+    },
+    "historical_metric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["instrument_id", "listing_id", "start_date", "end_date", "observation_count", "currency", "frequency", "return_convention", "distribution_treatment", "corporate_action_treatment", "cumulative_return", "annualized_volatility", "maximum_drawdown", "source_ids", "limitations"],
+      "properties": {
+        "instrument_id": {"$ref": "#/$defs/id"},
+        "listing_id": {"$ref": "#/$defs/id"},
+        "start_date": {"$ref": "#/$defs/date"},
+        "end_date": {"$ref": "#/$defs/date"},
+        "observation_count": {"type": "integer", "minimum": 2},
+        "currency": {"$ref": "#/$defs/currency"},
+        "frequency": {"enum": ["daily", "weekly", "monthly"]},
+        "return_convention": {"enum": ["price_index", "total_return_index"]},
+        "distribution_treatment": {"enum": ["included", "excluded"]},
+        "corporate_action_treatment": {"type": "string", "minLength": 1},
+        "cumulative_return": {"$ref": "#/$defs/decimal"},
+        "annualized_volatility": {"$ref": "#/$defs/nonnegative_decimal"},
+        "maximum_drawdown": {"$ref": "#/$defs/nonnegative_decimal"},
+        "benchmark_listing_id": {"$ref": "#/$defs/id"},
+        "benchmark_cumulative_return": {"$ref": "#/$defs/decimal"},
+        "excess_return": {"$ref": "#/$defs/decimal"},
+        "source_ids": {"$ref": "#/$defs/ids"},
+        "limitations": {"$ref": "#/$defs/strings"}
+      }
+    },
+    "correlation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["left_instrument_id", "right_instrument_id", "start_date", "end_date", "return_observation_count", "correlation", "source_ids"],
+      "properties": {
+        "left_instrument_id": {"$ref": "#/$defs/id"},
+        "right_instrument_id": {"$ref": "#/$defs/id"},
+        "start_date": {"$ref": "#/$defs/date"},
+        "end_date": {"$ref": "#/$defs/date"},
+        "return_observation_count": {"type": "integer", "minimum": 2},
+        "correlation": {"$ref": "#/$defs/decimal"},
+        "source_ids": {"$ref": "#/$defs/ids"}
+      }
+    },
+    "stress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stress_id", "stress_name", "instrument_id", "listing_id", "start_date", "end_date", "observation_count", "cumulative_return", "maximum_drawdown", "source_id", "limitations"],
+      "properties": {
+        "stress_id": {"$ref": "#/$defs/id"},
+        "stress_name": {"type": "string", "minLength": 1},
+        "instrument_id": {"$ref": "#/$defs/id"},
+        "listing_id": {"$ref": "#/$defs/id"},
+        "start_date": {"$ref": "#/$defs/date"},
+        "end_date": {"$ref": "#/$defs/date"},
+        "observation_count": {"type": "integer", "minimum": 2},
+        "cumulative_return": {"$ref": "#/$defs/decimal"},
+        "maximum_drawdown": {"$ref": "#/$defs/nonnegative_decimal"},
+        "source_id": {"$ref": "#/$defs/id"},
+        "limitations": {"$ref": "#/$defs/strings"}
+      }
+    },
+    "source_assessment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_id", "provider", "reference", "as_of", "retrieved_at", "age_days", "freshness", "methodology", "limitations", "terms_reference", "cache_permitted", "redistribution_permitted"],
+      "properties": {
+        "source_id": {"$ref": "#/$defs/id"},
+        "provider": {"type": "string", "minLength": 1},
+        "reference": {"type": "string", "minLength": 1},
+        "as_of": {"$ref": "#/$defs/date"},
+        "retrieved_at": {"$ref": "#/$defs/date_time"},
+        "age_days": {"type": "integer", "minimum": 0},
+        "freshness": {"enum": ["fresh", "stale"]},
+        "methodology": {"type": "string", "minLength": 1},
+        "limitations": {"$ref": "#/$defs/strings"},
+        "terms_reference": {"type": "string", "minLength": 1},
+        "cache_permitted": {"type": "boolean"},
+        "redistribution_permitted": {"type": "boolean"}
+      }
+    }
+  }
+}
