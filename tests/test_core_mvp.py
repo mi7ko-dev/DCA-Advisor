@@ -180,6 +180,7 @@ class SchemaAndValidationTests(unittest.TestCase):
             {schema.name for schema in schemas},
             {
                 "analysis-result.schema.json",
+                "committee-result.schema.json",
                 "contribution-plan.schema.json",
                 "intelligence-result.schema.json",
                 "market-input.schema.json",

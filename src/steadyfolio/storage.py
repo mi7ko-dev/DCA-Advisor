@@ -10,6 +10,7 @@ import tempfile
 from typing import Any
 
 from .errors import StorageSafetyError, ValidationError
+from .committee_models import CommitteeResult
 from .models import AnalysisResult, ContributionPlan, PortfolioState, to_json_value
 from .research_models import PortfolioIntelligenceResult, ThesisReviewResult
 from .validation import state_from_dict, state_to_dict
@@ -208,4 +209,19 @@ def save_thesis_review(
     target = _safe_target(workspace_root, "reviews", filename)
     return _atomic_write_text(
         target, _json_text(to_json_value(review)), overwrite=overwrite
+    )
+
+
+def save_committee_review(
+    workspace_root: str | Path,
+    result: CommitteeResult,
+    *,
+    filename: str = "committee-review.json",
+    overwrite: bool = False,
+) -> Path:
+    """Persist an explicitly authorized review without changing portfolio state."""
+
+    target = _safe_target(workspace_root, "reviews", filename)
+    return _atomic_write_text(
+        target, _json_text(to_json_value(result)), overwrite=overwrite
     )
