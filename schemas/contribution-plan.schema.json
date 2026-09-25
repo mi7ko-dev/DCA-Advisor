@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://steadyfolio.example/schemas/contribution-plan.schema.json",
+  "title": "SteadyFolio Contribution Plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "calculation_version", "method", "valuation_date", "contribution_amount", "currency", "lines", "total_purchase_value", "total_estimated_trade_cost", "remaining_cash", "expected_post_contribution_value", "source_ids", "warnings"],
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "calculation_version": {"type": "string", "minLength": 1},
+    "method": {"type": "string", "enum": ["simple", "drift_aware"]},
+    "valuation_date": {"type": "string", "format": "date"},
+    "contribution_amount": {"$ref": "#/$defs/decimal"},
+    "currency": {"type": "string", "pattern": "^[A-Z]{3}$"},
+    "lines": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["instrument_id", "listing_id", "current_weight", "target_weight", "drift", "quantity", "proposed_contribution", "estimated_trade_cost", "expected_post_contribution_weight", "remaining_drift"],
+        "properties": {
+          "instrument_id": {"type": "string", "minLength": 1},
+          "listing_id": {"type": "string", "minLength": 1},
+          "current_weight": {"$ref": "#/$defs/decimal"},
+          "target_weight": {"$ref": "#/$defs/decimal"},
+          "drift": {"$ref": "#/$defs/decimal"},
+          "quantity": {"$ref": "#/$defs/decimal"},
+          "proposed_contribution": {"$ref": "#/$defs/decimal"},
+          "estimated_trade_cost": {"$ref": "#/$defs/decimal"},
+          "expected_post_contribution_weight": {"$ref": "#/$defs/decimal"},
+          "remaining_drift": {"$ref": "#/$defs/decimal"}
+        }
+      }
+    },
+    "total_purchase_value": {"$ref": "#/$defs/decimal"},
+    "total_estimated_trade_cost": {"$ref": "#/$defs/decimal"},
+    "remaining_cash": {"$ref": "#/$defs/decimal"},
+    "expected_post_contribution_value": {"$ref": "#/$defs/decimal"},
+    "source_ids": {"type": "array", "items": {"type": "string"}},
+    "warnings": {"type": "array", "items": {"type": "string"}}
+  },
+  "$defs": {
+    "decimal": {"type": "string", "pattern": "^-?(0|[1-9][0-9]*)(\\.[0-9]+)?$"}
+  }
+}
