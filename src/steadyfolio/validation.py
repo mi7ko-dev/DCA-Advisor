@@ -129,6 +129,12 @@ def _validate_document_shape(root: Mapping[str, Any]) -> None:
                 "rationale",
                 "risks",
                 "review_date",
+                "target_weight",
+                "target_range_min",
+                "target_range_max",
+                "benchmark_instrument_id",
+                "review_triggers",
+                "last_review_date",
             },
         ),
         "data_sources": (
@@ -471,6 +477,33 @@ def state_from_dict(raw: Mapping[str, Any]) -> PortfolioState:
             review_date=_optional_string(
                 item.get("review_date"), "investment_theses[].review_date"
             ),
+            target_weight=_decimal(
+                item.get("target_weight"),
+                "investment_theses[].target_weight",
+                optional=True,
+            ),
+            target_range_min=_decimal(
+                item.get("target_range_min"),
+                "investment_theses[].target_range_min",
+                optional=True,
+            ),
+            target_range_max=_decimal(
+                item.get("target_range_max"),
+                "investment_theses[].target_range_max",
+                optional=True,
+            ),
+            benchmark_instrument_id=_optional_string(
+                item.get("benchmark_instrument_id"),
+                "investment_theses[].benchmark_instrument_id",
+            ),
+            review_triggers=_string_tuple(
+                item.get("review_triggers", []),
+                "investment_theses[].review_triggers",
+            ),
+            last_review_date=_optional_string(
+                item.get("last_review_date"),
+                "investment_theses[].last_review_date",
+            ),
         )
         for item in (
             _mapping(value, "investment_theses[]")
@@ -742,6 +775,7 @@ def validate_state(state: PortfolioState) -> None:
             raise ValidationError("Transaction quantity and monetary values are invalid.")
 
     approved_count = 0
+    approved_target_weights: dict[str, Decimal] = {}
     for allocation in state.target_allocations:
         if allocation.status not in {"approved", "proposed", "superseded"}:
             raise ValidationError("Unknown target allocation status.")
@@ -761,14 +795,74 @@ def validate_state(state: PortfolioState) -> None:
             raise ValidationError("Target allocation weights must sum to one.")
         if allocation.status == "approved":
             approved_count += 1
+            approved_target_weights = {
+                target.instrument_id: target.weight for target in allocation.targets
+            }
     if approved_count != 1:
         raise ValidationError("Exactly one approved target allocation is required.")
 
+    active_thesis_instruments: set[str] = set()
     for thesis in state.investment_theses:
         if thesis.instrument_id not in instruments:
             raise ValidationError("An investment thesis references an unknown instrument.")
+        if thesis.status not in {"active", "retired", "superseded"}:
+            raise ValidationError("Unknown investment thesis status.")
+        if thesis.status == "active":
+            if thesis.instrument_id in active_thesis_instruments:
+                raise ValidationError("Only one active thesis is allowed per instrument.")
+            active_thesis_instruments.add(thesis.instrument_id)
         if thesis.review_date is not None:
             _require_date(thesis.review_date, "investment_theses[].review_date")
+        if thesis.last_review_date is not None:
+            _require_date(
+                thesis.last_review_date, "investment_theses[].last_review_date"
+            )
+        if thesis.review_date is not None and thesis.last_review_date is not None:
+            if date.fromisoformat(thesis.last_review_date) > date.fromisoformat(
+                thesis.review_date
+            ):
+                raise ValidationError("A thesis last review cannot follow its next review.")
+        weights = (
+            thesis.target_weight,
+            thesis.target_range_min,
+            thesis.target_range_max,
+        )
+        if any(
+            weight is not None
+            and (not weight.is_finite() or weight < 0 or weight > 1)
+            for weight in weights
+        ):
+            raise ValidationError("Thesis target weights must be between zero and one.")
+        if (thesis.target_range_min is None) != (thesis.target_range_max is None):
+            raise ValidationError("A thesis target range requires both bounds.")
+        if (
+            thesis.target_range_min is not None
+            and thesis.target_range_max is not None
+            and thesis.target_range_min > thesis.target_range_max
+        ):
+            raise ValidationError("A thesis target range is inverted.")
+        if (
+            thesis.target_weight is not None
+            and thesis.target_range_min is not None
+            and not (
+                thesis.target_range_min
+                <= thesis.target_weight
+                <= thesis.target_range_max
+            )
+        ):
+            raise ValidationError("A thesis target weight is outside its range.")
+        approved_weight = approved_target_weights.get(thesis.instrument_id)
+        if thesis.target_weight is not None and thesis.target_weight != approved_weight:
+            raise ValidationError(
+                "A thesis target weight must match the approved allocation."
+            )
+        if (
+            thesis.benchmark_instrument_id is not None
+            and thesis.benchmark_instrument_id not in instruments
+        ):
+            raise ValidationError("A thesis benchmark references an unknown instrument.")
+        if len(set(thesis.review_triggers)) != len(thesis.review_triggers):
+            raise ValidationError("Thesis review triggers must be unique.")
 
     for source in state.data_sources:
         _require_datetime(source.value_time, "data_sources[].value_time")

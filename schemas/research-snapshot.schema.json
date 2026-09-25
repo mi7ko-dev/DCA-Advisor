@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://steadyfolio.example/schemas/research-snapshot.schema.json",
+  "title": "SteadyFolio Research Snapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "sources", "funds", "fund_holdings", "classified_exposures", "historical_series"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "sources": {"type": "array", "items": {"$ref": "#/$defs/source"}},
+    "funds": {"type": "array", "items": {"$ref": "#/$defs/fund"}},
+    "fund_holdings": {"type": "array", "items": {"$ref": "#/$defs/holding"}},
+    "classified_exposures": {"type": "array", "items": {"$ref": "#/$defs/exposure"}},
+    "historical_series": {"type": "array", "items": {"$ref": "#/$defs/series"}}
+  },
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"},
+    "date": {"type": "string", "format": "date"},
+    "date_time": {"type": "string", "format": "date-time"},
+    "currency": {"type": "string", "pattern": "^[A-Z]{3}$"},
+    "decimal": {"type": "string", "pattern": "^-?(0|[1-9][0-9]*)(\\.[0-9]+)?$"},
+    "nonnegative_decimal": {"type": "string", "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$"},
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "provider", "reference", "as_of", "retrieved_at", "methodology", "limitations", "freshness_days", "terms_reference", "cache_permitted", "redistribution_permitted"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "provider": {"type": "string", "minLength": 1},
+        "reference": {"type": "string", "minLength": 1},
+        "as_of": {"$ref": "#/$defs/date"},
+        "retrieved_at": {"$ref": "#/$defs/date_time"},
+        "methodology": {"type": "string", "minLength": 1},
+        "limitations": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "freshness_days": {"type": "integer", "minimum": 0},
+        "terms_reference": {"type": "string", "minLength": 1},
+        "cache_permitted": {"type": "boolean"},
+        "redistribution_permitted": {"type": "boolean"}
+      }
+    },
+    "fund": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["instrument_id", "domicile", "distribution_policy", "as_of", "source_id"],
+      "properties": {
+        "instrument_id": {"$ref": "#/$defs/id"},
+        "domicile": {"type": "string", "minLength": 1},
+        "distribution_policy": {"enum": ["accumulating", "distributing", "unknown"]},
+        "index_name": {"type": "string", "minLength": 1},
+        "replication_method": {"type": "string", "minLength": 1},
+        "ter": {"$ref": "#/$defs/nonnegative_decimal"},
+        "fund_size": {"$ref": "#/$defs/nonnegative_decimal"},
+        "fund_size_currency": {"$ref": "#/$defs/currency"},
+        "as_of": {"$ref": "#/$defs/date"},
+        "source_id": {"$ref": "#/$defs/id"}
+      }
+    },
+    "holding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fund_instrument_id", "constituent_id", "constituent_name", "weight", "as_of", "source_id"],
+      "properties": {
+        "fund_instrument_id": {"$ref": "#/$defs/id"},
+        "constituent_id": {"$ref": "#/$defs/id"},
+        "constituent_name": {"type": "string", "minLength": 1},
+        "weight": {"$ref": "#/$defs/nonnegative_decimal"},
+        "as_of": {"$ref": "#/$defs/date"},
+        "source_id": {"$ref": "#/$defs/id"}
+      }
+    },
+    "exposure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["instrument_id", "dimension", "label", "weight", "as_of", "source_id"],
+      "properties": {
+        "instrument_id": {"$ref": "#/$defs/id"},
+        "dimension": {"enum": ["sector", "geography", "currency"]},
+        "label": {"type": "string", "minLength": 1},
+        "weight": {"$ref": "#/$defs/nonnegative_decimal"},
+        "as_of": {"$ref": "#/$defs/date"},
+        "source_id": {"$ref": "#/$defs/id"}
+      }
+    },
+    "observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["date", "value"],
+      "properties": {
+        "date": {"$ref": "#/$defs/date"},
+        "value": {"$ref": "#/$defs/nonnegative_decimal"}
+      }
+    },
+    "series": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["listing_id", "currency", "frequency", "return_convention", "distribution_treatment", "corporate_action_treatment", "observations", "as_of", "source_id"],
+      "properties": {
+        "listing_id": {"$ref": "#/$defs/id"},
+        "currency": {"$ref": "#/$defs/currency"},
+        "frequency": {"enum": ["daily", "weekly", "monthly"]},
+        "return_convention": {"enum": ["price_index", "total_return_index"]},
+        "distribution_treatment": {"enum": ["included", "excluded"]},
+        "corporate_action_treatment": {"type": "string", "minLength": 1},
+        "observations": {"type": "array", "minItems": 2, "items": {"$ref": "#/$defs/observation"}},
+        "as_of": {"$ref": "#/$defs/date"},
+        "source_id": {"$ref": "#/$defs/id"}
+      }
+    }
+  }
+}

@@ -2,7 +2,7 @@
 
 ## Active phase
 
-Phase 3 - Core MVP Implementation is complete and awaiting approval to continue.
+Phase 4 - Portfolio Intelligence and Research is complete and awaiting approval to continue.
 
 ## Completed technical work
 
@@ -25,6 +25,12 @@ Phase 3 - Core MVP Implementation is complete and awaiting approval to continue.
 - Added safe private JSON and Markdown persistence with validation before write, path and symlink checks, atomic creation, and non-overwrite defaults.
 - Added public JSON Schemas, fully synthetic examples, structured result fixtures, an English contribution report, and a reproducible EUR 400 scenario generator.
 - Added deterministic tests covering portfolio analysis, missing prices and FX, multi-currency valuation, invalid inputs, whole and fractional trading, fees, residual cash, contribution sizes, non-mutation, persistence safety, and repository safety.
+- Added a replaceable research-provider protocol and a static offline provider whose requests contain only public instrument/listing identifiers and an as-of date.
+- Added validated research snapshots with source dates, retrieval times, freshness, methodology, limitations, provider terms, and cache/redistribution permissions.
+- Added coverage-aware ETF metadata, holdings overlap, observed company/issuer concentration, and sector/geography/currency exposure without treating missing data as zero.
+- Added compatible-series cumulative return, annualized volatility, maximum drawdown, correlation, benchmark comparison, and explicit stress-window analysis.
+- Extended holding theses with approved target references, ranges, benchmarks, risks, triggers, and review dates; added evidence-separated, non-mutating review proposals.
+- Added public synthetic Phase 4 inputs, structured outputs, reports, schemas, and deterministic failure/invariant tests.
 
 ## Open technical issues
 
@@ -34,8 +40,11 @@ Phase 3 - Core MVP Implementation is complete and awaiting approval to continue.
 - No upstream test suite was executed during the static audit; the review distinguishes inspected test coverage from locally reproduced results.
 - Hook templates are not enabled automatically because an existing local hook workflow must not be replaced without review.
 - The MVP supports ETF and stock positions only, direct or inverse FX pairs only, and does not model an existing portfolio cash balance.
-- Market data, broker connectivity, research agents, tax optimization, rebalancing sales, user interface, and host skill packaging remain outside the Phase 3 boundary.
+- Live market-data retrieval, broker connectivity, research agents, tax optimization, rebalancing sales, user interface, and host skill packaging remain outside the implemented boundary.
+- No live research provider is implemented; provider-specific authentication, terms validation, rate limits, caching, and optional live integration tests remain deferred.
+- Look-through data is deliberately partial, historical samples are illustrative, and all metrics are descriptive rather than predictive.
+- Tax and regulatory questions remain unresolved without current jurisdiction-specific primary sources.
 
 ## Next approval gate
 
-Phase 4 - Portfolio Intelligence and Research requires explicit approval. No approval is inferred from this file.
+Phase 5 - Multi-Agent Investment Committee requires explicit approval. No approval is inferred from this file.

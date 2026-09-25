@@ -104,6 +104,12 @@ class InvestmentThesis:
     rationale: str
     risks: tuple[str, ...] = ()
     review_date: str | None = None
+    target_weight: Decimal | None = None
+    target_range_min: Decimal | None = None
+    target_range_max: Decimal | None = None
+    benchmark_instrument_id: str | None = None
+    review_triggers: tuple[str, ...] = ()
+    last_review_date: str | None = None
 
 
 @dataclass(frozen=True)

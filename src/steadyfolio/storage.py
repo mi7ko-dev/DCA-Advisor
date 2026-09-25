@@ -11,6 +11,7 @@ from typing import Any
 
 from .errors import StorageSafetyError, ValidationError
 from .models import AnalysisResult, ContributionPlan, PortfolioState, to_json_value
+from .research_models import PortfolioIntelligenceResult, ThesisReviewResult
 from .validation import state_from_dict, state_to_dict
 
 
@@ -182,3 +183,29 @@ def save_report(
         raise ValidationError("A private report cannot be empty.")
     target = _safe_target(workspace_root, "reports", filename)
     return _atomic_write_text(target, report.rstrip() + "\n", overwrite=overwrite)
+
+
+def save_intelligence_result(
+    workspace_root: str | Path,
+    result: PortfolioIntelligenceResult,
+    *,
+    filename: str = "portfolio-intelligence.json",
+    overwrite: bool = False,
+) -> Path:
+    target = _safe_target(workspace_root, "research", filename)
+    return _atomic_write_text(
+        target, _json_text(to_json_value(result)), overwrite=overwrite
+    )
+
+
+def save_thesis_review(
+    workspace_root: str | Path,
+    review: ThesisReviewResult,
+    *,
+    filename: str = "thesis-review.json",
+    overwrite: bool = False,
+) -> Path:
+    target = _safe_target(workspace_root, "reviews", filename)
+    return _atomic_write_text(
+        target, _json_text(to_json_value(review)), overwrite=overwrite
+    )
