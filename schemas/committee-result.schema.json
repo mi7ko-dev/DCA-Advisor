@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://steadyfolio.example/schemas/committee-result.schema.json",
+  "title": "SteadyFolio Committee Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "committee_version",
+    "request_id",
+    "request_text",
+    "route",
+    "status",
+    "as_of",
+    "deterministic_facts",
+    "sources",
+    "data_limitations",
+    "assumptions",
+    "specialist_interpretations",
+    "disagreements",
+    "final_synthesis",
+    "proposed_next_actions",
+    "requires_user_approval",
+    "approval_reasons",
+    "mutation_performed",
+    "trace"
+  ],
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "committee_version": {"type": "string", "const": "1.0"},
+    "request_id": {"type": "string", "minLength": 1},
+    "request_text": {"type": "string", "minLength": 1},
+    "route": {
+      "enum": ["clarification", "contribution", "portfolio_review", "overlap_review", "thesis_review"]
+    },
+    "status": {
+      "enum": ["complete", "limited", "needs_clarification", "insufficient_evidence"]
+    },
+    "as_of": {"type": "string", "format": "date"},
+    "deterministic_facts": {"$ref": "#/$defs/stringArray"},
+    "sources": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/source"}
+    },
+    "data_limitations": {"$ref": "#/$defs/stringArray"},
+    "assumptions": {"$ref": "#/$defs/stringArray"},
+    "specialist_interpretations": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/specialist"}
+    },
+    "disagreements": {"$ref": "#/$defs/stringArray"},
+    "final_synthesis": {"type": "string", "minLength": 1},
+    "proposed_next_actions": {"$ref": "#/$defs/stringArray"},
+    "requires_user_approval": {"type": "boolean"},
+    "approval_reasons": {"$ref": "#/$defs/stringArray"},
+    "mutation_performed": {"type": "boolean", "const": false},
+    "trace": {"$ref": "#/$defs/trace"}
+  },
+  "$defs": {
+    "stringArray": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_id",
+        "provider",
+        "reference",
+        "value_time",
+        "retrieved_at",
+        "freshness",
+        "limitations"
+      ],
+      "properties": {
+        "source_id": {"type": "string", "minLength": 1},
+        "provider": {"type": "string", "minLength": 1},
+        "reference": {"type": "string", "minLength": 1},
+        "value_time": {"type": "string", "minLength": 1},
+        "retrieved_at": {"type": "string", "minLength": 1},
+        "freshness": {"enum": ["fresh", "stale", "unknown"]},
+        "limitations": {"$ref": "#/$defs/stringArray"}
+      }
+    },
+    "specialist": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "conclusion", "interpretation", "evidence_references", "limitations"],
+      "properties": {
+        "role": {"type": "string", "minLength": 1},
+        "conclusion": {"type": "string", "minLength": 1},
+        "interpretation": {"type": "string", "minLength": 1},
+        "evidence_references": {"$ref": "#/$defs/stringArray"},
+        "limitations": {"$ref": "#/$defs/stringArray"}
+      }
+    },
+    "trace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "route",
+        "deterministic_tools",
+        "review_lenses",
+        "provider_calls",
+        "external_calls",
+        "critic_passes",
+        "revisions",
+        "execution_mode"
+      ],
+      "properties": {
+        "route": {"type": "string", "minLength": 1},
+        "deterministic_tools": {"$ref": "#/$defs/stringArray"},
+        "review_lenses": {"$ref": "#/$defs/stringArray"},
+        "provider_calls": {"type": "integer", "minimum": 0, "maximum": 1},
+        "external_calls": {"type": "integer", "const": 0},
+        "critic_passes": {"type": "integer", "minimum": 0, "maximum": 1},
+        "revisions": {"type": "integer", "minimum": 0, "maximum": 1},
+        "execution_mode": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}

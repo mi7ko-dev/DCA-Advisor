@@ -149,9 +149,10 @@ private/                 # ignored; real state and derived output
 blueprint/               # entirely ignored local reference material
 ```
 
-The canonical skill under `.agents/skills/steadyfolio/`, an `agents/openai.yaml`
-manifest, MCP server, UI, and plugin bundle are deferred until their approved
-phases or an actual host or distribution requirement calls for them.
+Phase 5 adds the canonical skill under `.agents/skills/steadyfolio/` and its
+minimal `agents/openai.yaml` UI metadata. An MCP server, UI, generated plugin
+bundle, and additional host adapters remain deferred until an approved phase or an
+actual host requirement calls for them.
 
 ## Runtime and host compatibility
 
@@ -294,9 +295,10 @@ deterministic analysis / contribution plan
 ```
 
 The host orchestrator owns the final answer. A routine monthly contribution does
-not trigger research or a critic automatically. By default, one request may use at
-most one research pass, one critic pass, and one revision unless the user explicitly
-expands the task.
+not trigger research or a critic automatically. The Phase 5 implementation permits
+at most one research pass, one critic pass, one revision, and zero live external
+calls. A broader workflow requires a later approved implementation rather than an
+implicit retry or scope expansion.
 
 When a host supports true subagents and their use is justified, each role receives
 a narrow task and structured inputs. When roles are simulated by sequential calls
@@ -355,6 +357,24 @@ research, raw-response caching, tax/regulatory conclusions, forecasting, and pol
 mutation remain deferred. A future adapter must review provider terms before using
 or persisting data and must store real user-related responses and outputs below
 `private/`.
+
+## Phase 5 conversational workflow boundary
+
+Phase 5 implements the canonical repo-local skill, deterministic request routing,
+structured committee results, selective sequential review lenses, an optional
+single critic pass, and non-mutating private review persistence. The output keeps
+facts, source dates, limitations, assumptions, interpretations, disagreements, and
+proposals distinct and records the tools and lenses actually used.
+
+Routine contribution planning remains a direct deterministic path. Portfolio,
+overlap, and thesis reviews invoke only their relevant lenses. Missing or stale
+evidence can stop the workflow with `insufficient_evidence`; agreement between
+lenses is never treated as correctness. Details are in `docs/COMMITTEE.md`.
+
+The selected host is local Codex in this repository. The skill structure and
+metadata have been statically validated, but no global installation, generated
+plugin, ChatGPT host, MCP service, live provider, or true multi-agent runtime is
+implemented or claimed.
 
 ## Verification strategy
 

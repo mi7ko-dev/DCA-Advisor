@@ -2,7 +2,7 @@
 
 ## Active phase
 
-Phase 4 - Portfolio Intelligence and Research is complete and awaiting approval to continue.
+Phase 5 - Conversational Skill and Investment Committee is complete and awaiting approval to continue.
 
 ## Completed technical work
 
@@ -31,20 +31,27 @@ Phase 4 - Portfolio Intelligence and Research is complete and awaiting approval 
 - Added compatible-series cumulative return, annualized volatility, maximum drawdown, correlation, benchmark comparison, and explicit stress-window analysis.
 - Extended holding theses with approved target references, ranges, benchmarks, risks, triggers, and review dates; added evidence-separated, non-mutating review proposals.
 - Added public synthetic Phase 4 inputs, structured outputs, reports, schemas, and deterministic failure/invariant tests.
+- Added the canonical repo-local SteadyFolio skill with clear discovery metadata, bounded workflow instructions, approval gates, and progressively loaded references.
+- Added deterministic routing for contribution, portfolio-review, overlap-review, thesis-review, and clarification paths.
+- Added structured committee results that separate facts, sources/dates/limitations, assumptions, specialist interpretations, disagreements, synthesis, approval requirements, and the actual execution trace.
+- Added selective sequential review lenses with at most one research pass, one critic pass, one revision, and no live external calls; the output does not claim independent agent verification.
+- Added non-mutating committee-review persistence under `private/reviews/` and explicit approval boundaries for transactions and target or policy changes.
+- Added six fully synthetic end-to-end demonstrations covering EUR 400 contribution, portfolio review, ETF thesis review, partial overlap, residual drift, and missing/stale evidence with contradictory conclusions.
+- Validated the public skill structure with the bundled skill validator and added routing, integration, privacy, output, and repository-safety coverage.
 
 ## Open technical issues
 
 - AI Finance Assistant does not grant general code-reuse permission and must remain architecture-only reference material.
 - Wealthfolio and Ghostfolio are AGPL-3.0 at the repository root; main-code reuse is not recommended without an explicit later license decision.
-- Local Codex remains the only first supported runtime. A future generated plugin may provide a portability path, but no general ChatGPT/plugin compatibility has been tested or claimed.
+- Local Codex remains the only supported host. The repo-local skill was statically validated, but a fresh-host discovery test, global installation, generated plugin, and general ChatGPT compatibility have not been tested or claimed.
 - No upstream test suite was executed during the static audit; the review distinguishes inspected test coverage from locally reproduced results.
 - Hook templates are not enabled automatically because an existing local hook workflow must not be replaced without review.
 - The MVP supports ETF and stock positions only, direct or inverse FX pairs only, and does not model an existing portfolio cash balance.
-- Live market-data retrieval, broker connectivity, research agents, tax optimization, rebalancing sales, user interface, and host skill packaging remain outside the implemented boundary.
+- Live market-data retrieval, broker connectivity, true independent research agents, tax optimization, rebalancing sales, user interface, and host skill packaging remain outside the implemented boundary.
 - No live research provider is implemented; provider-specific authentication, terms validation, rate limits, caching, and optional live integration tests remain deferred.
 - Look-through data is deliberately partial, historical samples are illustrative, and all metrics are descriptive rather than predictive.
 - Tax and regulatory questions remain unresolved without current jurisdiction-specific primary sources.
 
 ## Next approval gate
 
-Phase 5 - Multi-Agent Investment Committee requires explicit approval. No approval is inferred from this file.
+Phase 6 - Final Hardening and Documentation requires explicit approval. No approval is inferred from this file.

@@ -1,6 +1,12 @@
 """SteadyFolio's deterministic, host-independent portfolio core."""
 
 from .calculations import analyze_portfolio, plan_contribution
+from .committee import (
+    committee_request_from_message,
+    route_request,
+    run_committee_workflow,
+)
+from .committee_models import *  # noqa: F403
 from .errors import (
     DuplicateIdentifierError,
     MissingFxRateError,
@@ -24,6 +30,7 @@ from .storage import (
     initialize_workspace,
     load_state,
     save_intelligence_result,
+    save_committee_review,
     save_state,
     save_thesis_review,
 )
@@ -35,10 +42,14 @@ __all__ = [
     "plan_contribution",
     "analyze_portfolio_intelligence",
     "review_investment_thesis",
+    "committee_request_from_message",
+    "route_request",
+    "run_committee_workflow",
     "initialize_workspace",
     "load_state",
     "save_state",
     "save_intelligence_result",
+    "save_committee_review",
     "save_thesis_review",
     "state_from_dict",
     "state_to_dict",

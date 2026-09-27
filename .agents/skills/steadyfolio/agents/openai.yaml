@@ -1,0 +1,6 @@
+interface:
+  display_name: "SteadyFolio"
+  short_description: "Deterministic portfolio maintenance reviews"
+  default_prompt: "Use $steadyfolio to review my portfolio with explicit sources and limitations."
+policy:
+  allow_implicit_invocation: true

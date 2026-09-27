@@ -199,3 +199,46 @@ must be recorded here and returned to an approval checkpoint before implementati
 Approval to execute Phase 4 accepted D-013 through D-015 for the bounded offline
 implementation. It did not authorize a live provider, external data transfer,
 tracked real research data, policy mutation, Phase 5 work, or publication.
+
+## D-016: Keep conversational routing deterministic and narrow
+
+- **Status:** Accepted
+- **Decision:** Route monthly contribution, portfolio review, fund-overlap, and ETF
+  thesis requests through explicit local request types and deterministic engine
+  operations. Ambiguous requests stop for clarification.
+- **Why:** A narrow router is testable and prevents conversational phrasing from
+  becoming a second calculation engine or an implicit authorization channel.
+- **Consequence:** Natural-language amount parsing accepts only an explicit
+  currency-first decimal form. Broader language support must preserve the same
+  structured validation boundary.
+
+## D-017: Implement committee roles as disclosed sequential review lenses
+
+- **Status:** Accepted
+- **Decision:** Phase 5 uses only the relevant allocation/diversification,
+  risk/cost/evidence, thesis-fit, and evidence-quality lenses over structured engine
+  results. It permits at most one research pass, one critic pass, one revision, and
+  zero live external calls.
+- **Why:** This provides useful challenge and synthesis without a framework
+  dependency, unbounded debate, or a false claim of independent verification.
+- **Consequence:** Outputs disclose actual tools and lenses. Lens agreement is not
+  correctness, conflicting conclusions remain visible, and insufficient evidence
+  stops the workflow.
+
+## D-018: Keep proposals and saved reviews non-mutating
+
+- **Status:** Accepted
+- **Decision:** Committee execution never changes holdings, transactions, theses,
+  or targets. Saving an explicitly authorized committee result writes only below
+  `private/reviews/`.
+- **Why:** Analysis approval is not transaction or policy approval, and a review
+  record must not masquerade as execution.
+- **Consequence:** Real transactions and target or policy changes require separate
+  explicit approval and future dedicated operations.
+
+## Phase 5 approval effects
+
+Approval to execute Phase 5 accepted D-016 through D-018 for the bounded local
+Codex workflow. It did not authorize a live provider, external data transfer, trade
+execution, policy mutation, global skill installation, plugin packaging, Phase 6
+work, publication, or pushing Phase 5 changes.
