@@ -26,25 +26,6 @@ The MVP deliberately excludes a web server, live brokerage integration, automati
 trading, broad market research, tax advice, credential storage, and advanced
 portfolio optimization.
 
-## Foundation comparison
-
-| Criterion | A: adapt CoFolio | B: clean skill with selected reference concepts | C: keep CoFolio largely intact and extend it |
-| --- | --- | --- | --- |
-| Simplicity | Moderate; less initial code, but inherited assumptions need removal | High; only the required paths are built | Low; two conceptual layers and compatibility work |
-| Required functionality | Partial; useful staged workflow and calculators | Exact; model and workflow can match SteadyFolio | Broad but still needs a separate domain extension |
-| Technical debt | Moderate; weak schemas and root-level state conventions must be corrected | Lowest controllable debt | Highest; legacy boundaries remain while new ones are added |
-| Testability | Moderate; existing behavior needs characterization first | High; pure functions and ports can be designed for tests | Moderate to low; behavior spans old and new paths |
-| Licensing | MIT permits reuse with notice | Clean-room project code; concepts only by default | MIT permits reuse with notice, but provenance is more complex |
-| Privacy fit | Requires material restructuring | Strong; private boundary is a first-class invariant | Weak until the inherited layout is replaced |
-| Maintenance | Tied to an upstream shape that is not the desired product model | Smallest stable surface and one calculation engine | Ongoing fork and extension maintenance |
-| Host compatibility | Skill shape is useful but not sufficient across hosts | Host-neutral core with explicit adapters and packaging path | Host assumptions remain embedded in the inherited layout |
-
-**Selected foundation: Option B.** The Phase 1 audit found valuable concepts in the
-references, but no upstream project combines the required privacy boundary, domain
-model, deterministic calculations, license posture, and MVP scope. A clean
-implementation avoids importing application-scale frameworks and avoids maintaining
-two engines that could disagree.
-
 ## System boundary
 
 ```text
@@ -147,7 +128,6 @@ examples/
 docs/
 tools/
 private/                 # ignored; real state and derived output
-blueprint/               # entirely ignored local reference material
 ```
 
 Phase 5 adds the canonical skill under `.agents/skills/steadyfolio/` and its
@@ -182,7 +162,7 @@ The Python core is host-independent. A later, explicitly authorized packaging st
 may generate a portable plugin bundle from the canonical skill and engine according
 to [OpenAI's plugin packaging guidance](https://developers.openai.com/plugins/build/plugins).
 Generated packaging must use an allowlist and a temporary output directory so
-`private/`, blueprint clones, caches, and repository history cannot enter the
+`private/`, caches, and repository history cannot enter the
 bundle. The target ChatGPT/Codex host must then be tested; compatibility is not
 assumed from directory shape alone.
 
@@ -393,7 +373,7 @@ incomplete data without network dependence.
 
 No separate artifact is required for the supported repository-local Codex use. If a
 future host requires packaging, its implementation must inventory an allowlisted
-build and fail if ignored paths, private instances, blueprint clones, VCS metadata,
+build and fail if ignored paths, private instances, VCS metadata,
 or local caches are present. It must also inspect the artifact and clean-install it
 before a separately approved publication.
 
@@ -401,20 +381,10 @@ before a separately approved publication.
 
 The approved project license is MIT and the repository includes the corresponding
 license file. Phase 3 is clean-room project code based on documented requirements
-and general concepts.
-
-- CoFolio and PyPortfolioOpt are MIT at the audited commits. If code is later copied
-  or adapted, their applicable copyright and license notices must accompany it.
-- FinRobot is Apache-2.0 with a `NOTICE`; any later reuse must preserve applicable
-  license/notice obligations and must not adopt its trademarks.
-- Finnie's inspected license does not grant general redistribution or reuse, so it
-  is architecture-only reference material.
-- Wealthfolio and Ghostfolio main repositories are AGPL-3.0. Their main-project code
-  will not be reused under this proposal. Any separately licensed subcomponent needs
-  a file-level license review before use.
-
-No copied upstream code is part of the Phase 3 implementation. License observations
-are engineering constraints, not legal advice.
+and general concepts. No copied upstream code is part of the implementation. Any
+future copied or adapted code requires a file-level provenance, license, notice,
+and trademark review before it enters the repository. These are engineering
+constraints, not legal advice.
 
 The completed implementation has no runtime third-party dependency and redistributes
 no upstream code, so it does not require a third-party notice file. The project MIT

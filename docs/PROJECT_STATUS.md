@@ -13,10 +13,6 @@ packaged, or published.
 - Added a Git-backed repository-safety checker, synthetic tests, and a minimal-permission CI workflow.
 - Added a redacted local Gitleaks workflow that scans Git history and public candidate files without scanning ignored private state.
 - Added optional pre-commit and pre-push hook templates without changing local or global Git configuration.
-- Shallow-cloned all six reference repositories into ignored `blueprint/` subdirectories and recorded their metadata in the local ignored reference workspace.
-- Recorded each reference URL, checkout state, commit, license location, preliminary license, and relevance.
-- Audited the six recorded reference commits and documented verified capabilities, calculation and test quality, privacy conflicts, scope fit, and licensing constraints in `docs/BLUEPRINT_REVIEW.md`.
-- Compared adapting CoFolio, building a clean skill from reviewed concepts, and retaining CoFolio with a separate extension; selected the clean repository-owned foundation as the proposed baseline.
 - Defined the proposed component boundaries, host-independent Python engine, canonical skill location, private workspace boundary, JSON/Markdown persistence, domain model, financial invariants, and bounded review workflow in `docs/ARCHITECTURE.md`.
 - Recorded the proposed foundation, runtime, storage, schema, committee, provenance, license, Phase 3 scope, and packaging decisions in `docs/DECISIONS.md`.
 - Verified the proposed repo-local skill and future plugin portability path against current official OpenAI skill and plugin documentation; target-host compatibility remains something to test, not assume.
@@ -79,8 +75,8 @@ Verification on 2026-09-27 completed with these results:
   staged-equivalent index containing every current public working-tree change.
 - Gitleaks 8.30.1 passed for all history reachable in the non-shallow local clone
   and 74 current public candidate files. The clone contained 24 reachable commits.
-- The staged diff was empty, no tracked symlink was present, nothing under
-  `blueprint/` was tracked, the manual authored-language and machine/user-identifier
+- The staged diff was empty, no tracked symlink was present, and the manual
+  authored-language and machine/user-identifier
   searches returned no finding, and the patch whitespace check passed.
 
 The local interpreter is Python 3.9.7 32-bit; Python 3.11, Ruff, and Pyright are not
@@ -95,8 +91,6 @@ attest to deleted remote refs, unavailable objects, forks, or private systems.
 
 ## Open technical issues
 
-- AI Finance Assistant does not grant general code-reuse permission and must remain architecture-only reference material.
-- Wealthfolio and Ghostfolio are AGPL-3.0 at the repository root; main-code reuse is not recommended without an explicit later license decision.
 - Local Codex remains the only supported host. Discovery is verified in the current
   repository session, but a clean-machine host test, global installation, generated
   plugin, and general ChatGPT compatibility have not been tested or claimed.

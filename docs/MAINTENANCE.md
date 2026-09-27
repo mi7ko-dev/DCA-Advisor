@@ -71,7 +71,7 @@ currently produced.
 
 If a future host requires a distributable artifact, build it in a temporary
 directory from an explicit allowlist. Fail if its inventory contains `private/`,
-`blueprint/`, `.git/`, credentials, caches, local outputs, or files outside the
+`.git/`, credentials, caches, local outputs, or files outside the
 allowlist. Inspect the archive, verify notices, and test a clean installation before
 publication. A local build is not permission to publish.
 

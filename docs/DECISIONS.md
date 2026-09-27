@@ -14,8 +14,8 @@ packaging, publishing, later phases, or tracked real user data.
 - **Why:** This is the smallest option that satisfies the public/private boundary,
   explicit schema, deterministic testing, and narrow MVP without a compatibility
   layer or application-scale dependencies.
-- **Rejected:** Adapting CoFolio directly would require replacing important state
-  and schema assumptions. Keeping it intact plus an extension would produce two
+- **Rejected:** Adapting an upstream application would require replacing important
+  state and schema assumptions. Keeping it intact plus an extension would produce two
   overlapping product models and the highest maintenance cost.
 - **Consequence:** Phase 3 must implement only approved behavior and cannot copy
   source merely because a reference repository is public.
@@ -50,8 +50,8 @@ packaging, publishing, later phases, or tracked real user data.
   library and `decimal.Decimal` unless a dependency has a demonstrated need.
 - **Why:** Pure Python functions are deterministic, portable, inspectable, and easy
   to test. They prevent prompt logic from becoming an unversioned second engine.
-- **Consequence:** NumPy, pandas, CVXPY, PyPortfolioOpt, LangGraph, AutoGen, and a
-  server framework are outside the MVP.
+- **Consequence:** Numerical, optimization, agent, and server frameworks are outside
+  the MVP unless a demonstrated requirement justifies them.
 
 ## D-005: Use JSON and Markdown private storage in the MVP
 
@@ -135,13 +135,11 @@ packaging, publishing, later phases, or tracked real user data.
 - **Decision:** Use MIT for SteadyFolio with the repository license file added in
   Phase 3. Prefer concepts and independently authored code. Record required notices
   before any file-level upstream reuse.
-- **Why:** MIT fits a small portable public skill, but the audited references have
-  different obligations: MIT, Apache-2.0 plus notice/trademark terms, AGPL-3.0, and
-  source-viewing-only terms.
-- **Consequence:** Finnie code and AGPL application code from Wealthfolio or
-  Ghostfolio are excluded. CoFolio, PyPortfolioOpt, FinRobot, or a separately
-  licensed component may be reused only after a specific provenance and notice
-  review. This is an engineering policy, not legal advice.
+- **Why:** MIT fits a small portable public skill, while copied or adapted third-party
+  code can introduce different license, notice, copyleft, and trademark obligations.
+- **Consequence:** Third-party code may be reused only after a specific file-level
+  provenance, license, and notice review. This is an engineering policy, not legal
+  advice.
 
 ## D-012: Package by allowlist only
 
@@ -151,7 +149,7 @@ packaging, publishing, later phases, or tracked real user data.
 - **Why:** Copying the repository and then applying exclusions risks publishing
   ignored state, reference clones, caches, or Git history.
 - **Consequence:** Packaging needs its own approval, inventory test, host test, and
-  license-notice check. `private/`, `blueprint/` clones, `.git/`, caches, and local
+  license-notice check. `private/`, `.git/`, caches, and local
   outputs are never package inputs.
 
 ## Phase 3 approval effects

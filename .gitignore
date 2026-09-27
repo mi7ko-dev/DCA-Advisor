@@ -17,8 +17,7 @@
 /context/private/
 /portfolio/private/
 
-# Reference material and disposable local work
-/blueprint/
+# Disposable local work
 /workspace/
 /workdir/
 /worktrees/
