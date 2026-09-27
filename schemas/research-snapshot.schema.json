@@ -4,9 +4,28 @@
   "title": "SteadyFolio Research Snapshot",
   "type": "object",
   "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {"schema_version": {"const": "1.1"}},
+        "required": ["schema_version"]
+      },
+      "then": {
+        "properties": {
+          "historical_series": {
+            "items": {
+              "properties": {
+                "observations": {"minItems": 3}
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
   "required": ["schema_version", "sources", "funds", "fund_holdings", "classified_exposures", "historical_series"],
   "properties": {
-    "schema_version": {"const": "1.0"},
+    "schema_version": {"enum": ["1.0", "1.1"]},
     "sources": {"type": "array", "items": {"$ref": "#/$defs/source"}},
     "funds": {"type": "array", "items": {"$ref": "#/$defs/fund"}},
     "fund_holdings": {"type": "array", "items": {"$ref": "#/$defs/holding"}},
@@ -101,7 +120,7 @@
         "return_convention": {"enum": ["price_index", "total_return_index"]},
         "distribution_treatment": {"enum": ["included", "excluded"]},
         "corporate_action_treatment": {"type": "string", "minLength": 1},
-        "observations": {"type": "array", "minItems": 3, "items": {"$ref": "#/$defs/observation"}},
+        "observations": {"type": "array", "minItems": 2, "items": {"$ref": "#/$defs/observation"}},
         "as_of": {"$ref": "#/$defs/date"},
         "source_id": {"$ref": "#/$defs/id"}
       }

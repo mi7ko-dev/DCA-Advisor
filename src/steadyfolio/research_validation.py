@@ -12,6 +12,7 @@ from typing import Any
 from .errors import ValidationError
 from .research_models import (
     RESEARCH_SCHEMA_VERSION,
+    SUPPORTED_RESEARCH_SCHEMA_VERSIONS,
     THESIS_EVIDENCE_KINDS,
     ClassifiedExposure,
     FundHolding,
@@ -366,7 +367,7 @@ def research_snapshot_from_dict(raw: Mapping[str, Any]) -> ResearchSnapshot:
 
 
 def validate_research_snapshot(snapshot: ResearchSnapshot) -> None:
-    if snapshot.schema_version != RESEARCH_SCHEMA_VERSION:
+    if snapshot.schema_version not in SUPPORTED_RESEARCH_SCHEMA_VERSIONS:
         raise ValidationError("Unsupported research snapshot schema version.")
 
     sources: dict[str, ResearchSource] = {}
@@ -469,9 +470,14 @@ def validate_research_snapshot(snapshot: ResearchSnapshot) -> None:
             raise ValidationError("Unknown historical return convention.")
         if series.distribution_treatment not in {"included", "excluded"}:
             raise ValidationError("Unknown distribution treatment.")
-        if len(series.observations) < 3:
+        minimum_observations = (
+            3 if snapshot.schema_version == RESEARCH_SCHEMA_VERSION else 2
+        )
+        if len(series.observations) < minimum_observations:
             raise ValidationError(
-                "Historical series need at least three observations for volatility."
+                "Research snapshot schema "
+                f"{snapshot.schema_version} historical series need at least "
+                f"{minimum_observations} observations."
             )
         dates = [_date(item.date, "historical_series[].observations[].date") for item in series.observations]
         if dates != sorted(dates) or len(set(dates)) != len(dates):

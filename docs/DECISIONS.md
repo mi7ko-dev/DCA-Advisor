@@ -278,9 +278,11 @@ work, publication, or pushing Phase 5 changes.
   non-comparable holdings dates, undersized historical series, invalid evidence
   kinds, inactive thesis reviews, partial numeric-token matches, and rewrites of
   approved allocation versions. Normalize only target weights already valid within
-  tolerance. Fingerprint every plan-defining input in contribution IDs. Treat empty
-  or zero-coverage research as missing evidence, and apply critic and revision
-  limits independently.
+  tolerance. Fingerprint every plan-defining input, including selected listing
+  constraints, in contribution IDs. Treat empty or zero-coverage research as
+  missing evidence, and apply critic and revision limits independently. Version
+  the stricter historical-series minimum as research schema `1.1` while retaining
+  explicit read compatibility for schema `1.0`.
 - **Why:** Input order, implicit coercion, missing coverage, and loosely coupled
   orchestration limits can otherwise produce reproducible-looking but unsupported
   financial output.

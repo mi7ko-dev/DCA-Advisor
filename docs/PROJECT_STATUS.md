@@ -59,12 +59,16 @@ packaged, or published.
   hardening rejects ambiguous market and evidence inputs, preserves approved
   allocation history, validates derived outputs before saving, and treats absent
   coverage as insufficient evidence.
+- Addressed follow-up review findings by fingerprinting selected listing
+  constraints, rejecting contribution amounts joined to identifier characters,
+  and versioning the three-observation research contract as schema `1.1` with
+  explicit read compatibility for schema `1.0`.
 
 ## Phase 6 local verification record
 
 Verification on 2026-09-27 completed with these results:
 
-- 106 unit, integration, privacy, invariant, repository-safety, and skill-structure
+- 109 unit, integration, privacy, invariant, repository-safety, and skill-structure
   tests passed with zero skips.
 - Python compilation passed for `src/`, `tests/`, and `tools/`.
 - All three synthetic generators reproduced the working-tree examples byte for byte

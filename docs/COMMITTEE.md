@@ -47,7 +47,8 @@ a revision when `max_revisions` is zero.
 
 Currency-first contribution parsing accepts only an unsigned decimal token with at
 most two fractional digits. Unsupported grouped or over-precise forms such as
-`EUR 1,000` and `EUR 400.000` are not partially interpreted as smaller amounts.
+`EUR 1,000` and `EUR 400.000`, and amounts joined to identifier characters such as
+`EUR 400USD`, are not partially interpreted as smaller amounts.
 
 ## Output contract
 

@@ -93,9 +93,14 @@ The Phase 4 MVP accepts positive index levels with an explicit:
 Portfolio series used together must have identical observation dates, currency,
 frequency, return convention, distribution treatment, and corporate-action
 treatment. The MVP requires the portfolio base currency and does not perform a
-second implicit historical FX conversion. Each series requires at least three
-levels so volatility is based on at least two returns rather than reporting a
-misleading zero from one return.
+second implicit historical FX conversion. Current research snapshots use schema
+`1.1`, which requires at least three levels so volatility is based on at least two
+returns rather than reporting a misleading zero from one return.
+
+Legacy schema `1.0` remains readable with its original two-observation minimum. A
+legacy series containing only two levels is retained as sourced evidence, but no
+historical volatility metric is emitted from its single return; the intelligence
+result records an explicit limitation. Unknown schema versions are rejected.
 
 Simple periodic return is `current / previous - 1`. Cumulative return is
 `last / first - 1`. Annualized volatility is sample standard deviation multiplied
