@@ -6,7 +6,8 @@ from dataclasses import dataclass
 from decimal import Decimal
 
 
-RESEARCH_SCHEMA_VERSION = "1.0"
+RESEARCH_SCHEMA_VERSION = "1.1"
+SUPPORTED_RESEARCH_SCHEMA_VERSIONS = frozenset({"1.0", RESEARCH_SCHEMA_VERSION})
 INTELLIGENCE_CALCULATION_VERSION = "1.0"
 THESIS_EVIDENCE_KINDS = frozenset(
     {

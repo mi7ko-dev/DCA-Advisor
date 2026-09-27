@@ -396,7 +396,9 @@ def _contribution_plan_id(
     valuation_date: str,
     constraints: Sequence[TradingConstraint],
     preferred_listings: Mapping[str, str],
+    lines: Sequence[ContributionLine],
 ) -> str:
+    selected_listing_ids = {line.listing_id for line in lines}
     payload = {
         "calculation_version": CALCULATION_VERSION,
         "investor_id": state.investor_profile.id,
@@ -410,6 +412,13 @@ def _contribution_plan_id(
         "valuation_date": valuation_date,
         "constraints": _canonical_records(constraints),
         "preferred_listings": dict(sorted(preferred_listings.items())),
+        "selected_listings": _canonical_records(
+            tuple(
+                listing
+                for listing in state.listings
+                if listing.id in selected_listing_ids
+            )
+        ),
     }
     encoded = json.dumps(
         payload, ensure_ascii=True, separators=(",", ":"), sort_keys=True
@@ -627,6 +636,7 @@ def plan_contribution(
             valuation_date,
             constraints,
             preferred,
+            lines,
         ),
         calculation_version=CALCULATION_VERSION,
         method=method,

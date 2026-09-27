@@ -129,8 +129,9 @@ or change an approved target.
 
 Each plan ID includes a deterministic SHA-256 fingerprint of its calculation
 version, approved allocation, analysis, market inputs, contribution amount,
-constraints, and preferred listings. Reordering equivalent input collections does
-not change the ID, while a plan-defining input change does.
+constraints, preferred listings, and the selected listing records with their hard
+trading constraints. Reordering equivalent input collections does not change the
+ID, while a plan-defining input change does.
 
 ## MVP limitations
 

@@ -16,15 +16,11 @@ import run_repository_checks  # noqa: E402
 
 
 class RepositorySafetyTests(unittest.TestCase):
-    def test_blueprint_paths_are_forbidden(self) -> None:
+    def test_local_runtime_paths_are_forbidden(self) -> None:
         self.assertTrue(
-            repository_safety.is_explicitly_forbidden(
-                "blueprint/BLUEPRINT_SOURCES.md"
-            )
+            repository_safety.is_explicitly_forbidden("workspace/scratch.txt")
         )
-        self.assertTrue(
-            repository_safety.is_explicitly_forbidden("blueprint/cofolio/README.md")
-        )
+        self.assertTrue(repository_safety.is_explicitly_forbidden("cache/state.db"))
 
     def test_sensitive_and_runtime_paths_are_ignored(self) -> None:
         for relative_path in repository_safety.IGNORED_PATHS:

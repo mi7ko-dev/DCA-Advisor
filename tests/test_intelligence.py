@@ -213,13 +213,60 @@ class ProviderAndValidationTests(unittest.TestCase):
             snapshot.historical_series[0],
             observations=snapshot.historical_series[0].observations[:2],
         )
-        with self.assertRaisesRegex(ValidationError, "three observations"):
+        with self.assertRaisesRegex(ValidationError, "at least 3 observations"):
             validate_research_snapshot(
                 replace(
                     snapshot,
                     historical_series=(shortened,) + snapshot.historical_series[1:],
                 )
             )
+
+    def test_legacy_two_observation_series_omits_volatility(self) -> None:
+        state, analysis, _, _ = _inputs()
+        raw = deepcopy(_read(EXAMPLES / "research-snapshot.example.json"))
+        raw["schema_version"] = "1.0"
+        raw["historical_series"] = [raw["historical_series"][0]]
+        raw["historical_series"][0]["observations"] = raw["historical_series"][0][
+            "observations"
+        ][:2]
+        legacy = research_snapshot_from_dict(raw)
+
+        result = analyze_portfolio_intelligence(
+            state, analysis, legacy, ANALYSIS_DATE
+        )
+
+        self.assertFalse(result.historical_metrics)
+        self.assertTrue(
+            any(
+                "legacy research series has fewer than three observations"
+                in warning
+                for warning in result.warnings
+            )
+        )
+
+    def test_research_schema_versions_the_observation_minimum(self) -> None:
+        schema = _read(REPOSITORY_ROOT / "schemas" / "research-snapshot.schema.json")
+        self.assertEqual(
+            schema["properties"]["schema_version"]["enum"], ["1.0", "1.1"]
+        )
+        self.assertEqual(
+            schema["$defs"]["series"]["properties"]["observations"]["minItems"],
+            2,
+        )
+        self.assertEqual(
+            schema["allOf"][0]["then"]["properties"]["historical_series"]
+            ["items"]["properties"]["observations"]["minItems"],
+            3,
+        )
+        self.assertEqual(
+            _read(EXAMPLES / "research-snapshot.example.json")["schema_version"],
+            "1.1",
+        )
+
+    def test_unknown_research_schema_version_is_rejected(self) -> None:
+        _, _, snapshot, _ = _inputs()
+        with self.assertRaisesRegex(ValidationError, "Unsupported research snapshot"):
+            validate_research_snapshot(replace(snapshot, schema_version="2.0"))
 
     def test_stress_window_identifiers_are_validated_for_parsed_and_direct_inputs(self) -> None:
         with self.assertRaisesRegex(ValidationError, "stable identifier"):

@@ -42,7 +42,7 @@ from .thesis import review_investment_thesis
 _IDENTIFIER = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$")
 _AMOUNT = re.compile(
     r"\b(?P<currency>[A-Z]{3})\s*"
-    r"(?P<amount>[0-9]+(?:[.,][0-9]{1,2})?)(?![0-9.,])"
+    r"(?P<amount>[0-9]+(?:[.,][0-9]{1,2})?)\b(?![.,][0-9])"
 )
 _EXECUTION_MODE = (
     "deterministic engine with sequential review lenses; no independent agents"

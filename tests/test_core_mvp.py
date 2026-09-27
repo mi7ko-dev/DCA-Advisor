@@ -756,10 +756,47 @@ class ContributionPlanningTests(unittest.TestCase):
             VALUATION_DATE,
             constraints,
         )
+        changed_listings = tuple(
+            replace(listing, quantity_increment=Decimal("3"))
+            if listing.id == "listing-global-xetr"
+            else listing
+            for listing in state.listings
+        )
+        changed_listing_state = replace(state, listings=changed_listings)
+        changed_listing_analysis = analyze_portfolio(
+            changed_listing_state, prices, fx_rates, VALUATION_DATE
+        )
+        baseline_without_overrides = plan_contribution(
+            state,
+            analysis,
+            prices,
+            fx_rates,
+            Decimal("400"),
+            "EUR",
+            "simple",
+            VALUATION_DATE,
+        )
+        changed_listing_plan = plan_contribution(
+            changed_listing_state,
+            changed_listing_analysis,
+            prices,
+            fx_rates,
+            Decimal("400"),
+            "EUR",
+            "simple",
+            VALUATION_DATE,
+        )
 
         self.assertEqual(baseline.id, repeated.id)
         self.assertNotEqual(baseline.id, changed_amount.id)
         self.assertNotEqual(baseline.id, changed_market.id)
+        self.assertNotEqual(
+            baseline_without_overrides.id, changed_listing_plan.id
+        )
+        self.assertNotEqual(
+            baseline_without_overrides.lines[0].quantity,
+            changed_listing_plan.lines[0].quantity,
+        )
 
 
 class StorageAndReportingTests(unittest.TestCase):

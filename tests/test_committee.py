@@ -124,7 +124,13 @@ class RoutingTests(unittest.TestCase):
                 self.assertEqual(route_request(request), expected)
 
     def test_unsupported_numeric_tokens_are_not_partially_parsed(self) -> None:
-        for token in ("EUR 1,000", "EUR 400.000"):
+        for token in (
+            "EUR 1,000",
+            "EUR 400.000",
+            "EUR 400USD",
+            "EUR 400abc",
+            "EUR 400_foo",
+        ):
             with self.subTest(token=token):
                 request = committee_request_from_message(
                     "request-invalid-amount",

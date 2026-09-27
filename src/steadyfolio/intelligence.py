@@ -563,6 +563,13 @@ def _historical_analysis(
     metrics: list[HistoricalMetric] = []
     for instrument_id, series in selected.items():
         used_sources.add(series.source_id)
+        if len(series.observations) < 3:
+            warnings.append(
+                "Historical volatility is unavailable for "
+                f"{instrument_id}; the legacy research series has fewer than "
+                "three observations."
+            )
+            continue
         thesis = theses.get(instrument_id)
         benchmark_series: HistoricalSeries | None = None
         benchmark_listing_id: str | None = None
