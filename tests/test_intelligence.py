@@ -25,8 +25,12 @@ from steadyfolio.intelligence_reporting import (  # noqa: E402
 from steadyfolio.models import to_json_value  # noqa: E402
 from steadyfolio.providers import ResearchProvider, StaticResearchProvider  # noqa: E402
 from steadyfolio.research_models import (  # noqa: E402
+    HistoricalObservation,
     ResearchRequest,
     ResearchSnapshot,
+    ResearchSource,
+    StressWindow,
+    ThesisEvidence,
 )
 from steadyfolio.research_validation import (  # noqa: E402
     research_snapshot_from_dict,
@@ -85,7 +89,7 @@ class ProviderAndValidationTests(unittest.TestCase):
         self.assertIsInstance(provider, ResearchProvider)
         self.assertEqual(
             {field.name for field in fields(ResearchRequest)},
-            {"instrument_ids", "listing_ids", "as_of"},
+            {"instrument_ids", "listing_ids", "as_of", "source_ids"},
         )
         supplied = provider.fetch(
             ResearchRequest(
@@ -117,6 +121,71 @@ class ProviderAndValidationTests(unittest.TestCase):
             {"listing-global-xetr"},
         )
 
+    def test_static_provider_checks_dates_after_filtering(self) -> None:
+        _, _, snapshot, _ = _inputs()
+        future_source = ResearchSource(
+            id="synthetic-future-unused",
+            provider="Synthetic Provider",
+            reference="synthetic-future-unused",
+            as_of="2026-02-01",
+            retrieved_at="2026-02-01T18:00:00+00:00",
+            methodology="Synthetic excluded record",
+            limitations=(),
+            freshness_days=1,
+            terms_reference="project-generated-synthetic-data",
+            cache_permitted=True,
+            redistribution_permitted=True,
+        )
+        future_exposure = replace(
+            snapshot.classified_exposures[-1],
+            label="Synthetic excluded exposure",
+            weight=Decimal("0.01"),
+            as_of="2026-02-01",
+            source_id=future_source.id,
+        )
+        mixed_snapshot = replace(
+            snapshot,
+            sources=(*snapshot.sources, future_source),
+            classified_exposures=(*snapshot.classified_exposures, future_exposure),
+        )
+        provider = StaticResearchProvider("Synthetic Provider", mixed_snapshot)
+
+        filtered = provider.fetch(
+            ResearchRequest(
+                instrument_ids=("instrument-global",),
+                listing_ids=("listing-global-xetr",),
+                as_of=ANALYSIS_DATE,
+            )
+        )
+
+        self.assertNotIn(future_source.id, {item.id for item in filtered.sources})
+
+    def test_static_provider_retains_explicit_evidence_only_source(self) -> None:
+        _, _, snapshot, _ = _inputs()
+        evidence_source = ResearchSource(
+            id="synthetic-evidence-only",
+            provider="Synthetic Provider",
+            reference="synthetic-evidence-only",
+            as_of="2026-01-15",
+            retrieved_at="2026-01-15T18:00:00+00:00",
+            methodology="Synthetic thesis evidence",
+            limitations=(),
+            freshness_days=30,
+            terms_reference="project-generated-synthetic-data",
+            cache_permitted=True,
+            redistribution_permitted=True,
+        )
+        provider = StaticResearchProvider(
+            "Synthetic Provider",
+            replace(snapshot, sources=(*snapshot.sources, evidence_source)),
+        )
+
+        filtered = provider.fetch(
+            ResearchRequest((), (), ANALYSIS_DATE, (evidence_source.id,))
+        )
+
+        self.assertEqual(filtered.sources, (evidence_source,))
+
     def test_research_snapshot_rejects_overstated_holdings_coverage(self) -> None:
         _, _, snapshot, _ = _inputs()
         first = replace(snapshot.fund_holdings[0], weight=Decimal("0.95"))
@@ -131,6 +200,49 @@ class ProviderAndValidationTests(unittest.TestCase):
         raw["funds"][0]["ter"] = 0.002
         with self.assertRaisesRegex(ValidationError, "decimal string"):
             research_snapshot_from_dict(raw)
+
+    def test_research_snapshot_rejects_noncanonical_decimal_strings(self) -> None:
+        raw = deepcopy(_read(EXAMPLES / "research-snapshot.example.json"))
+        raw["funds"][0]["ter"] = "2e-3"
+        with self.assertRaisesRegex(ValidationError, "canonical decimal"):
+            research_snapshot_from_dict(raw)
+
+    def test_short_historical_series_is_rejected_for_volatility(self) -> None:
+        _, _, snapshot, _ = _inputs()
+        shortened = replace(
+            snapshot.historical_series[0],
+            observations=snapshot.historical_series[0].observations[:2],
+        )
+        with self.assertRaisesRegex(ValidationError, "three observations"):
+            validate_research_snapshot(
+                replace(
+                    snapshot,
+                    historical_series=(shortened,) + snapshot.historical_series[1:],
+                )
+            )
+
+    def test_stress_window_identifiers_are_validated_for_parsed_and_direct_inputs(self) -> None:
+        with self.assertRaisesRegex(ValidationError, "stable identifier"):
+            stress_windows_from_dict(
+                [
+                    {
+                        "id": "bad id",
+                        "name": "Synthetic Window",
+                        "start_date": "2025-01-01",
+                        "end_date": "2025-02-01",
+                    }
+                ]
+            )
+
+        state, analysis, snapshot, _ = _inputs()
+        with self.assertRaisesRegex(ValidationError, "stable identifier"):
+            analyze_portfolio_intelligence(
+                state,
+                analysis,
+                snapshot,
+                ANALYSIS_DATE,
+                (StressWindow("bad id", "Synthetic Window", "2025-01-01", "2025-02-01"),),
+            )
 
     def test_thesis_target_must_match_approved_policy(self) -> None:
         state, _, _, _ = _inputs()
@@ -191,6 +303,23 @@ class PortfolioIntelligenceTests(unittest.TestCase):
                 for item in result.exposures
             )
         )
+
+    def test_overlap_rejects_incompatible_holdings_dates(self) -> None:
+        state, analysis, snapshot, stress = _inputs()
+        changed_holdings = tuple(
+            replace(item, as_of="2025-12-30")
+            if item.fund_instrument_id == "instrument-bond"
+            else item
+            for item in snapshot.fund_holdings
+        )
+        with self.assertRaisesRegex(ValidationError, "same-date holdings"):
+            analyze_portfolio_intelligence(
+                state,
+                analysis,
+                replace(snapshot, fund_holdings=changed_holdings),
+                ANALYSIS_DATE,
+                stress,
+            )
 
     def test_source_freshness_and_terms_are_retained(self) -> None:
         state, analysis, snapshot, stress = _inputs()
@@ -337,8 +466,82 @@ class PortfolioIntelligenceTests(unittest.TestCase):
         }
         self.assertEqual(exposures[stock.id], Decimal("0.2"))
 
+    def test_direct_and_look_through_company_exposure_aggregate_by_identifier(self) -> None:
+        state, analysis, snapshot, stress = _inputs()
+        stock = replace(state.instruments[1], kind="stock")
+        stock_state = replace(
+            state,
+            instruments=(state.instruments[0], stock) + state.instruments[2:],
+        )
+        linked_holding = replace(
+            snapshot.fund_holdings[0],
+            constituent_id=stock.id,
+            constituent_name="Synthetic Provider Display Name",
+        )
+        changed_snapshot = replace(
+            snapshot,
+            funds=tuple(item for item in snapshot.funds if item.instrument_id != stock.id),
+            fund_holdings=(linked_holding,)
+            + tuple(
+                item
+                for item in snapshot.fund_holdings[1:]
+                if item.fund_instrument_id != stock.id
+            ),
+        )
+
+        result = analyze_portfolio_intelligence(
+            stock_state, analysis, changed_snapshot, ANALYSIS_DATE, stress
+        )
+        matching = tuple(
+            item
+            for item in result.company_concentration.exposures
+            if item.constituent_id == stock.id
+        )
+        self.assertEqual(len(matching), 1)
+        self.assertEqual(matching[0].name, stock.name)
+        self.assertEqual(matching[0].observed_portfolio_weight, Decimal("0.264"))
+
 
 class ThesisReviewTests(unittest.TestCase):
+    def test_inactive_thesis_cannot_be_reviewed(self) -> None:
+        state, _, snapshot, _ = _inputs()
+        inactive = replace(state.investment_theses[0], status="retired")
+        inactive_state = replace(
+            state,
+            investment_theses=(inactive,) + state.investment_theses[1:],
+        )
+        with self.assertRaisesRegex(ValidationError, "active investment thesis"):
+            review_investment_thesis(
+                inactive_state, inactive.id, (), (), ANALYSIS_DATE, snapshot
+            )
+
+    def test_unknown_thesis_evidence_kind_is_rejected(self) -> None:
+        raw, _ = _thesis_input()
+        invalid_raw = deepcopy(raw["evidence"])
+        invalid_raw[0]["kind"] = "price"
+        with self.assertRaisesRegex(ValidationError, "evidence kind"):
+            thesis_evidence_from_dict(invalid_raw)
+
+        state, _, snapshot, _ = _inputs()
+        invalid = ThesisEvidence(
+            id="evidence-unknown-kind",
+            instrument_id="instrument-global",
+            kind="price",
+            summary="Synthetic unsupported evidence kind.",
+            observed_at="2026-01-15",
+            source_id="synthetic-fund-facts",
+            assessment="contradicts",
+        )
+        with self.assertRaisesRegex(ValidationError, "evidence kind"):
+            review_investment_thesis(
+                state,
+                "thesis-global",
+                (invalid,),
+                (),
+                ANALYSIS_DATE,
+                snapshot,
+            )
+
     def test_price_decline_alone_does_not_fail_or_mutate_thesis(self) -> None:
         state, _, snapshot, _ = _inputs()
         raw, evidence = _thesis_input()
@@ -427,6 +630,22 @@ class OutputTests(unittest.TestCase):
         self.assertIn("## Evidence facts", thesis_report)
         self.assertIn("## Interpretation", thesis_report)
         self.assertIn("does not mutate holdings", thesis_report)
+        self.assertTrue(intelligence_report.startswith("# Portfolio Intelligence Report"))
+        self.assertTrue(thesis_report.startswith("# Investment Thesis Review"))
+
+    def test_intelligence_report_escapes_instrument_names_in_tables(self) -> None:
+        state, analysis, snapshot, stress = _inputs()
+        renamed = replace(state.instruments[0], name="Synthetic | Global\nETF")
+        changed_state = replace(
+            state, instruments=(renamed,) + state.instruments[1:]
+        )
+        result = analyze_portfolio_intelligence(
+            changed_state, analysis, snapshot, ANALYSIS_DATE, stress
+        )
+
+        report = render_intelligence_report(changed_state, result)
+
+        self.assertIn("Synthetic \\| Global ETF", report)
 
     def test_private_intelligence_and_review_outputs_stay_below_private(self) -> None:
         state, analysis, snapshot, stress = _inputs()

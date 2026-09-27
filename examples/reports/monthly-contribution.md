@@ -1,4 +1,4 @@
-# Synthetic Monthly Contribution Plan
+# Monthly Contribution Plan
 
 Method: `drift_aware`
 Valuation date: 2026-01-31
@@ -29,5 +29,5 @@ No sale or executed transaction is created by this proposal.
 
 - Source records: `synthetic-prices-2026-01-31`
 - Calculation version: `1.0`
-- Prices, FX rates, fees, and fractional-share settings are synthetic assumptions.
-- This scenario is not a forecast or financial advice.
+- Prices, FX rates, fees, and fractional-share settings are supplied inputs; verify their provenance.
+- This proposal is not a forecast or financial advice.

@@ -12,6 +12,7 @@ from typing import Any
 from .errors import ValidationError
 from .research_models import (
     RESEARCH_SCHEMA_VERSION,
+    THESIS_EVIDENCE_KINDS,
     ClassifiedExposure,
     FundHolding,
     FundProfile,
@@ -26,6 +27,10 @@ from .research_models import (
 
 _CURRENCY = re.compile(r"^[A-Z]{3}$")
 _IDENTIFIER = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$")
+_DECIMAL_TEXT = re.compile(r"^-?(0|[1-9][0-9]*)(\.[0-9]+)?$")
+_DATE_TIME = re.compile(
+    r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$"
+)
 _WEIGHT_TOLERANCE = Decimal("0.00000001")
 
 
@@ -77,6 +82,8 @@ def _decimal(value: Any, field: str, *, optional: bool = False) -> Decimal | Non
         return None
     if not isinstance(value, str):
         raise ValidationError(f"{field} must be a decimal string.")
+    if not _DECIMAL_TEXT.fullmatch(value):
+        raise ValidationError(f"{field} must be a canonical decimal string.")
     try:
         result = Decimal(value)
     except InvalidOperation as error:
@@ -106,8 +113,10 @@ def _date(value: str, field: str) -> date:
 
 
 def _datetime(value: str, field: str) -> datetime:
+    if not _DATE_TIME.fullmatch(value):
+        raise ValidationError(f"{field} must be a timezone-aware ISO datetime.")
     try:
-        result = datetime.fromisoformat(value)
+        result = datetime.fromisoformat(value.replace("Z", "+00:00"))
     except ValueError as error:
         raise ValidationError(f"{field} must be an ISO datetime.") from error
     if result.tzinfo is None:
@@ -460,8 +469,10 @@ def validate_research_snapshot(snapshot: ResearchSnapshot) -> None:
             raise ValidationError("Unknown historical return convention.")
         if series.distribution_treatment not in {"included", "excluded"}:
             raise ValidationError("Unknown distribution treatment.")
-        if len(series.observations) < 2:
-            raise ValidationError("Historical series need at least two observations.")
+        if len(series.observations) < 3:
+            raise ValidationError(
+                "Historical series need at least three observations for volatility."
+            )
         dates = [_date(item.date, "historical_series[].observations[].date") for item in series.observations]
         if dates != sorted(dates) or len(set(dates)) != len(dates):
             raise ValidationError("Historical observation dates must be unique and increasing.")
@@ -486,14 +497,26 @@ def stress_windows_from_dict(raw: Sequence[Mapping[str, Any]]) -> tuple[StressWi
             start_date=_string(item["start_date"], "stress_windows[].start_date"),
             end_date=_string(item["end_date"], "stress_windows[].end_date"),
         )
+        windows.append(window)
+    result = tuple(windows)
+    validate_stress_windows(result)
+    return result
+
+
+def validate_stress_windows(windows: Sequence[StressWindow]) -> None:
+    """Validate parsed or directly constructed stress-window records."""
+
+    identifiers: set[str] = set()
+    for window in windows:
+        _identifier(window.id, "stress_windows[].id")
+        _string(window.name, "stress_windows[].name")
+        if window.id in identifiers:
+            raise ValidationError("Stress window identifiers must be unique.")
         if _date(window.start_date, "stress_windows[].start_date") >= _date(
             window.end_date, "stress_windows[].end_date"
         ):
             raise ValidationError("A stress window must end after it starts.")
-        windows.append(window)
-    if len({window.id for window in windows}) != len(windows):
-        raise ValidationError("Stress window identifiers must be unique.")
-    return tuple(windows)
+        identifiers.add(window.id)
 
 
 def thesis_evidence_from_dict(raw: Sequence[Mapping[str, Any]]) -> tuple[ThesisEvidence, ...]:
@@ -532,6 +555,8 @@ def thesis_evidence_from_dict(raw: Sequence[Mapping[str, Any]]) -> tuple[ThesisE
         _date(parsed.observed_at, "thesis_evidence[].observed_at")
         if parsed.assessment not in {"supports", "neutral", "contradicts"}:
             raise ValidationError("Unknown thesis evidence assessment.")
+        if parsed.kind not in THESIS_EVIDENCE_KINDS:
+            raise ValidationError("Unknown thesis evidence kind.")
         evidence.append(parsed)
     if len({item.id for item in evidence}) != len(evidence):
         raise ValidationError("Thesis evidence identifiers must be unique.")

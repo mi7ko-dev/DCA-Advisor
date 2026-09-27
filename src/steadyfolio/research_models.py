@@ -8,6 +8,16 @@ from decimal import Decimal
 
 RESEARCH_SCHEMA_VERSION = "1.0"
 INTELLIGENCE_CALCULATION_VERSION = "1.0"
+THESIS_EVIDENCE_KINDS = frozenset(
+    {
+        "benchmark_change",
+        "cost_change",
+        "fund_structure",
+        "fundamental_change",
+        "price_change",
+        "risk_event",
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -93,6 +103,7 @@ class ResearchRequest:
     instrument_ids: tuple[str, ...]
     listing_ids: tuple[str, ...]
     as_of: str
+    source_ids: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)

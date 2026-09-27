@@ -19,6 +19,19 @@ def _value(value: Decimal | None, currency: str | None = None) -> str:
     return f"{value:,.2f}{suffix}"
 
 
+def _cell(value: str) -> str:
+    return (
+        value.replace("\\", "\\\\")
+        .replace("|", "\\|")
+        .replace("\r", " ")
+        .replace("\n", " ")
+    )
+
+
+def _line(value: str) -> str:
+    return value.replace("\r", " ").replace("\n", " ")
+
+
 def render_intelligence_report(
     state: PortfolioState, result: PortfolioIntelligenceResult
 ) -> str:
@@ -26,7 +39,7 @@ def render_intelligence_report(
 
     names = {instrument.id: instrument.name for instrument in state.instruments}
     lines = [
-        "# Synthetic Portfolio Intelligence Report",
+        "# Portfolio Intelligence Report",
         "",
         f"Analysis date: {result.analysis_date}",
         f"Base currency: {result.base_currency}",
@@ -41,12 +54,12 @@ def render_intelligence_report(
             "| "
             + " | ".join(
                 [
-                    item.name,
-                    item.kind,
-                    item.domicile or "unavailable",
-                    item.distribution_policy or "unavailable",
-                    item.index_name or "unavailable",
-                    item.replication_method or "unavailable",
+                    _cell(item.name),
+                    _cell(item.kind),
+                    _cell(item.domicile or "unavailable"),
+                    _cell(item.distribution_policy or "unavailable"),
+                    _cell(item.index_name or "unavailable"),
+                    _cell(item.replication_method or "unavailable"),
                     _percent(item.ter),
                     _value(item.fund_size, item.fund_size_currency),
                     item.facts_as_of or "unavailable",
@@ -67,7 +80,7 @@ def render_intelligence_report(
     if result.overlaps:
         for item in result.overlaps:
             lines.append(
-                f"| {names[item.left_instrument_id]} / {names[item.right_instrument_id]} "
+                f"| {_cell(names[item.left_instrument_id])} / {_cell(names[item.right_instrument_id])} "
                 f"| {_percent(item.observed_overlap_weight)} "
                 f"| {_percent(item.left_holdings_coverage)} "
                 f"| {_percent(item.right_holdings_coverage)} "
@@ -90,7 +103,9 @@ def render_intelligence_report(
         ]
     )
     for item in concentration.exposures:
-        lines.append(f"| {item.name} | {_percent(item.observed_portfolio_weight)} |")
+        lines.append(
+            f"| {_cell(item.name)} | {_percent(item.observed_portfolio_weight)} |"
+        )
 
     lines.extend(["", "## Classified exposures", ""])
     for exposure in result.exposures:
@@ -106,7 +121,9 @@ def render_intelligence_report(
             ]
         )
         for item in exposure.entries:
-            lines.append(f"| {item.label} | {_percent(item.observed_portfolio_weight)} |")
+            lines.append(
+                f"| {_cell(item.label)} | {_percent(item.observed_portfolio_weight)} |"
+            )
         lines.append("")
 
     lines.extend(
@@ -119,7 +136,7 @@ def render_intelligence_report(
     )
     for metric in result.historical_metrics:
         lines.append(
-            f"| {names[metric.instrument_id]} "
+            f"| {_cell(names[metric.instrument_id])} "
             f"| {metric.start_date} to {metric.end_date} "
             f"| {_percent(metric.cumulative_return)} "
             f"| {_percent(metric.annualized_volatility)} "
@@ -127,7 +144,7 @@ def render_intelligence_report(
             f"| {_percent(metric.excess_return)} "
             f"| {metric.frequency} {metric.return_convention}, distributions "
             f"{metric.distribution_treatment}, corporate actions "
-            f"{metric.corporate_action_treatment} |"
+            f"{_cell(metric.corporate_action_treatment)} |"
         )
 
     lines.extend(["", "## Correlation", ""])
@@ -167,9 +184,9 @@ def render_intelligence_report(
     lines.extend(
         [
             "- Top-holdings data is partial and is not presented as complete look-through coverage.",
-            "- Historical metrics and stress windows describe synthetic past observations; they are not forecasts.",
+            "- Historical metrics and stress windows describe supplied past observations; they are not forecasts.",
             "- No policy, holding, or transaction was changed by this analysis.",
-            "- This synthetic report is not financial advice.",
+            "- This report is not financial advice.",
             "",
         ]
     )
@@ -183,9 +200,9 @@ def render_thesis_review_report(
 
     names = {instrument.id: instrument.name for instrument in state.instruments}
     lines = [
-        "# Synthetic Investment Thesis Review",
+        "# Investment Thesis Review",
         "",
-        f"Instrument: {names[review.instrument_id]}",
+        f"Instrument: {_line(names[review.instrument_id])}",
         f"Reviewed at: {review.reviewed_at}",
         f"Role: {review.role}",
         f"Approved target reference: {_percent(review.target_weight)}",
@@ -222,7 +239,7 @@ def render_thesis_review_report(
         [
             "- A price decline alone is not treated as thesis failure.",
             "- This review does not mutate holdings, transactions, the thesis, or approved policy.",
-            "- This synthetic review is not financial advice.",
+            "- This review is not financial advice.",
             "",
         ]
     )

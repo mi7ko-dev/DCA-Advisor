@@ -101,7 +101,7 @@
         "return_convention": {"enum": ["price_index", "total_return_index"]},
         "distribution_treatment": {"enum": ["included", "excluded"]},
         "corporate_action_treatment": {"type": "string", "minLength": 1},
-        "observations": {"type": "array", "minItems": 2, "items": {"$ref": "#/$defs/observation"}},
+        "observations": {"type": "array", "minItems": 3, "items": {"$ref": "#/$defs/observation"}},
         "as_of": {"$ref": "#/$defs/date"},
         "source_id": {"$ref": "#/$defs/id"}
       }

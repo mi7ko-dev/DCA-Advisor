@@ -2,7 +2,9 @@
 
 ## Active phase
 
-Phase 5 - Conversational Skill and Investment Committee is complete and awaiting approval to continue.
+Phase 6 - Final Hardening and Documentation is complete in the working tree and is
+at its approval checkpoint. The Phase 6 changes are not staged, committed, pushed,
+packaged, or published.
 
 ## Completed technical work
 
@@ -25,7 +27,7 @@ Phase 5 - Conversational Skill and Investment Committee is complete and awaiting
 - Added safe private JSON and Markdown persistence with validation before write, path and symlink checks, atomic creation, and non-overwrite defaults.
 - Added public JSON Schemas, fully synthetic examples, structured result fixtures, an English contribution report, and a reproducible EUR 400 scenario generator.
 - Added deterministic tests covering portfolio analysis, missing prices and FX, multi-currency valuation, invalid inputs, whole and fractional trading, fees, residual cash, contribution sizes, non-mutation, persistence safety, and repository safety.
-- Added a replaceable research-provider protocol and a static offline provider whose requests contain only public instrument/listing identifiers and an as-of date.
+- Added a replaceable research-provider protocol and a static offline provider whose requests contain only public instrument/listing identifiers, explicitly referenced public evidence-source identifiers, and an as-of date.
 - Added validated research snapshots with source dates, retrieval times, freshness, methodology, limitations, provider terms, and cache/redistribution permissions.
 - Added coverage-aware ETF metadata, holdings overlap, observed company/issuer concentration, and sector/geography/currency exposure without treating missing data as zero.
 - Added compatible-series cumulative return, annualized volatility, maximum drawdown, correlation, benchmark comparison, and explicit stress-window analysis.
@@ -38,20 +40,73 @@ Phase 5 - Conversational Skill and Investment Committee is complete and awaiting
 - Added non-mutating committee-review persistence under `private/reviews/` and explicit approval boundaries for transactions and target or policy changes.
 - Added six fully synthetic end-to-end demonstrations covering EUR 400 contribution, portfolio review, ETF thesis review, partial overlap, residual drift, and missing/stale evidence with contradictory conclusions.
 - Validated the public skill structure with the bundled skill validator and added routing, integration, privacy, output, and repository-safety coverage.
+- Hardened provider-failure traces so a failed bounded attempt is recorded while
+  raw exception details remain absent from the structured result.
+- Added storage tests for symlinked output directories and target files, provider
+  failure redaction and call bounds, and portable repo-local skill structure.
+- Extended CI to use Python 3.11, install and import the source package, compile the
+  Python surface, regenerate every synthetic output, enforce reproducibility, and
+  run a checksum-pinned Gitleaks scan without uploading artifacts.
+- Added final setup, synthetic walkthrough, private-state operation, provider-flow,
+  troubleshooting, maintenance, verification, distribution, and licensing guides.
+- Confirmed in the current Codex repository session that the repo-local
+  `steadyfolio` skill is discovered; the skill also passes the bundled validator.
+- Re-reviewed the public index, current staged state, available Git history,
+  authored language, generated outputs, dependency boundary, license, and absence
+  of required third-party notices.
+- Addressed the consolidated automated review findings across calculation,
+  validation, persistence, reporting, research, and committee boundaries. The
+  hardening rejects ambiguous market and evidence inputs, preserves approved
+  allocation history, validates derived outputs before saving, and treats absent
+  coverage as insufficient evidence.
+
+## Phase 6 local verification record
+
+Verification on 2026-09-27 completed with these results:
+
+- 106 unit, integration, privacy, invariant, repository-safety, and skill-structure
+  tests passed with zero skips.
+- Python compilation passed for `src/`, `tests/`, and `tools/`.
+- All three synthetic generators reproduced the working-tree examples byte for byte
+  on a second run.
+- The bundled skill validator reported `Skill is valid!`.
+- Repository safety passed 15 ignored-path expectations and 12 public-path
+  expectations against both the 70-file current Git index and a temporary 74-file
+  staged-equivalent index containing every current public working-tree change.
+- Gitleaks 8.30.1 passed for all history reachable in the non-shallow local clone
+  and 74 current public candidate files. The clone contained 24 reachable commits.
+- The staged diff was empty, no tracked symlink was present, nothing under
+  `blueprint/` was tracked, the manual authored-language and machine/user-identifier
+  searches returned no finding, and the patch whitespace check passed.
+
+The local interpreter is Python 3.9.7 32-bit; Python 3.11, Ruff, and Pyright are not
+installed locally. Therefore a clean install on the supported Python version and
+those optional static tools were unavailable locally. CI is configured to install
+and import the source package on Python 3.11, but that updated workflow cannot run
+until an authorized commit and push. No release artifact was built because the
+supported repo-local distribution does not require one.
+
+History coverage includes only objects and refs available in this clone. It cannot
+attest to deleted remote refs, unavailable objects, forks, or private systems.
 
 ## Open technical issues
 
 - AI Finance Assistant does not grant general code-reuse permission and must remain architecture-only reference material.
 - Wealthfolio and Ghostfolio are AGPL-3.0 at the repository root; main-code reuse is not recommended without an explicit later license decision.
-- Local Codex remains the only supported host. The repo-local skill was statically validated, but a fresh-host discovery test, global installation, generated plugin, and general ChatGPT compatibility have not been tested or claimed.
+- Local Codex remains the only supported host. Discovery is verified in the current
+  repository session, but a clean-machine host test, global installation, generated
+  plugin, and general ChatGPT compatibility have not been tested or claimed.
 - No upstream test suite was executed during the static audit; the review distinguishes inspected test coverage from locally reproduced results.
 - Hook templates are not enabled automatically because an existing local hook workflow must not be replaced without review.
 - The MVP supports ETF and stock positions only, direct or inverse FX pairs only, and does not model an existing portfolio cash balance.
-- Live market-data retrieval, broker connectivity, true independent research agents, tax optimization, rebalancing sales, user interface, and host skill packaging remain outside the implemented boundary.
+- Live market-data retrieval, broker connectivity, true independent research agents, tax optimization, rebalancing sales, user interface, and plugin packaging remain outside the implemented boundary.
 - No live research provider is implemented; provider-specific authentication, terms validation, rate limits, caching, and optional live integration tests remain deferred.
 - Look-through data is deliberately partial, historical samples are illustrative, and all metrics are descriptive rather than predictive.
 - Tax and regulatory questions remain unresolved without current jurisdiction-specific primary sources.
 
 ## Next approval gate
 
-Phase 6 - Final Hardening and Documentation requires explicit approval. No approval is inferred from this file.
+Phase 6 is the final approved project phase. Any commit, push, package publication,
+live-provider work, broker integration, transaction recording, policy mutation, or
+new product scope requires a separate explicit instruction. No approval is inferred
+from this file.

@@ -15,6 +15,15 @@ def _percent(value: Decimal) -> str:
     return f"{(value * Decimal('100')).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)}%"
 
 
+def _markdown_cell(value: str) -> str:
+    return (
+        value.replace("\\", "\\\\")
+        .replace("|", "\\|")
+        .replace("\r", " ")
+        .replace("\n", " ")
+    )
+
+
 def render_analysis_report(state: PortfolioState, analysis: AnalysisResult) -> str:
     names = {instrument.id: instrument.name for instrument in state.instruments}
     rows = [
@@ -24,7 +33,7 @@ def render_analysis_report(state: PortfolioState, analysis: AnalysisResult) -> s
     for position in analysis.positions:
         rows.append(
             "| {name} | {value} | {current} | {target} | {drift} |".format(
-                name=names[position.instrument_id],
+                name=_markdown_cell(names[position.instrument_id]),
                 value=_money(position.current_value, analysis.base_currency),
                 current=_percent(position.current_weight),
                 target=_percent(position.target_weight),
@@ -40,7 +49,7 @@ def render_analysis_report(state: PortfolioState, analysis: AnalysisResult) -> s
     sources = ", ".join(f"`{source}`" for source in analysis.source_ids) or "None"
     return "\n".join(
         [
-            "# Synthetic Portfolio Analysis",
+            "# Portfolio Analysis",
             "",
             f"Valuation date: {analysis.valuation_date}",
             f"Base currency: {analysis.base_currency}",
@@ -81,7 +90,7 @@ def render_contribution_report(
     for line in plan.lines:
         rows.append(
             "| {name} | {current} | {target} | {drift} | {quantity} | {purchase} | {cost} | {post} | {remaining} |".format(
-                name=names[line.instrument_id],
+                name=_markdown_cell(names[line.instrument_id]),
                 current=_percent(line.current_weight),
                 target=_percent(line.target_weight),
                 drift=_percent(line.drift),
@@ -101,7 +110,7 @@ def render_contribution_report(
     sources = ", ".join(f"`{source}`" for source in plan.source_ids) or "None"
     return "\n".join(
         [
-            "# Synthetic Monthly Contribution Plan",
+            "# Monthly Contribution Plan",
             "",
             f"Method: `{plan.method}`",
             f"Valuation date: {plan.valuation_date}",
@@ -129,7 +138,7 @@ def render_contribution_report(
             "",
             f"- Source records: {sources}",
             f"- Calculation version: `{plan.calculation_version}`",
-            "- Prices, FX rates, fees, and fractional-share settings are synthetic assumptions.",
-            "- This scenario is not a forecast or financial advice.",
+            "- Prices, FX rates, fees, and fractional-share settings are supplied inputs; verify their provenance.",
+            "- This proposal is not a forecast or financial advice.",
         ]
     )

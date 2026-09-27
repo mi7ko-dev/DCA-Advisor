@@ -1,4 +1,4 @@
-# Synthetic Investment Thesis Review
+# Investment Thesis Review
 
 Instrument: Synthetic Global Equity ETF
 Reviewed at: 2026-01-31
@@ -37,4 +37,4 @@ Action for user review: `retain`
 - Five observations are insufficient for investment forecasting.
 - A price decline alone is not treated as thesis failure.
 - This review does not mutate holdings, transactions, the thesis, or approved policy.
-- This synthetic review is not financial advice.
+- This review is not financial advice.

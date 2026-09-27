@@ -41,7 +41,8 @@ from .thesis import review_investment_thesis
 
 _IDENTIFIER = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$")
 _AMOUNT = re.compile(
-    r"\b(?P<currency>[A-Z]{3})\s*(?P<amount>[0-9]+(?:[.,][0-9]{1,2})?)\b"
+    r"\b(?P<currency>[A-Z]{3})\s*"
+    r"(?P<amount>[0-9]+(?:[.,][0-9]{1,2})?)(?![0-9.,])"
 )
 _EXECUTION_MODE = (
     "deterministic engine with sequential review lenses; no independent agents"
@@ -83,23 +84,24 @@ def route_request(request: CommitteeRequest) -> str:
 
     _validate_request(request)
     normalized = " ".join(request.message.lower().split())
+    intents: list[str] = []
     if "overlap" in normalized or "overlapping" in normalized:
-        return "overlap_review"
+        intents.append("overlap_review")
     if (
         request.thesis_id is not None
         or request.instrument_id is not None
         or "still be in my portfolio" in normalized
         or "investment thesis" in normalized
     ):
-        return "thesis_review"
+        intents.append("thesis_review")
     if "review" in normalized and "portfolio" in normalized:
-        return "portfolio_review"
+        intents.append("portfolio_review")
     if request.contribution_amount is not None or any(
         phrase in normalized
         for phrase in ("to invest this month", "monthly contribution", "contribute")
     ):
-        return "contribution"
-    return "clarification"
+        intents.append("contribution")
+    return intents[0] if len(set(intents)) == 1 else "clarification"
 
 
 def _validate_request(request: CommitteeRequest) -> None:
@@ -164,6 +166,10 @@ def _market_sources(
             limitations = ("The market source value time could not be dated.",)
         else:
             age_days = (cutoff - source_date).days
+            if age_days < 0:
+                raise ValidationError(
+                    "A market source value time cannot be newer than the review date."
+                )
             freshness = "fresh" if age_days <= 1 else "stale"
             limitations = (
                 ()
@@ -228,6 +234,7 @@ def _fetch_research(
     request: CommitteeRequest,
     state: PortfolioState,
     provider: ResearchProvider | None,
+    source_ids: Sequence[str] = (),
 ) -> tuple[ResearchSnapshot | None, int, tuple[str, ...]]:
     if provider is None or request.max_research_passes == 0:
         return None, 0, ("No structured research snapshot was supplied.",)
@@ -237,6 +244,7 @@ def _fetch_research(
                 instrument_ids=tuple(item.id for item in state.instruments),
                 listing_ids=tuple(item.id for item in state.listings),
                 as_of=request.as_of,
+                source_ids=tuple(dict.fromkeys(source_ids)),
             )
         )
     except ProviderUnavailableError:
@@ -402,7 +410,7 @@ def _portfolio_lenses(
             or not intelligence.exposures
             or not intelligence.historical_metrics
         )
-        if all_stale and missing_major_evidence:
+        if (not intelligence.source_assessments or all_stale) and missing_major_evidence:
             conclusion = "wait_for_data"
             interpretation = (
                 "Research is stale and major look-through or historical evidence is "
@@ -446,19 +454,26 @@ def _run_portfolio_review(
     )
     intelligence: PortfolioIntelligenceResult | None = None
     tools = ["analyze_portfolio"]
+    if provider_calls:
+        tools.append("ResearchProvider.fetch")
     if snapshot is not None:
-        tools.extend(("ResearchProvider.fetch", "analyze_portfolio_intelligence"))
+        tools.append("analyze_portfolio_intelligence")
         intelligence = analyze_portfolio_intelligence(
             state, analysis, snapshot, request.as_of, stress_windows
         )
     lenses = _portfolio_lenses(analysis, intelligence)
-    critic_passes = 1 if request.max_critic_passes == 1 else 0
     disagreements: tuple[str, ...] = ()
-    if lenses[0].conclusion != lenses[1].conclusion:
+    material_disagreement = lenses[1].conclusion == "wait_for_data"
+    if material_disagreement:
         disagreements = (
-            "The allocation lens supports policy-preserving drift correction, while "
-            "the evidence lens limits or defers evidence-dependent conclusions.",
+            "The allocation lens identifies policy-preserving drift correction, while "
+            "the evidence lens requires more data before a broader portfolio conclusion.",
         )
+    critic_passes = (
+        1
+        if request.max_critic_passes == 1 and material_disagreement
+        else 0
+    )
     if critic_passes:
         lenses = (
             *lenses,
@@ -503,7 +518,7 @@ def _run_portfolio_review(
             or not intelligence.exposures
             or not intelligence.historical_metrics
         )
-        if all_stale and missing_major_evidence:
+        if (not intelligence.source_assessments or all_stale) and missing_major_evidence:
             status = "insufficient_evidence"
         elif intelligence.warnings:
             status = "limited"
@@ -549,7 +564,9 @@ def _run_portfolio_review(
             provider_calls=provider_calls,
             external_calls=0,
             critic_passes=critic_passes,
-            revisions=critic_passes,
+            revisions=(
+                1 if critic_passes and request.max_revisions == 1 else 0
+            ),
             execution_mode=_EXECUTION_MODE,
         ),
     )
@@ -582,7 +599,11 @@ def _run_overlap_review(
             ),
             trace=WorkflowTrace(
                 route="overlap_review",
-                deterministic_tools=("analyze_portfolio",),
+                deterministic_tools=(
+                    ("analyze_portfolio", "ResearchProvider.fetch")
+                    if provider_calls
+                    else ("analyze_portfolio",)
+                ),
                 review_lenses=(),
                 provider_calls=provider_calls,
                 external_calls=0,
@@ -595,15 +616,21 @@ def _run_overlap_review(
         state, analysis, snapshot, request.as_of
     )
     facts = list(_analysis_facts(analysis))
-    for overlap in intelligence.overlaps:
+    comparable_overlaps = tuple(
+        overlap
+        for overlap in intelligence.overlaps
+        if overlap.left_holdings_coverage > 0
+        and overlap.right_holdings_coverage > 0
+    )
+    for overlap in comparable_overlaps:
         facts.append(
             f"Observed overlap between {overlap.left_instrument_id} and "
             f"{overlap.right_instrument_id} is {_percent(overlap.observed_overlap_weight)}; "
             f"holdings coverage is {_percent(overlap.left_holdings_coverage)} and "
             f"{_percent(overlap.right_holdings_coverage)}."
         )
-    no_overlap_evidence = not intelligence.overlaps
-    partial = any(
+    no_overlap_evidence = not comparable_overlaps
+    partial = not no_overlap_evidence and any(
         item.left_holdings_coverage < 1 or item.right_holdings_coverage < 1
         for item in intelligence.overlaps
     )
@@ -668,7 +695,7 @@ def _run_overlap_review(
         final_synthesis=(
             "The observed overlap is useful as a covered-slice measurement, not as a "
             "complete-fund overlap estimate."
-            if intelligence.overlaps
+            if comparable_overlaps
             else "Evidence is insufficient for an overlap conclusion."
         ),
         proposed_next_actions=(
@@ -688,7 +715,9 @@ def _run_overlap_review(
             provider_calls=provider_calls,
             external_calls=0,
             critic_passes=critic_passes,
-            revisions=critic_passes,
+            revisions=(
+                1 if critic_passes and request.max_revisions == 1 else 0
+            ),
             execution_mode=_EXECUTION_MODE,
         ),
     )
@@ -696,7 +725,14 @@ def _run_overlap_review(
 
 def _resolve_thesis_id(request: CommitteeRequest, state: PortfolioState) -> str | None:
     if request.thesis_id is not None:
-        return request.thesis_id
+        return next(
+            (
+                thesis.id
+                for thesis in state.investment_theses
+                if thesis.id == request.thesis_id and thesis.status == "active"
+            ),
+            None,
+        )
     matches = tuple(
         thesis.id
         for thesis in state.investment_theses
@@ -716,7 +752,10 @@ def _run_thesis_review(
     if thesis_id is None:
         return _clarification_result(request, "thesis_review")
     snapshot, provider_calls, provider_limitations = _fetch_research(
-        request, state, provider
+        request,
+        state,
+        provider,
+        tuple(item.source_id for item in evidence),
     )
     if snapshot is None:
         return replace(
@@ -726,7 +765,9 @@ def _run_thesis_review(
             final_synthesis="Thesis review stopped because sourced evidence is unavailable.",
             trace=WorkflowTrace(
                 route="thesis_review",
-                deterministic_tools=(),
+                deterministic_tools=(
+                    ("ResearchProvider.fetch",) if provider_calls else ()
+                ),
                 review_lenses=(),
                 provider_calls=provider_calls,
                 external_calls=0,
@@ -838,7 +879,9 @@ def _run_thesis_review(
             provider_calls=provider_calls,
             external_calls=0,
             critic_passes=critic_passes,
-            revisions=critic_passes,
+            revisions=(
+                1 if critic_passes and request.max_revisions == 1 else 0
+            ),
             execution_mode=_EXECUTION_MODE,
         ),
     )

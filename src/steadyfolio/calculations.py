@@ -5,6 +5,8 @@ from __future__ import annotations
 from collections import defaultdict
 from datetime import date
 from decimal import Decimal, ROUND_CEILING, ROUND_FLOOR, localcontext
+import hashlib
+import json
 import re
 from typing import Mapping, Sequence
 
@@ -21,6 +23,7 @@ from .models import (
     PositionAnalysis,
     TargetAllocation,
     TradingConstraint,
+    to_json_value,
 )
 from .validation import validate_state
 
@@ -46,6 +49,18 @@ def _approved_target(state: PortfolioState) -> TargetAllocation:
     if len(approved) != 1:
         raise ValidationError("Exactly one approved target allocation is required.")
     return approved[0]
+
+
+def _normalized_target_weights(
+    allocation: TargetAllocation,
+) -> dict[str, Decimal]:
+    total = sum((target.weight for target in allocation.targets), Decimal("0"))
+    if total <= 0:
+        raise ValidationError("Approved target weights must have a positive total.")
+    return {
+        target.instrument_id: target.weight / total
+        for target in allocation.targets
+    }
 
 
 def _latest_prices(
@@ -75,6 +90,14 @@ def _latest_prices(
         if current_date is None or price_date > current_date:
             selected[price.listing_id] = price
             selected_dates[price.listing_id] = price_date
+        elif price_date == current_date:
+            current = selected[price.listing_id]
+            if price.amount != current.amount:
+                raise ValidationError(
+                    "Conflicting market prices share a listing and as-of date."
+                )
+            if price.source_id < current.source_id:
+                selected[price.listing_id] = price
     return selected
 
 
@@ -106,6 +129,13 @@ class _FxTable:
             current = self._rates.get(key)
             if current is None or rate_date > current[0]:
                 self._rates[key] = (rate_date, rate.rate, rate.source_id)
+            elif rate_date == current[0]:
+                if rate.rate != current[1]:
+                    raise ValidationError(
+                        "Conflicting FX rates share a currency pair and as-of date."
+                    )
+                if rate.source_id < current[2]:
+                    self._rates[key] = (rate_date, rate.rate, rate.source_id)
 
     def convert(
         self, amount: Decimal, source_currency: str, target_currency: str
@@ -113,9 +143,11 @@ class _FxTable:
         if source_currency == target_currency:
             return amount, None
         direct = self._rates.get((source_currency, target_currency))
-        if direct is not None:
-            return amount * direct[1], direct[2]
         inverse = self._rates.get((target_currency, source_currency))
+        if direct is not None and (
+            inverse is None or direct[0] >= inverse[0]
+        ):
+            return amount * direct[1], direct[2]
         if inverse is not None:
             return amount / inverse[1], inverse[2]
         raise MissingFxRateError(
@@ -175,9 +207,7 @@ def analyze_portfolio(
         valuation_date, "valuation_date"
     ):
         raise ValidationError("The approved target is not effective on the valuation date.")
-    target_weights = {
-        target.instrument_id: target.weight for target in approved.targets
-    }
+    target_weights = _normalized_target_weights(approved)
     instrument_by_id = {instrument.id: instrument for instrument in state.instruments}
 
     with localcontext() as context:
@@ -344,6 +374,49 @@ def _validate_constraint(constraint: TradingConstraint) -> None:
         raise ValidationError("A quantity increment must be positive and finite.")
 
 
+def _canonical_records(records: Sequence[object]) -> list[object]:
+    serialized = [to_json_value(record) for record in records]
+    return sorted(
+        serialized,
+        key=lambda item: json.dumps(
+            item, ensure_ascii=True, separators=(",", ":"), sort_keys=True
+        ),
+    )
+
+
+def _contribution_plan_id(
+    state: PortfolioState,
+    approved: TargetAllocation,
+    analysis: AnalysisResult,
+    prices: Sequence[MarketPrice],
+    fx_rates: Sequence[FxRate],
+    contribution_amount: Decimal,
+    currency: str,
+    method: str,
+    valuation_date: str,
+    constraints: Sequence[TradingConstraint],
+    preferred_listings: Mapping[str, str],
+) -> str:
+    payload = {
+        "calculation_version": CALCULATION_VERSION,
+        "investor_id": state.investor_profile.id,
+        "approved_allocation": to_json_value(approved),
+        "analysis": to_json_value(analysis),
+        "prices": _canonical_records(prices),
+        "fx_rates": _canonical_records(fx_rates),
+        "contribution_amount": to_json_value(contribution_amount),
+        "currency": currency,
+        "method": method,
+        "valuation_date": valuation_date,
+        "constraints": _canonical_records(constraints),
+        "preferred_listings": dict(sorted(preferred_listings.items())),
+    }
+    encoded = json.dumps(
+        payload, ensure_ascii=True, separators=(",", ":"), sort_keys=True
+    ).encode("utf-8")
+    return f"contribution:{hashlib.sha256(encoded).hexdigest()}"
+
+
 def plan_contribution(
     state: PortfolioState,
     analysis: AnalysisResult,
@@ -372,9 +445,7 @@ def plan_contribution(
         raise ValidationError("Analysis does not match the supplied state and market inputs.")
 
     approved = _approved_target(state)
-    target_weights = {
-        target.instrument_id: target.weight for target in approved.targets
-    }
+    target_weights = _normalized_target_weights(approved)
     analysis_by_id = {
         position.instrument_id: position for position in analysis.positions
     }
@@ -433,6 +504,9 @@ def plan_contribution(
         warnings: list[str] = []
         for target in approved.targets:
             instrument_id = target.instrument_id
+            target_weight = target_weights[instrument_id]
+            if target_weight == 0:
+                continue
             listing = _listing_for_instrument(
                 instrument_id, state.listings, preferred
             )
@@ -456,15 +530,25 @@ def plan_contribution(
             fractional = (
                 listing.fractional_allowed
                 if constraint.fractional_allowed is None
-                else constraint.fractional_allowed
+                else listing.fractional_allowed
+                and constraint.fractional_allowed
             )
-            increment = (
-                constraint.quantity_increment
-                if constraint.quantity_increment is not None
-                else listing.quantity_increment
-            )
+            increment = listing.quantity_increment
+            if constraint.quantity_increment is not None:
+                ratio = constraint.quantity_increment / listing.quantity_increment
+                if ratio != ratio.to_integral_value():
+                    raise ValidationError(
+                        "A constraint quantity increment cannot weaken or conflict with its listing increment."
+                    )
+                increment = constraint.quantity_increment
             if not fractional:
-                increment = Decimal("1")
+                if increment != increment.to_integral_value():
+                    whole_share_ratio = Decimal("1") / increment
+                    if whole_share_ratio != whole_share_ratio.to_integral_value():
+                        raise ValidationError(
+                            "The quantity increment is incompatible with whole-share trading."
+                        )
+                    increment = Decimal("1")
             quantity, purchase_value, trade_fee = _execute_budget(
                 budgets[instrument_id], base_price, increment, constraint
             )
@@ -478,7 +562,7 @@ def plan_contribution(
                     instrument_id,
                     listing.id,
                     position.current_weight,
-                    target.weight,
+                    target_weight,
                     position.drift,
                     quantity,
                     purchase_value,
@@ -531,7 +615,19 @@ def plan_contribution(
             raise ValidationError("Contribution plan does not conserve available cash.")
 
     return ContributionPlan(
-        id=f"contribution:{state.investor_profile.id}:{valuation_date}:{method}",
+        id=_contribution_plan_id(
+            state,
+            approved,
+            analysis,
+            prices,
+            fx_rates,
+            contribution_amount,
+            currency,
+            method,
+            valuation_date,
+            constraints,
+            preferred,
+        ),
         calculation_version=CALCULATION_VERSION,
         method=method,
         valuation_date=valuation_date,

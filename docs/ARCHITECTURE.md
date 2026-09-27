@@ -110,10 +110,11 @@ overwritten without a separate, explicit operation.
 
 Structured source records separate supplied data from interpretation. Phase 4 adds
 a replaceable research-provider protocol and an offline synthetic provider. The
-request boundary carries public instrument/listing identifiers and an as-of date,
-not portfolio quantities or personal context. Future live price, FX, broker, or
-research adapters must preserve timestamps, source identifiers, retrieval times,
-methodology, terms, limitations, and failure states.
+request boundary carries public instrument/listing identifiers, explicitly
+referenced public evidence-source identifiers, and an as-of date, not portfolio
+quantities or personal context. Future live price, FX, broker, or research adapters
+must preserve timestamps, source identifiers, retrieval times, methodology, terms,
+limitations, and failure states.
 
 ## Repository layout
 
@@ -258,7 +259,7 @@ The following distinctions are schema and workflow invariants:
 ## Calculation conventions and invariants
 
 - Persist monetary values, quantities, prices, FX rates, weights, and fees as
-  decimal strings and calculate with `decimal.Decimal`.
+  canonical decimal strings and calculate with `decimal.Decimal`.
 - Every monetary amount carries or inherits one explicit ISO 4217 currency.
 - Cross-currency valuation requires a dated FX source record. Missing FX causes an
   explicit incomplete result, not an assumed rate or mixed-currency sum.
@@ -268,8 +269,11 @@ The following distinctions are schema and workflow invariants:
   account for fees and minimum trade sizes, honor whole/fractional-share settings,
   and report residual cash.
 - Calculations do not mutate holdings, transactions, targets, or source data.
-- Weights and reconciliations use explicit tolerances and return warnings rather
-  than silently normalizing invalid input.
+- Weights and reconciliations use explicit tolerances. A target allocation that is
+  valid within tolerance is normalized once for every downstream calculation;
+  input outside tolerance is rejected.
+- Structured calculation results are revalidated before persistence, and approved
+  allocation versions cannot be removed or rewritten by an overwrite.
 - Outputs include the calculation version, input references, valuation date,
   provenance, and limitations needed to reproduce the result.
 
@@ -291,14 +295,15 @@ deterministic analysis / contribution plan
                  +--> critic review (only when needed)
                  |
                  v
-              one bounded revision and final synthesis
+              optional bounded revision and final synthesis
 ```
 
 The host orchestrator owns the final answer. A routine monthly contribution does
-not trigger research or a critic automatically. The Phase 5 implementation permits
-at most one research pass, one critic pass, one revision, and zero live external
-calls. A broader workflow requires a later approved implementation rather than an
-implicit retry or scope expansion.
+not trigger research or a critic automatically. A critic runs only for a material
+disagreement. The current implementation independently permits at most one research
+pass, one critic pass, one revision, and zero live external calls. A broader
+workflow requires a later approved implementation rather than an implicit retry or
+scope expansion.
 
 When a host supports true subagents and their use is justified, each role receives
 a narrow task and structured inputs. When roles are simulated by sequential calls
@@ -368,13 +373,14 @@ proposals distinct and records the tools and lenses actually used.
 
 Routine contribution planning remains a direct deterministic path. Portfolio,
 overlap, and thesis reviews invoke only their relevant lenses. Missing or stale
-evidence can stop the workflow with `insufficient_evidence`; agreement between
-lenses is never treated as correctness. Details are in `docs/COMMITTEE.md`.
+evidence, an empty snapshot, or zero overlap coverage can stop the workflow with
+`insufficient_evidence`; agreement between lenses is never treated as correctness.
+Details are in `docs/COMMITTEE.md`.
 
-The selected host is local Codex in this repository. The skill structure and
-metadata have been statically validated, but no global installation, generated
-plugin, ChatGPT host, MCP service, live provider, or true multi-agent runtime is
-implemented or claimed.
+The selected host is local Codex in this repository. The skill is discovered in the
+current repository session, and its structure and metadata pass the bundled skill
+validator. No clean-machine or global installation, generated plugin, ChatGPT host,
+MCP service, live provider, or true multi-agent runtime is implemented or claimed.
 
 ## Verification strategy
 
@@ -385,9 +391,11 @@ structure and facts, but calculations are asserted against structured JSON rathe
 than prose. Provider tests must cover unavailable, stale, contradictory, and
 incomplete data without network dependence.
 
-A future packaging phase must add a test that inventories an allowlisted build and
-fails if ignored paths, private instances, blueprint clones, VCS metadata, or local
-caches are present.
+No separate artifact is required for the supported repository-local Codex use. If a
+future host requires packaging, its implementation must inventory an allowlisted
+build and fail if ignored paths, private instances, blueprint clones, VCS metadata,
+or local caches are present. It must also inspect the artifact and clean-install it
+before a separately approved publication.
 
 ## Licensing and provenance
 
@@ -407,6 +415,10 @@ and general concepts.
 
 No copied upstream code is part of the Phase 3 implementation. License observations
 are engineering constraints, not legal advice.
+
+The completed implementation has no runtime third-party dependency and redistributes
+no upstream code, so it does not require a third-party notice file. The project MIT
+license remains the only current distribution notice.
 
 ## Known limitations
 

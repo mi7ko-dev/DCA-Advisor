@@ -14,6 +14,7 @@ from .committee_models import CommitteeResult
 from .models import AnalysisResult, ContributionPlan, PortfolioState, to_json_value
 from .research_models import PortfolioIntelligenceResult, ThesisReviewResult
 from .validation import state_from_dict, state_to_dict
+from .validation import validate_analysis_result, validate_contribution_plan
 
 
 _SAFE_FILENAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
@@ -31,10 +32,10 @@ def _workspace_root(workspace_root: str | Path) -> Path:
 def _private_root(workspace_root: str | Path, *, create: bool) -> Path:
     root = _workspace_root(workspace_root)
     private = root / "private"
+    if private.is_symlink():
+        raise StorageSafetyError("The private workspace cannot be a symlink.")
     if not private.exists() and not create:
         raise FileNotFoundError("The private workspace does not exist.")
-    if private.exists() and private.is_symlink():
-        raise StorageSafetyError("The private workspace cannot be a symlink.")
     if create:
         private.mkdir(mode=0o700, exist_ok=True)
     resolved = private.resolve(strict=True)
@@ -54,17 +55,17 @@ def _safe_target(
         raise StorageSafetyError("Private output names contain unsafe characters.")
     private = _private_root(workspace_root, create=create_directories)
     directory = private / category
+    if directory.is_symlink():
+        raise StorageSafetyError("A private output directory cannot be a symlink.")
     if not directory.exists() and not create_directories:
         raise FileNotFoundError("The requested private output directory does not exist.")
-    if directory.exists() and directory.is_symlink():
-        raise StorageSafetyError("A private output directory cannot be a symlink.")
     if create_directories:
         directory.mkdir(mode=0o700, exist_ok=True)
     resolved_directory = directory.resolve(strict=True)
     if not resolved_directory.is_relative_to(private):
         raise StorageSafetyError("A private output directory escaped the workspace.")
     target = resolved_directory / filename
-    if target.exists() and target.is_symlink():
+    if target.is_symlink():
         raise StorageSafetyError("A private output file cannot be a symlink.")
     return target
 
@@ -109,6 +110,42 @@ def _json_text(value: Any) -> str:
     return json.dumps(value, indent=2, ensure_ascii=True, sort_keys=True) + "\n"
 
 
+def _validate_persisted_allocation_versions(
+    existing: PortfolioState, replacement: PortfolioState
+) -> None:
+    replacement_by_id = {
+        allocation.id: allocation for allocation in replacement.target_allocations
+    }
+    for allocation in existing.target_allocations:
+        if allocation.status not in {"approved", "superseded"}:
+            continue
+        updated = replacement_by_id.get(allocation.id)
+        if updated is None:
+            raise ValidationError(
+                "Approved allocation versions cannot be removed during overwrite."
+            )
+        immutable_fields = (
+            allocation.effective_date,
+            allocation.targets,
+            allocation.rationale,
+        )
+        if immutable_fields != (
+            updated.effective_date,
+            updated.targets,
+            updated.rationale,
+        ):
+            raise ValidationError(
+                "Approved allocation version contents are immutable."
+            )
+        allowed_statuses = (
+            {"approved", "superseded"}
+            if allocation.status == "approved"
+            else {"superseded"}
+        )
+        if updated.status not in allowed_statuses:
+            raise ValidationError("An allocation version has an invalid status transition.")
+
+
 def initialize_workspace(
     workspace_root: str | Path, initial_state: PortfolioState
 ) -> Path:
@@ -128,6 +165,14 @@ def save_state(
     if reparsed != state:
         raise ValidationError("Portfolio state did not round-trip through its schema.")
     target = _safe_target(workspace_root, "state", "portfolio.json")
+    if overwrite and target.exists():
+        try:
+            existing = state_from_dict(json.loads(target.read_text(encoding="utf-8")))
+        except (OSError, json.JSONDecodeError, ValidationError) as error:
+            raise ValidationError(
+                "The existing private portfolio state cannot be safely replaced."
+            ) from error
+        _validate_persisted_allocation_versions(existing, state)
     return _atomic_write_text(target, _json_text(payload), overwrite=overwrite)
 
 
@@ -154,6 +199,7 @@ def save_analysis_result(
     filename: str = "analysis.json",
     overwrite: bool = False,
 ) -> Path:
+    validate_analysis_result(result)
     target = _safe_target(workspace_root, "results", filename)
     return _atomic_write_text(
         target, _json_text(to_json_value(result)), overwrite=overwrite
@@ -167,6 +213,7 @@ def save_contribution_plan(
     filename: str = "contribution-plan.json",
     overwrite: bool = False,
 ) -> Path:
+    validate_contribution_plan(plan)
     target = _safe_target(workspace_root, "results", filename)
     return _atomic_write_text(
         target, _json_text(to_json_value(plan)), overwrite=overwrite

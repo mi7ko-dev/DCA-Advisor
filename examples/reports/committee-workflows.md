@@ -138,28 +138,9 @@ Lens limitations:
 - Geography exposure is partial; unclassified weight remains.
 - Currency exposure is partial; unclassified weight remains.
 
-### committee-critic
-
-Conclusion: `preserve_boundary`
-
-Keep the policy-preserving drift fact separate from the evidence-dependent conclusion; do not turn missing evidence into a target change.
-
-Evidence references:
-
-- analysis:synthetic-investor:2026-01-31
-- intelligence:synthetic-investor:2026-01-31
-- synthetic-classified-exposures
-- synthetic-fund-facts
-- synthetic-fund-holdings
-- synthetic-total-return-history
-
-Lens limitations:
-
-- The critic adds no new source evidence.
-
 ## Meaningful disagreements
 
-- The allocation lens supports policy-preserving drift correction, while the evidence lens limits or defers evidence-dependent conclusions.
+- None.
 
 ## Final synthesis and proposed next action
 
@@ -175,11 +156,11 @@ Mutation performed: no.
 ## Execution trace
 
 - Deterministic tools: `analyze_portfolio`, `ResearchProvider.fetch`, `analyze_portfolio_intelligence`.
-- Review lenses: `allocation-diversification`, `risk-cost-evidence`, `committee-critic`.
+- Review lenses: `allocation-diversification`, `risk-cost-evidence`.
 - Provider calls: 1.
 - Live external calls: 0.
-- Critic passes: 1.
-- Revisions: 1.
+- Critic passes: 0.
+- Revisions: 0.
 - Execution mode: deterministic engine with sequential review lenses; no independent agents.
 - Review lenses are sequential interpretations, not independent agents or verification.
 
@@ -553,7 +534,7 @@ Lens limitations:
 
 ## Meaningful disagreements
 
-- The allocation lens supports policy-preserving drift correction, while the evidence lens limits or defers evidence-dependent conclusions.
+- The allocation lens identifies policy-preserving drift correction, while the evidence lens requires more data before a broader portfolio conclusion.
 
 ## Final synthesis and proposed next action
 

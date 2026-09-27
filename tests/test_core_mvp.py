@@ -39,7 +39,10 @@ from steadyfolio.models import (  # noqa: E402
     TradingConstraint,
     to_json_value,
 )
-from steadyfolio.reporting import render_contribution_report  # noqa: E402
+from steadyfolio.reporting import (  # noqa: E402
+    render_analysis_report,
+    render_contribution_report,
+)
 from steadyfolio.storage import (  # noqa: E402
     initialize_workspace,
     load_state,
@@ -216,6 +219,24 @@ class SchemaAndValidationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValidationError, "decimal string"):
             state_from_dict(raw)
 
+    def test_decimal_json_fields_reject_noncanonical_strings(self) -> None:
+        raw = deepcopy(_read_json(EXAMPLES / "portfolio.example.json"))
+        for value in ("8e-3", "+0.008", " 0.008", "0_008"):
+            with self.subTest(value=value):
+                changed = deepcopy(raw)
+                changed["instruments"][0]["annual_fee_rate"] = value
+                with self.assertRaisesRegex(ValidationError, "canonical decimal"):
+                    state_from_dict(changed)
+
+    def test_public_timestamps_require_a_timezone_offset(self) -> None:
+        raw = deepcopy(_read_json(EXAMPLES / "portfolio.example.json"))
+        for value in ("2026-01-31", "2026-01-31T18:00:00"):
+            with self.subTest(value=value):
+                changed = deepcopy(raw)
+                changed["data_sources"][0]["retrieved_at"] = value
+                with self.assertRaisesRegex(ValidationError, "timezone-aware"):
+                    state_from_dict(changed)
+
     def test_unknown_state_fields_are_rejected(self) -> None:
         raw = deepcopy(_read_json(EXAMPLES / "portfolio.example.json"))
         raw["private_note"] = "must not be silently retained"
@@ -319,6 +340,40 @@ class PortfolioAnalysisTests(unittest.TestCase):
 
         self.assertEqual(result.total_value, Decimal("190"))
         self.assertEqual(set(result.source_ids), {"source-prices", "source-fx"})
+
+    def test_newest_fx_quote_wins_across_direct_and_inverse_orientations(self) -> None:
+        state = _multi_currency_state()
+        prices = (
+            MarketPrice("listing-eur", Decimal("100"), "EUR", VALUATION_DATE, "source-prices"),
+            MarketPrice("listing-usd", Decimal("100"), "USD", VALUATION_DATE, "source-prices"),
+        )
+        rates = (
+            FxRate("USD", "EUR", Decimal("0.9"), "2026-01-01", "source-fx"),
+            FxRate("EUR", "USD", Decimal("2"), VALUATION_DATE, "source-fx"),
+        )
+
+        result = analyze_portfolio(state, prices, rates, VALUATION_DATE)
+
+        self.assertEqual(result.total_value, Decimal("150"))
+
+    def test_conflicting_same_date_fx_rates_are_rejected(self) -> None:
+        state = _multi_currency_state()
+        prices = (
+            MarketPrice("listing-eur", Decimal("100"), "EUR", VALUATION_DATE, "source-prices"),
+            MarketPrice("listing-usd", Decimal("100"), "USD", VALUATION_DATE, "source-prices"),
+        )
+        rates = (
+            FxRate("USD", "EUR", Decimal("0.9"), VALUATION_DATE, "source-fx"),
+            FxRate("USD", "EUR", Decimal("0.8"), VALUATION_DATE, "source-fx"),
+        )
+        with self.assertRaisesRegex(ValidationError, "Conflicting FX rates"):
+            analyze_portfolio(state, prices, rates, VALUATION_DATE)
+
+    def test_conflicting_same_date_prices_are_rejected(self) -> None:
+        state, prices, fx_rates, _ = _example_inputs()
+        conflicting = (*prices, replace(prices[0], amount=Decimal("101")))
+        with self.assertRaisesRegex(ValidationError, "Conflicting market prices"):
+            analyze_portfolio(state, conflicting, fx_rates, VALUATION_DATE)
 
     def test_missing_fx_is_rejected_instead_of_mixing_currencies(self) -> None:
         state = _multi_currency_state()
@@ -433,6 +488,114 @@ class ContributionPlanningTests(unittest.TestCase):
             Decimal("400"),
         )
 
+    def test_whole_share_round_lot_increment_is_preserved(self) -> None:
+        state, prices, fx_rates, _ = _example_inputs()
+        round_lot_listing = replace(
+            state.listings[0],
+            fractional_allowed=False,
+            quantity_increment=Decimal("10"),
+        )
+        round_lot_state = replace(
+            state,
+            listings=(round_lot_listing,) + state.listings[1:],
+        )
+        analysis = analyze_portfolio(
+            round_lot_state, prices, fx_rates, VALUATION_DATE
+        )
+        plan = plan_contribution(
+            round_lot_state,
+            analysis,
+            prices,
+            fx_rates,
+            Decimal("3000"),
+            "EUR",
+            "simple",
+            VALUATION_DATE,
+        )
+        line = next(
+            item for item in plan.lines if item.instrument_id == "instrument-global"
+        )
+        self.assertEqual(line.quantity, Decimal("10"))
+
+    def test_tolerated_target_weights_are_normalized_for_budgeting(self) -> None:
+        state, prices, fx_rates, _ = _example_inputs()
+        target = replace(
+            state.target_allocations[0],
+            targets=(
+                AllocationTarget("instrument-global", Decimal("0.500000004")),
+                AllocationTarget("instrument-bond", Decimal("0.500000004")),
+            ),
+        )
+        weights = {
+            item.instrument_id: item.weight for item in target.targets
+        }
+        normalized_state = replace(
+            state,
+            target_allocations=(target,),
+            investment_theses=tuple(
+                replace(thesis, target_weight=weights[thesis.instrument_id])
+                if thesis.target_weight is not None
+                else thesis
+                for thesis in state.investment_theses
+            ),
+        )
+        analysis = analyze_portfolio(
+            normalized_state, prices, fx_rates, VALUATION_DATE
+        )
+        plan = plan_contribution(
+            normalized_state,
+            analysis,
+            prices,
+            fx_rates,
+            Decimal("400"),
+            "EUR",
+            "simple",
+            VALUATION_DATE,
+        )
+        self.assertEqual(
+            sum((line.target_weight for line in plan.lines), Decimal("0")),
+            Decimal("1"),
+        )
+        self.assertEqual(
+            plan.total_purchase_value
+            + plan.total_estimated_trade_cost
+            + plan.remaining_cash,
+            Decimal("400"),
+        )
+
+    def test_zero_weight_target_needs_no_listing_or_market_data(self) -> None:
+        state, prices, fx_rates, _ = _example_inputs()
+        legacy = Instrument(
+            id="instrument-zero-target",
+            name="Synthetic Zero Target",
+            kind="etf",
+            economic_currency="EUR",
+        )
+        approved = replace(
+            state.target_allocations[0],
+            targets=(
+                *state.target_allocations[0].targets,
+                AllocationTarget(legacy.id, Decimal("0")),
+            ),
+        )
+        extended = replace(
+            state,
+            instruments=(*state.instruments, legacy),
+            target_allocations=(approved,),
+        )
+        analysis = analyze_portfolio(extended, prices, fx_rates, VALUATION_DATE)
+        plan = plan_contribution(
+            extended,
+            analysis,
+            prices,
+            fx_rates,
+            Decimal("400"),
+            "EUR",
+            "simple",
+            VALUATION_DATE,
+        )
+        self.assertNotIn(legacy.id, {line.instrument_id for line in plan.lines})
+
     def test_cash_only_portfolio_allocates_by_target(self) -> None:
         state, prices, fx_rates, _ = _example_inputs()
         empty = replace(state, holdings=())
@@ -536,8 +699,84 @@ class ContributionPlanningTests(unittest.TestCase):
         self.assertEqual(small.total_purchase_value, 0)
         self.assertEqual(small.remaining_cash, Decimal("5"))
 
+    def test_contribution_id_covers_plan_defining_inputs(self) -> None:
+        state, prices, fx_rates, constraints = _example_inputs()
+        analysis = analyze_portfolio(state, prices, fx_rates, VALUATION_DATE)
+
+        baseline = plan_contribution(
+            state,
+            analysis,
+            prices,
+            fx_rates,
+            Decimal("400"),
+            "EUR",
+            "simple",
+            VALUATION_DATE,
+            constraints,
+        )
+        repeated = plan_contribution(
+            state,
+            analysis,
+            prices,
+            fx_rates,
+            Decimal("400"),
+            "EUR",
+            "simple",
+            VALUATION_DATE,
+            tuple(reversed(constraints)),
+        )
+        changed_amount = plan_contribution(
+            state,
+            analysis,
+            prices,
+            fx_rates,
+            Decimal("401"),
+            "EUR",
+            "simple",
+            VALUATION_DATE,
+            constraints,
+        )
+        changed_prices = tuple(
+            replace(price, amount=price.amount + Decimal("1"))
+            if price.listing_id == "listing-global-xetr"
+            else price
+            for price in prices
+        )
+        changed_analysis = analyze_portfolio(
+            state, changed_prices, fx_rates, VALUATION_DATE
+        )
+        changed_market = plan_contribution(
+            state,
+            changed_analysis,
+            changed_prices,
+            fx_rates,
+            Decimal("400"),
+            "EUR",
+            "simple",
+            VALUATION_DATE,
+            constraints,
+        )
+
+        self.assertEqual(baseline.id, repeated.id)
+        self.assertNotEqual(baseline.id, changed_amount.id)
+        self.assertNotEqual(baseline.id, changed_market.id)
+
 
 class StorageAndReportingTests(unittest.TestCase):
+    def test_workspace_root_symlink_is_rejected(self) -> None:
+        state, _, _, _ = _example_inputs()
+        with tempfile.TemporaryDirectory(prefix="steadyfolio-symlink-test-") as temporary:
+            base = Path(temporary)
+            actual_workspace = base / "actual-workspace"
+            workspace_link = base / "workspace-link"
+            actual_workspace.mkdir()
+            try:
+                os.symlink(actual_workspace, workspace_link, target_is_directory=True)
+            except OSError as error:
+                self.skipTest(f"Directory symlinks are unavailable: {error}")
+            with self.assertRaises(StorageSafetyError):
+                initialize_workspace(workspace_link, state)
+
     def test_private_state_initialization_is_atomic_and_non_overwriting(self) -> None:
         state, _, _, _ = _example_inputs()
         with tempfile.TemporaryDirectory(prefix="steadyfolio-workspace-") as temporary:
@@ -554,6 +793,46 @@ class StorageAndReportingTests(unittest.TestCase):
             with self.assertRaises(ValidationError):
                 save_state(workspace, invalid, overwrite=True)
             self.assertEqual(state_path.read_bytes(), original)
+
+    def test_overwrite_cannot_rewrite_an_approved_allocation_version(self) -> None:
+        state, _, _, _ = _example_inputs()
+        changed_target = replace(
+            state.target_allocations[0], rationale="Changed after approval"
+        )
+        changed_state = replace(state, target_allocations=(changed_target,))
+        with tempfile.TemporaryDirectory(prefix="steadyfolio-workspace-") as temporary:
+            workspace = Path(temporary)
+            state_path = initialize_workspace(workspace, state)
+            original = state_path.read_bytes()
+            with self.assertRaisesRegex(ValidationError, "immutable"):
+                save_state(workspace, changed_state, overwrite=True)
+            self.assertEqual(state_path.read_bytes(), original)
+
+    def test_invalid_derived_results_are_rejected_before_persistence(self) -> None:
+        state, prices, fx_rates, constraints = _example_inputs()
+        analysis = analyze_portfolio(state, prices, fx_rates, VALUATION_DATE)
+        plan = plan_contribution(
+            state,
+            analysis,
+            prices,
+            fx_rates,
+            Decimal("400"),
+            "EUR",
+            "drift_aware",
+            VALUATION_DATE,
+            constraints,
+        )
+        with tempfile.TemporaryDirectory(prefix="steadyfolio-workspace-") as temporary:
+            with self.assertRaisesRegex(ValidationError, "finite"):
+                save_analysis_result(
+                    temporary,
+                    replace(analysis, total_value=Decimal("NaN")),
+                )
+            with self.assertRaisesRegex(ValidationError, "reconcile"):
+                save_contribution_plan(
+                    temporary,
+                    replace(plan, remaining_cash=plan.remaining_cash + Decimal("1")),
+                )
 
     def test_private_output_rejects_path_traversal(self) -> None:
         state, prices, fx_rates, _ = _example_inputs()
@@ -602,6 +881,42 @@ class StorageAndReportingTests(unittest.TestCase):
             with self.assertRaises(StorageSafetyError):
                 initialize_workspace(workspace, state)
 
+    def test_private_output_directory_symlink_is_rejected(self) -> None:
+        state, prices, fx_rates, _ = _example_inputs()
+        analysis = analyze_portfolio(state, prices, fx_rates, VALUATION_DATE)
+        with tempfile.TemporaryDirectory(prefix="steadyfolio-symlink-test-") as temporary:
+            base = Path(temporary)
+            workspace = base / "workspace"
+            outside = base / "outside"
+            (workspace / "private").mkdir(parents=True)
+            outside.mkdir()
+            try:
+                os.symlink(
+                    outside,
+                    workspace / "private" / "results",
+                    target_is_directory=True,
+                )
+            except OSError as error:
+                self.skipTest(f"Directory symlinks are unavailable: {error}")
+            with self.assertRaises(StorageSafetyError):
+                save_analysis_result(workspace, analysis)
+
+    def test_dangling_private_output_file_symlink_is_rejected(self) -> None:
+        state, prices, fx_rates, _ = _example_inputs()
+        analysis = analyze_portfolio(state, prices, fx_rates, VALUATION_DATE)
+        with tempfile.TemporaryDirectory(prefix="steadyfolio-symlink-test-") as temporary:
+            base = Path(temporary)
+            workspace = base / "workspace"
+            results = workspace / "private" / "results"
+            outside = base / "outside.json"
+            results.mkdir(parents=True)
+            try:
+                os.symlink(outside, results / "analysis.json")
+            except OSError as error:
+                self.skipTest(f"File symlinks are unavailable: {error}")
+            with self.assertRaises(StorageSafetyError):
+                save_analysis_result(workspace, analysis)
+
     def test_loading_missing_state_does_not_create_private_directories(self) -> None:
         with tempfile.TemporaryDirectory(prefix="steadyfolio-workspace-") as temporary:
             workspace = Path(temporary)
@@ -625,10 +940,39 @@ class StorageAndReportingTests(unittest.TestCase):
         )
         report = render_contribution_report(state, analysis, plan)
 
-        self.assertIn("# Synthetic Monthly Contribution Plan", report)
+        self.assertIn("# Monthly Contribution Plan", report)
         self.assertIn("Available contribution: 400.00 EUR", report)
         self.assertIn("No sale or executed transaction", report)
         self.assertIn("not a forecast or financial advice", report)
+
+    def test_report_uses_neutral_provenance_and_escapes_table_names(self) -> None:
+        state, prices, fx_rates, constraints = _example_inputs()
+        renamed = replace(state.instruments[0], name="Synthetic | Equity\nETF")
+        changed_state = replace(
+            state, instruments=(renamed,) + state.instruments[1:]
+        )
+        analysis = analyze_portfolio(
+            changed_state, prices, fx_rates, VALUATION_DATE
+        )
+        plan = plan_contribution(
+            changed_state,
+            analysis,
+            prices,
+            fx_rates,
+            Decimal("400"),
+            "EUR",
+            "drift_aware",
+            VALUATION_DATE,
+            constraints,
+        )
+        reports = (
+            render_analysis_report(changed_state, analysis),
+            render_contribution_report(changed_state, analysis, plan),
+        )
+        for report in reports:
+            with self.subTest(report=report.splitlines()[0]):
+                self.assertIn("Synthetic \\| Equity ETF", report)
+                self.assertNotIn("synthetic assumptions", report)
 
     def test_structured_outputs_match_schema_required_fields(self) -> None:
         state, prices, fx_rates, constraints = _example_inputs()

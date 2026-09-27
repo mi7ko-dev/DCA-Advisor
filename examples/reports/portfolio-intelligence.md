@@ -1,4 +1,4 @@
-# Synthetic Portfolio Intelligence Report
+# Portfolio Intelligence Report
 
 Analysis date: 2026-01-31
 Base currency: EUR
@@ -94,6 +94,6 @@ Coverage: 20.40%; unclassified: 79.60%
 - Geography exposure is partial; unclassified weight remains.
 - Currency exposure is partial; unclassified weight remains.
 - Top-holdings data is partial and is not presented as complete look-through coverage.
-- Historical metrics and stress windows describe synthetic past observations; they are not forecasts.
+- Historical metrics and stress windows describe supplied past observations; they are not forecasts.
 - No policy, holding, or transaction was changed by this analysis.
-- This synthetic report is not financial advice.
+- This report is not financial advice.
