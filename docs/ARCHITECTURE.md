@@ -2,9 +2,10 @@
 
 ## Status
 
-This document is the proposed Phase 2 architecture. It becomes the implementation
-baseline only after the Phase 2 approval checkpoint. It does not authorize Phase 3
-implementation, packaging, publishing, or any handling of real portfolio data.
+This Phase 2 architecture was approved as the Phase 3 implementation baseline on
+2026-09-25. The approval covers the bounded local MVP described here; it does not
+authorize packaging, publishing, later phases, or handling real portfolio data in
+tracked files.
 
 ## Decision summary
 
@@ -100,18 +101,19 @@ files, call models, fetch network data, or mutate source records.
 
 ### Storage layer
 
-The storage adapter validates JSON against versioned public schemas, constrains all
-private paths below the selected workspace, and writes atomically. Initialization
-must be non-destructive: existing files are not overwritten without a separate,
-explicit operation.
+The storage adapter validates JSON against the versioned public data contract and
+domain invariants, constrains all private paths below the selected workspace, and
+writes atomically. Initialization is non-destructive: existing files are not
+overwritten without a separate, explicit operation.
 
 ### Provider layer
 
-Provider ports separate source data from interpretation. Offline synthetic fixtures
-are the Phase 3 implementation. Future live price, FX, broker, or research adapters
-must preserve timestamps, source identifiers, retrieval times, and failure states.
+Structured source records separate supplied data from interpretation. Offline
+synthetic fixtures are the Phase 3 implementation. Future live price, FX, broker,
+or research adapters must preserve timestamps, source identifiers, retrieval times,
+and failure states.
 
-## Proposed repository layout
+## Repository layout
 
 ```text
 AGENTS.md
@@ -125,14 +127,13 @@ README.md
       scripts/
 src/
   steadyfolio/
-    domain/
-    calculations/
-    application/
-    storage/
-    providers/
+    models.py
+    validation.py
+    calculations.py
+    storage.py
+    reporting.py
 schemas/
 tests/
-  fixtures/
 examples/
 docs/
 tools/
@@ -140,9 +141,9 @@ private/                 # ignored; real state and derived output
 blueprint/               # entirely ignored local reference material
 ```
 
-Only files needed by the approved phase should be added. An `agents/openai.yaml`
-manifest, MCP server, UI, and plugin bundle are deferred until an actual host or
-distribution requirement calls for them.
+The canonical skill under `.agents/skills/steadyfolio/`, an `agents/openai.yaml`
+manifest, MCP server, UI, and plugin bundle are deferred until their approved
+phases or an actual host or distribution requirement calls for them.
 
 ## Runtime and host compatibility
 
@@ -150,8 +151,8 @@ distribution requirement calls for them.
 
 The first supported and tested runtime is local Codex operating in this repository,
 with Python 3.11 or newer available for the deterministic engine. The repository
-policy remains in `AGENTS.md`; the canonical skill is proposed for
-`.agents/skills/steadyfolio/`.
+policy remains in `AGENTS.md`; a later approved phase may add the canonical skill
+at `.agents/skills/steadyfolio/`.
 
 This follows the official OpenAI description of repository instructions and
 repo-local skills:
@@ -296,7 +297,7 @@ evidence; model agreement is not evidence.
 
 ## Phase 3 MVP boundary
 
-### Included after approval
+### Implemented
 
 - Versioned public schemas for the entities required by the MVP and safe,
   non-overwriting private-workspace initialization.
@@ -341,15 +342,15 @@ structure and facts, but calculations are asserted against structured JSON rathe
 than prose. Provider tests must cover unavailable, stale, contradictory, and
 incomplete data without network dependence.
 
-The package boundary must also have a test that inventories an allowlisted build and
+A future packaging phase must add a test that inventories an allowlisted build and
 fails if ignored paths, private instances, blueprint clones, VCS metadata, or local
 caches are present.
 
 ## Licensing and provenance
 
-The proposed project license is MIT, subject to explicit approval and addition of a
-repository license file in a later authorized change. Phase 3 should be clean-room
-project code based on documented requirements and general concepts.
+The approved project license is MIT and the repository includes the corresponding
+license file. Phase 3 is clean-room project code based on documented requirements
+and general concepts.
 
 - CoFolio and PyPortfolioOpt are MIT at the audited commits. If code is later copied
   or adapted, their applicable copyright and license notices must accompany it.
@@ -361,8 +362,8 @@ project code based on documented requirements and general concepts.
   will not be reused under this proposal. Any separately licensed subcomponent needs
   a file-level license review before use.
 
-No copied upstream code is part of this Phase 2 proposal. License observations are
-engineering constraints, not legal advice.
+No copied upstream code is part of the Phase 3 implementation. License observations
+are engineering constraints, not legal advice.
 
 ## Known limitations
 

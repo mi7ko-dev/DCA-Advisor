@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://steadyfolio.example/schemas/analysis-result.schema.json",
+  "title": "SteadyFolio Analysis Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "calculation_version", "valuation_date", "base_currency", "total_value", "positions", "weighted_annual_fee_rate", "maximum_direct_weight", "herfindahl_index", "concentrated_instrument_ids", "source_ids", "warnings"],
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "calculation_version": {"type": "string", "minLength": 1},
+    "valuation_date": {"type": "string", "format": "date"},
+    "base_currency": {"type": "string", "pattern": "^[A-Z]{3}$"},
+    "total_value": {"$ref": "#/$defs/decimal"},
+    "positions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["instrument_id", "current_value", "current_weight", "target_weight", "drift"],
+        "properties": {
+          "instrument_id": {"type": "string", "minLength": 1},
+          "current_value": {"$ref": "#/$defs/decimal"},
+          "current_weight": {"$ref": "#/$defs/decimal"},
+          "target_weight": {"$ref": "#/$defs/decimal"},
+          "drift": {"$ref": "#/$defs/decimal"}
+        }
+      }
+    },
+    "weighted_annual_fee_rate": {"$ref": "#/$defs/decimal"},
+    "maximum_direct_weight": {"$ref": "#/$defs/decimal"},
+    "herfindahl_index": {"$ref": "#/$defs/decimal"},
+    "concentrated_instrument_ids": {"type": "array", "items": {"type": "string"}},
+    "source_ids": {"type": "array", "items": {"type": "string"}},
+    "warnings": {"type": "array", "items": {"type": "string"}}
+  },
+  "$defs": {
+    "decimal": {"type": "string", "pattern": "^-?(0|[1-9][0-9]*)(\\.[0-9]+)?$"}
+  }
+}

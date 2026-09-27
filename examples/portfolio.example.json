@@ -1,0 +1,124 @@
+{
+  "accounts": [
+    {
+      "currency": "EUR",
+      "id": "synthetic-account",
+      "kind": "brokerage",
+      "name": "Synthetic Brokerage Account"
+    }
+  ],
+  "data_sources": [
+    {
+      "id": "synthetic-prices-2026-01-31",
+      "provider": "Synthetic Fixture Provider",
+      "quality": "synthetic",
+      "reference": "examples/market-input.example.json",
+      "retrieved_at": "2026-01-31T18:00:00+00:00",
+      "source_type": "market_snapshot",
+      "value_time": "2026-01-31T16:30:00+00:00"
+    }
+  ],
+  "goals": [
+    {
+      "currency": "EUR",
+      "id": "synthetic-long-term-goal",
+      "name": "Synthetic Long-Term Goal",
+      "priority": 1,
+      "target_amount": "250000",
+      "target_date": "2046-01-31"
+    }
+  ],
+  "holdings": [
+    {
+      "account_id": "synthetic-account",
+      "id": "holding-global",
+      "listing_id": "listing-global-xetr",
+      "quantity": "8"
+    },
+    {
+      "account_id": "synthetic-account",
+      "id": "holding-bond",
+      "listing_id": "listing-bond-xetr",
+      "quantity": "4"
+    }
+  ],
+  "investment_theses": [
+    {
+      "id": "thesis-global",
+      "instrument_id": "instrument-global",
+      "rationale": "Synthetic broad equity exposure for a long horizon.",
+      "review_date": "2027-01-31",
+      "risks": ["Equity drawdown", "Foreign-currency exposure"],
+      "role": "growth",
+      "status": "active"
+    },
+    {
+      "id": "thesis-bond",
+      "instrument_id": "instrument-bond",
+      "rationale": "Synthetic stabilizing allocation for the example portfolio.",
+      "review_date": "2027-01-31",
+      "risks": ["Interest-rate risk", "Credit-spread risk"],
+      "role": "stability",
+      "status": "active"
+    }
+  ],
+  "instruments": [
+    {
+      "annual_fee_rate": "0.002",
+      "economic_currency": "EUR",
+      "id": "instrument-global",
+      "isin": "IE00SYNTH001",
+      "kind": "etf",
+      "name": "Synthetic Global Equity ETF"
+    },
+    {
+      "annual_fee_rate": "0.0015",
+      "economic_currency": "EUR",
+      "id": "instrument-bond",
+      "isin": "IE00SYNTH019",
+      "kind": "etf",
+      "name": "Synthetic Aggregate Bond ETF"
+    }
+  ],
+  "investor_profile": {
+    "base_currency": "EUR",
+    "goal_ids": ["synthetic-long-term-goal"],
+    "id": "synthetic-investor",
+    "jurisdiction": "EU-SYNTHETIC"
+  },
+  "listings": [
+    {
+      "fractional_allowed": true,
+      "id": "listing-global-xetr",
+      "instrument_id": "instrument-global",
+      "mic": "XETR",
+      "quantity_increment": "0.001",
+      "ticker": "WLDX",
+      "trading_currency": "EUR"
+    },
+    {
+      "fractional_allowed": true,
+      "id": "listing-bond-xetr",
+      "instrument_id": "instrument-bond",
+      "mic": "XETR",
+      "quantity_increment": "0.001",
+      "ticker": "BNDX",
+      "trading_currency": "EUR"
+    }
+  ],
+  "review_history": [],
+  "schema_version": "1.0",
+  "target_allocations": [
+    {
+      "effective_date": "2026-01-01",
+      "id": "allocation-approved-2026",
+      "rationale": "Synthetic balanced policy used only for deterministic tests.",
+      "status": "approved",
+      "targets": [
+        {"instrument_id": "instrument-global", "weight": "0.5"},
+        {"instrument_id": "instrument-bond", "weight": "0.5"}
+      ]
+    }
+  ],
+  "transactions": []
+}

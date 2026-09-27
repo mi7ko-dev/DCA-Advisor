@@ -1,0 +1,42 @@
+{
+  "calculation_version": "1.0",
+  "contribution_amount": "400",
+  "currency": "EUR",
+  "expected_post_contribution_value": "1398.6",
+  "id": "contribution:synthetic-investor:2026-01-31:drift_aware",
+  "lines": [
+    {
+      "current_weight": "0.8",
+      "drift": "0.3",
+      "estimated_trade_cost": "0",
+      "expected_post_contribution_weight": "0.572000572000572000572000572000572001",
+      "instrument_id": "instrument-global",
+      "listing_id": "listing-global-xetr",
+      "proposed_contribution": "0",
+      "quantity": "0",
+      "remaining_drift": "0.072000572000572000572000572000572001",
+      "target_weight": "0.5"
+    },
+    {
+      "current_weight": "0.2",
+      "drift": "-0.3",
+      "estimated_trade_cost": "1.4",
+      "expected_post_contribution_weight": "0.427999427999427999427999427999427999",
+      "instrument_id": "instrument-bond",
+      "listing_id": "listing-bond-xetr",
+      "proposed_contribution": "398.6",
+      "quantity": "7.972",
+      "remaining_drift": "-0.072000572000572000572000572000572001",
+      "target_weight": "0.5"
+    }
+  ],
+  "method": "drift_aware",
+  "remaining_cash": "0",
+  "source_ids": [
+    "synthetic-prices-2026-01-31"
+  ],
+  "total_estimated_trade_cost": "1.4",
+  "total_purchase_value": "398.6",
+  "valuation_date": "2026-01-31",
+  "warnings": []
+}
