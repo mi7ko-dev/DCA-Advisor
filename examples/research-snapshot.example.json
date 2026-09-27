@@ -1,0 +1,159 @@
+{
+  "schema_version": "1.0",
+  "sources": [
+    {
+      "id": "synthetic-fund-facts",
+      "provider": "SteadyFolio Synthetic Research Provider",
+      "reference": "synthetic://fund-facts/2026-01-15",
+      "as_of": "2026-01-15",
+      "retrieved_at": "2026-01-31T18:05:00+00:00",
+      "methodology": "Project-authored synthetic fund facts for deterministic tests.",
+      "limitations": ["The facts do not describe a real fund."],
+      "freshness_days": 60,
+      "terms_reference": "project-generated-synthetic-data",
+      "cache_permitted": true,
+      "redistribution_permitted": true
+    },
+    {
+      "id": "synthetic-fund-holdings",
+      "provider": "SteadyFolio Synthetic Research Provider",
+      "reference": "synthetic://fund-holdings/2025-12-31",
+      "as_of": "2025-12-31",
+      "retrieved_at": "2026-01-31T18:06:00+00:00",
+      "methodology": "A deliberately partial synthetic top-holdings snapshot without extrapolation.",
+      "limitations": ["Only selected holdings are supplied; coverage is intentionally incomplete."],
+      "freshness_days": 30,
+      "terms_reference": "project-generated-synthetic-data",
+      "cache_permitted": true,
+      "redistribution_permitted": true
+    },
+    {
+      "id": "synthetic-classified-exposures",
+      "provider": "SteadyFolio Synthetic Research Provider",
+      "reference": "synthetic://classified-exposures/2025-12-31",
+      "as_of": "2025-12-31",
+      "retrieved_at": "2026-01-31T18:07:00+00:00",
+      "methodology": "Synthetic look-through classifications over the same partial holdings coverage.",
+      "limitations": ["Unclassified fund weight is intentionally retained as unknown."],
+      "freshness_days": 30,
+      "terms_reference": "project-generated-synthetic-data",
+      "cache_permitted": true,
+      "redistribution_permitted": true
+    },
+    {
+      "id": "synthetic-total-return-history",
+      "provider": "SteadyFolio Synthetic Research Provider",
+      "reference": "synthetic://total-return-history/2026-01-31",
+      "as_of": "2026-01-31",
+      "retrieved_at": "2026-01-31T18:08:00+00:00",
+      "methodology": "Synthetic month-end total-return index levels in EUR with distributions and corporate actions included.",
+      "limitations": ["Five observations are insufficient for investment forecasting."],
+      "freshness_days": 7,
+      "terms_reference": "project-generated-synthetic-data",
+      "cache_permitted": true,
+      "redistribution_permitted": true
+    }
+  ],
+  "funds": [
+    {
+      "instrument_id": "instrument-global",
+      "domicile": "IE",
+      "distribution_policy": "accumulating",
+      "index_name": "Synthetic Global Index",
+      "replication_method": "physical sampled",
+      "ter": "0.002",
+      "fund_size": "1250000000",
+      "fund_size_currency": "EUR",
+      "as_of": "2026-01-15",
+      "source_id": "synthetic-fund-facts"
+    },
+    {
+      "instrument_id": "instrument-bond",
+      "domicile": "IE",
+      "distribution_policy": "accumulating",
+      "index_name": "Synthetic Aggregate Bond Index",
+      "replication_method": "physical sampled",
+      "ter": "0.0015",
+      "fund_size": "620000000",
+      "fund_size_currency": "EUR",
+      "as_of": "2026-01-15",
+      "source_id": "synthetic-fund-facts"
+    }
+  ],
+  "fund_holdings": [
+    {"fund_instrument_id": "instrument-global", "constituent_id": "entity-alpha", "constituent_name": "Synthetic Alpha Company", "weight": "0.08", "as_of": "2025-12-31", "source_id": "synthetic-fund-holdings"},
+    {"fund_instrument_id": "instrument-global", "constituent_id": "entity-beta", "constituent_name": "Synthetic Beta Company", "weight": "0.06", "as_of": "2025-12-31", "source_id": "synthetic-fund-holdings"},
+    {"fund_instrument_id": "instrument-global", "constituent_id": "entity-gamma", "constituent_name": "Synthetic Gamma Company", "weight": "0.05", "as_of": "2025-12-31", "source_id": "synthetic-fund-holdings"},
+    {"fund_instrument_id": "instrument-global", "constituent_id": "entity-delta", "constituent_name": "Synthetic Delta Company", "weight": "0.04", "as_of": "2025-12-31", "source_id": "synthetic-fund-holdings"},
+    {"fund_instrument_id": "instrument-bond", "constituent_id": "entity-alpha", "constituent_name": "Synthetic Alpha Company", "weight": "0.03", "as_of": "2025-12-31", "source_id": "synthetic-fund-holdings"},
+    {"fund_instrument_id": "instrument-bond", "constituent_id": "entity-beta", "constituent_name": "Synthetic Beta Company", "weight": "0.02", "as_of": "2025-12-31", "source_id": "synthetic-fund-holdings"},
+    {"fund_instrument_id": "instrument-bond", "constituent_id": "entity-epsilon", "constituent_name": "Synthetic Epsilon Issuer", "weight": "0.05", "as_of": "2025-12-31", "source_id": "synthetic-fund-holdings"}
+  ],
+  "classified_exposures": [
+    {"instrument_id": "instrument-global", "dimension": "sector", "label": "Technology", "weight": "0.10", "as_of": "2025-12-31", "source_id": "synthetic-classified-exposures"},
+    {"instrument_id": "instrument-global", "dimension": "sector", "label": "Health Care", "weight": "0.08", "as_of": "2025-12-31", "source_id": "synthetic-classified-exposures"},
+    {"instrument_id": "instrument-global", "dimension": "sector", "label": "Industrials", "weight": "0.05", "as_of": "2025-12-31", "source_id": "synthetic-classified-exposures"},
+    {"instrument_id": "instrument-bond", "dimension": "sector", "label": "Government", "weight": "0.05", "as_of": "2025-12-31", "source_id": "synthetic-classified-exposures"},
+    {"instrument_id": "instrument-bond", "dimension": "sector", "label": "Corporate", "weight": "0.05", "as_of": "2025-12-31", "source_id": "synthetic-classified-exposures"},
+    {"instrument_id": "instrument-global", "dimension": "geography", "label": "North America", "weight": "0.10", "as_of": "2025-12-31", "source_id": "synthetic-classified-exposures"},
+    {"instrument_id": "instrument-global", "dimension": "geography", "label": "Europe", "weight": "0.08", "as_of": "2025-12-31", "source_id": "synthetic-classified-exposures"},
+    {"instrument_id": "instrument-global", "dimension": "geography", "label": "Asia", "weight": "0.05", "as_of": "2025-12-31", "source_id": "synthetic-classified-exposures"},
+    {"instrument_id": "instrument-bond", "dimension": "geography", "label": "Europe", "weight": "0.10", "as_of": "2025-12-31", "source_id": "synthetic-classified-exposures"},
+    {"instrument_id": "instrument-global", "dimension": "currency", "label": "USD", "weight": "0.15", "as_of": "2025-12-31", "source_id": "synthetic-classified-exposures"},
+    {"instrument_id": "instrument-global", "dimension": "currency", "label": "EUR", "weight": "0.08", "as_of": "2025-12-31", "source_id": "synthetic-classified-exposures"},
+    {"instrument_id": "instrument-bond", "dimension": "currency", "label": "EUR", "weight": "0.10", "as_of": "2025-12-31", "source_id": "synthetic-classified-exposures"}
+  ],
+  "historical_series": [
+    {
+      "listing_id": "listing-global-xetr",
+      "currency": "EUR",
+      "frequency": "monthly",
+      "return_convention": "total_return_index",
+      "distribution_treatment": "included",
+      "corporate_action_treatment": "included in synthetic index levels",
+      "observations": [
+        {"date": "2025-09-30", "value": "100"},
+        {"date": "2025-10-31", "value": "110"},
+        {"date": "2025-11-30", "value": "99"},
+        {"date": "2025-12-31", "value": "105"},
+        {"date": "2026-01-31", "value": "120"}
+      ],
+      "as_of": "2026-01-31",
+      "source_id": "synthetic-total-return-history"
+    },
+    {
+      "listing_id": "listing-bond-xetr",
+      "currency": "EUR",
+      "frequency": "monthly",
+      "return_convention": "total_return_index",
+      "distribution_treatment": "included",
+      "corporate_action_treatment": "included in synthetic index levels",
+      "observations": [
+        {"date": "2025-09-30", "value": "100"},
+        {"date": "2025-10-31", "value": "102"},
+        {"date": "2025-11-30", "value": "101"},
+        {"date": "2025-12-31", "value": "103"},
+        {"date": "2026-01-31", "value": "104"}
+      ],
+      "as_of": "2026-01-31",
+      "source_id": "synthetic-total-return-history"
+    },
+    {
+      "listing_id": "listing-policy-benchmark-xetr",
+      "currency": "EUR",
+      "frequency": "monthly",
+      "return_convention": "total_return_index",
+      "distribution_treatment": "included",
+      "corporate_action_treatment": "included in synthetic index levels",
+      "observations": [
+        {"date": "2025-09-30", "value": "100"},
+        {"date": "2025-10-31", "value": "108"},
+        {"date": "2025-11-30", "value": "100"},
+        {"date": "2025-12-31", "value": "106"},
+        {"date": "2026-01-31", "value": "118"}
+      ],
+      "as_of": "2026-01-31",
+      "source_id": "synthetic-total-return-history"
+    }
+  ]
+}

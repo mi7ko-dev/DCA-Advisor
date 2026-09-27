@@ -23,3 +23,7 @@ class MissingFxRateError(ValidationError):
 
 class StorageSafetyError(SteadyFolioError):
     """A requested file operation would cross the private workspace boundary."""
+
+
+class ProviderUnavailableError(SteadyFolioError):
+    """An explicitly selected research provider cannot return data."""

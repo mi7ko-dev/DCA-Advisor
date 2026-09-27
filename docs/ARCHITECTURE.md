@@ -108,10 +108,12 @@ overwritten without a separate, explicit operation.
 
 ### Provider layer
 
-Structured source records separate supplied data from interpretation. Offline
-synthetic fixtures are the Phase 3 implementation. Future live price, FX, broker,
-or research adapters must preserve timestamps, source identifiers, retrieval times,
-and failure states.
+Structured source records separate supplied data from interpretation. Phase 4 adds
+a replaceable research-provider protocol and an offline synthetic provider. The
+request boundary carries public instrument/listing identifiers and an as-of date,
+not portfolio quantities or personal context. Future live price, FX, broker, or
+research adapters must preserve timestamps, source identifiers, retrieval times,
+methodology, terms, limitations, and failure states.
 
 ## Repository layout
 
@@ -132,6 +134,12 @@ src/
     calculations.py
     storage.py
     reporting.py
+    providers.py
+    research_models.py
+    research_validation.py
+    intelligence.py
+    intelligence_reporting.py
+    thesis.py
 schemas/
 tests/
 examples/
@@ -219,10 +227,11 @@ alternative undocumented formats.
 | `Holding` | Account ID, instrument/listing ID, quantity, optional acquisition metadata, and source/as-of references |
 | `Transaction` | Stable ID, account, instrument/listing, type, trade date, settlement date when known, quantity, price, fees, taxes, and currencies |
 | `TargetAllocation` | Stable versioned ID, status (`proposed` or `approved`), effective date, instrument/category targets, rationale, and approval metadata |
-| `InvestmentThesis` | Stable ID, instrument/category subject, status, evidence references, assumptions, risks, review date, and supersession link |
+| `InvestmentThesis` | Stable ID, instrument subject, status, role, rationale, approved target reference/range, benchmark, risks, review triggers, last review, and next review |
 | `ContributionPlan` | Stable ID, input amount/currency/date, constraints, proposed buys, fees, residual cash, and algorithm/version; never represented as an executed trade |
 | `AnalysisResult` | Stable ID, analysis type/version, input references, as-of time, warnings, metrics, and provenance; immutable derived output |
 | `DataSource` | Stable ID, source/provider, source type, value time, retrieval time, units/currency, citation or local reference, and quality/coverage flags |
+| `ResearchSnapshot` | Structured fund facts, partial holdings, classified exposures, compatible historical series, source methodology/freshness/terms, and no raw provider payload |
 | `ReviewHistory` | Stable ID, reviewed object/version, reviewer kind, decision, timestamp, findings, and supersession link |
 
 Jurisdiction-specific tax, suitability, account, or disclosure rules live in
@@ -332,6 +341,20 @@ residual cash to the available amount.
   hosted API, and MCP server.
 - SQLite or another database until JSON limitations are demonstrated and a migration
   plan is approved.
+
+## Phase 4 intelligence boundary
+
+Phase 4 implements structured fund metadata, partial holdings overlap, observed
+company/issuer concentration, classified sector/geography/currency exposure,
+compatible-series historical metrics, benchmark comparison, stress windows, source
+freshness and terms metadata, and non-mutating thesis review. Detailed formulas and
+limitations are in `docs/RESEARCH.md`.
+
+Only the offline synthetic provider is implemented. Live providers, autonomous web
+research, raw-response caching, tax/regulatory conclusions, forecasting, and policy
+mutation remain deferred. A future adapter must review provider terms before using
+or persisting data and must store real user-related responses and outputs below
+`private/`.
 
 ## Verification strategy
 

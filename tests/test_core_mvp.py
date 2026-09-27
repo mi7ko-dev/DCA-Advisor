@@ -176,7 +176,18 @@ def _multi_currency_state() -> PortfolioState:
 class SchemaAndValidationTests(unittest.TestCase):
     def test_public_schema_documents_are_valid_json(self) -> None:
         schemas = sorted((REPOSITORY_ROOT / "schemas").glob("*.schema.json"))
-        self.assertEqual(len(schemas), 4)
+        self.assertEqual(
+            {schema.name for schema in schemas},
+            {
+                "analysis-result.schema.json",
+                "contribution-plan.schema.json",
+                "intelligence-result.schema.json",
+                "market-input.schema.json",
+                "portfolio.schema.json",
+                "research-snapshot.schema.json",
+                "thesis-review.schema.json",
+            },
+        )
         for schema in schemas:
             with self.subTest(schema=schema.name):
                 parsed = _read_json(schema)

@@ -1,9 +1,9 @@
 # SteadyFolio
 
 SteadyFolio is a local-first, deterministic portfolio-maintenance core for
-contribution-based investors. The Phase 3 MVP values a portfolio, reports current
-weights and signed drift, and produces buy-only simple or drift-aware contribution
-plans under explicit price, FX, fee, minimum-trade, and share-increment assumptions.
+contribution-based investors. It values a portfolio, reports current weights and
+signed drift, produces buy-only simple or drift-aware contribution plans, and adds
+coverage-aware portfolio intelligence over structured research snapshots.
 
 The project does not place orders, connect to brokers, provide tax or suitability
 advice, forecast returns, or infer missing market data. All tracked examples are
@@ -27,12 +27,31 @@ Regenerate the public synthetic result and English report:
 
 ```powershell
 python tools/generate_synthetic_example.py
+python tools/generate_synthetic_intelligence.py
 ```
 
 The inputs are `examples/portfolio.example.json`,
 `examples/market-input.example.json`, and
-`examples/contribution-request.example.json`. Generated output remains synthetic
-and is written only below `examples/results/` and `examples/reports/`.
+`examples/contribution-request.example.json` for Phase 3, plus
+`examples/research-snapshot.example.json`, `examples/stress-windows.example.json`,
+and `examples/thesis-evidence.example.json` for Phase 4. Generated output remains
+synthetic and is written only below `examples/results/` and `examples/reports/`.
+
+## Portfolio intelligence
+
+Phase 4 adds a replaceable provider protocol and an offline synthetic provider. It
+supports sourced fund facts, partial holdings overlap, observed company/issuer
+concentration, sector/geography/currency exposure, historical return/volatility/
+drawdown/correlation, benchmark and stress comparisons, and non-mutating thesis
+review.
+
+Coverage and freshness are part of every result. Missing holdings or exposure data
+is reported as unclassified, not converted to zero. Historical inputs must use
+compatible periods, currencies, return conventions, distribution treatment, and
+corporate-action treatment.
+
+No live data provider is included. Provider interfaces and exact methodology are
+documented in `docs/RESEARCH.md`.
 
 ## Private workspace boundary
 
@@ -62,5 +81,6 @@ installed package.
 The exact valuation, drift, DCA, fee, residual-cash, and concentration conventions
 are documented in `docs/CALCULATIONS.md`. Architecture and privacy boundaries are
 documented in `docs/ARCHITECTURE.md` and `docs/SECURITY.md`.
+Portfolio-intelligence methodology is documented in `docs/RESEARCH.md`.
 
 SteadyFolio is provided under the MIT License. It is not financial advice.

@@ -46,20 +46,32 @@
     {
       "id": "thesis-global",
       "instrument_id": "instrument-global",
+      "benchmark_instrument_id": "instrument-policy-benchmark",
+      "last_review_date": "2026-01-15",
       "rationale": "Synthetic broad equity exposure for a long horizon.",
       "review_date": "2027-01-31",
+      "review_triggers": ["Index methodology changes", "TER exceeds 0.30%", "Fund closure or merger"],
       "risks": ["Equity drawdown", "Foreign-currency exposure"],
       "role": "growth",
-      "status": "active"
+      "status": "active",
+      "target_range_max": "0.6",
+      "target_range_min": "0.4",
+      "target_weight": "0.5"
     },
     {
       "id": "thesis-bond",
       "instrument_id": "instrument-bond",
+      "benchmark_instrument_id": "instrument-policy-benchmark",
+      "last_review_date": "2026-01-15",
       "rationale": "Synthetic stabilizing allocation for the example portfolio.",
       "review_date": "2027-01-31",
+      "review_triggers": ["Index methodology changes", "Credit quality changes materially", "Fund closure or merger"],
       "risks": ["Interest-rate risk", "Credit-spread risk"],
       "role": "stability",
-      "status": "active"
+      "status": "active",
+      "target_range_max": "0.6",
+      "target_range_min": "0.4",
+      "target_weight": "0.5"
     }
   ],
   "instruments": [
@@ -78,6 +90,14 @@
       "isin": "IE00SYNTH019",
       "kind": "etf",
       "name": "Synthetic Aggregate Bond ETF"
+    },
+    {
+      "annual_fee_rate": "0",
+      "economic_currency": "EUR",
+      "id": "instrument-policy-benchmark",
+      "isin": "IE00SYNTH027",
+      "kind": "etf",
+      "name": "Synthetic Policy Benchmark"
     }
   ],
   "investor_profile": {
@@ -103,6 +123,15 @@
       "mic": "XETR",
       "quantity_increment": "0.001",
       "ticker": "BNDX",
+      "trading_currency": "EUR"
+    },
+    {
+      "fractional_allowed": false,
+      "id": "listing-policy-benchmark-xetr",
+      "instrument_id": "instrument-policy-benchmark",
+      "mic": "XETR",
+      "quantity_increment": "1",
+      "ticker": "POLX",
       "trading_currency": "EUR"
     }
   ],

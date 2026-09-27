@@ -154,8 +154,48 @@ packaging, publishing, later phases, or tracked real user data.
   license-notice check. `private/`, `blueprint/` clones, `.git/`, caches, and local
   outputs are never package inputs.
 
-## Approval effects
+## Phase 3 approval effects
 
 Phase 2 approval accepted D-001 through D-012 as the Phase 3 baseline. Any material
 change to privacy boundaries, runtime, licensing, schema semantics, or MVP scope
 must be recorded here and returned to an approval checkpoint before implementation.
+
+## D-013: Use structured, replaceable research providers
+
+- **Status:** Accepted
+- **Decision:** Provider requests carry only public instrument/listing identifiers
+  and an as-of date. Providers return validated structured snapshots with source,
+  methodology, freshness, limitations, terms, and cache/redistribution metadata.
+- **Why:** This keeps the deterministic engine independent of a vendor and avoids
+  sending portfolio quantities, balances, accounts, goals, or theses to a data
+  provider.
+- **Consequence:** Phase 4 implements an offline synthetic provider only. Live
+  adapters and their explicit integration tests require a separate provider and
+  terms review.
+
+## D-014: Preserve partial coverage instead of extrapolating
+
+- **Status:** Accepted
+- **Decision:** Holdings overlap, company concentration, and classified exposures
+  use only supplied records and report covered plus unclassified portfolio weight.
+- **Why:** Top holdings are not complete fund holdings, and missing exposure is not
+  evidence of zero exposure.
+- **Consequence:** Observed look-through metrics are lower-bound descriptions. They
+  cannot be presented as complete exposure without complete provider coverage.
+
+## D-015: Require compatible historical series
+
+- **Status:** Accepted
+- **Decision:** Joint historical analysis requires aligned dates, one base
+  currency, frequency, return convention, distribution treatment, and
+  corporate-action treatment. Benchmark comparisons use the same contract.
+- **Why:** Mixing incompatible inputs produces precise-looking but invalid risk and
+  performance metrics.
+- **Consequence:** Missing or incompatible series fail or remain explicitly
+  unavailable. Historical metrics are descriptive and never forecasts.
+
+## Phase 4 approval effects
+
+Approval to execute Phase 4 accepted D-013 through D-015 for the bounded offline
+implementation. It did not authorize a live provider, external data transfer,
+tracked real research data, policy mutation, Phase 5 work, or publication.

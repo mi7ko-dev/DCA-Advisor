@@ -1,0 +1,27 @@
+{
+  "thesis_id": "thesis-global",
+  "reviewed_at": "2026-01-31",
+  "observed_review_triggers": [],
+  "evidence": [
+    {
+      "id": "evidence-fund-structure",
+      "instrument_id": "instrument-global",
+      "kind": "fund_structure",
+      "summary": "The synthetic index and replication method remain unchanged.",
+      "observed_at": "2026-01-15",
+      "source_id": "synthetic-fund-facts",
+      "assessment": "supports",
+      "limitations": ["This is a synthetic demonstration fact."]
+    },
+    {
+      "id": "evidence-price-decline",
+      "instrument_id": "instrument-global",
+      "kind": "price_change",
+      "summary": "The synthetic listing declined during one monthly observation.",
+      "observed_at": "2025-11-30",
+      "source_id": "synthetic-total-return-history",
+      "assessment": "contradicts",
+      "limitations": ["A single price move does not test the long-term rationale."]
+    }
+  ]
+}

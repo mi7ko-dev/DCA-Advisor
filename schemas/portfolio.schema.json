@@ -165,7 +165,13 @@
         "role": {"type": "string", "minLength": 1},
         "rationale": {"type": "string", "minLength": 1},
         "risks": {"type": "array", "items": {"type": "string", "minLength": 1}},
-        "review_date": {"$ref": "#/$defs/date"}
+        "review_date": {"$ref": "#/$defs/date"},
+        "target_weight": {"$ref": "#/$defs/nonnegative_decimal"},
+        "target_range_min": {"$ref": "#/$defs/nonnegative_decimal"},
+        "target_range_max": {"$ref": "#/$defs/nonnegative_decimal"},
+        "benchmark_instrument_id": {"$ref": "#/$defs/id"},
+        "review_triggers": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "last_review_date": {"$ref": "#/$defs/date"}
       }
     },
     "data_source": {
