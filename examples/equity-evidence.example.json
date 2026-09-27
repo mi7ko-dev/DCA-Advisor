@@ -1,0 +1,108 @@
+{
+  "as_of": "2026-01-31",
+  "circle_of_competence": {
+    "business_model_summary": "Sells synthetic compute capacity to diversified customers.",
+    "business_model_understood": true,
+    "external_dependency": null,
+    "observable_event": null,
+    "revenue_driver_summary": "Revenue changes with contracted capacity and utilization.",
+    "revenue_drivers_understood": true
+  },
+  "identity": {
+    "instrument_id": "synthetic-compute-company",
+    "isin": "IE00SYNTH035",
+    "listing_id": "synthetic-compute-xetr",
+    "mic": "XETR",
+    "reported_name": "Synthetic Compute Company",
+    "source_id": "synthetic-equity-source",
+    "ticker": "SYCO",
+    "trading_currency": "EUR"
+  },
+  "quality": {
+    "benchmark_outperformance": {
+      "as_of": "2026-01-31",
+      "rationale": "Synthetic five-year total return exceeded the benchmark.",
+      "source_id": "synthetic-equity-source",
+      "value": true
+    },
+    "capex_to_revenue": {
+      "as_of": "2026-01-31",
+      "source_id": "synthetic-equity-source",
+      "value": "0.10"
+    },
+    "debt_to_ebitda": {
+      "as_of": "2026-01-31",
+      "source_id": "synthetic-equity-source",
+      "value": "1.5"
+    },
+    "free_cash_flow": [
+      {
+        "period_end": "2023-12-31",
+        "source_id": "synthetic-equity-source",
+        "value": "100"
+      },
+      {
+        "period_end": "2024-12-31",
+        "source_id": "synthetic-equity-source",
+        "value": "120"
+      },
+      {
+        "period_end": "2025-12-31",
+        "source_id": "synthetic-equity-source",
+        "value": "140"
+      }
+    ],
+    "institutional_ownership": {
+      "as_of": "2026-01-31",
+      "source_id": "synthetic-equity-source",
+      "value": "0.60"
+    },
+    "moat_and_management": {
+      "as_of": "2026-01-31",
+      "rationale": "Synthetic pricing-power and governance evidence is positive.",
+      "source_id": "synthetic-equity-source",
+      "value": true
+    },
+    "operating_margin": {
+      "as_of": "2026-01-31",
+      "source_id": "synthetic-equity-source",
+      "value": "0.20"
+    },
+    "revenue_growth": {
+      "as_of": "2026-01-31",
+      "source_id": "synthetic-equity-source",
+      "value": "0.12"
+    }
+  },
+  "schema_version": "1.0",
+  "sources": [
+    {
+      "cache_permitted": true,
+      "freshness_days": 7,
+      "id": "synthetic-equity-source",
+      "limitations": [
+        "Synthetic evidence for deterministic examples only."
+      ],
+      "methodology": "Synthetic fundamentals and valuation values.",
+      "provider": "SteadyFolio Synthetic Equity Provider",
+      "redistribution_permitted": true,
+      "reference": "examples/equity-evidence.example.json",
+      "retrieved_at": "2026-01-31T18:00:00+00:00",
+      "as_of": "2026-01-31",
+      "terms_reference": "synthetic://terms"
+    }
+  ],
+  "valuation_anchors": [
+    {
+      "as_of": "2026-01-31",
+      "currency": "EUR",
+      "current_price": "100",
+      "fair_value": "125",
+      "method": "dcf",
+      "rationale": "Synthetic discounted cash-flow estimate.",
+      "source_ids": [
+        "synthetic-equity-source"
+      ]
+    }
+  ]
+}

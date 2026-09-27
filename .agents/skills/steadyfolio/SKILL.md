@@ -1,6 +1,6 @@
 ---
 name: steadyfolio
-description: Route and explain local portfolio contributions, portfolio reviews, ETF thesis checks, fund overlap, and evidence-limited investment questions through SteadyFolio's deterministic engine. Use for SteadyFolio maintenance and review requests; do not use it to execute trades, invent live data, or provide tax or legal conclusions.
+description: Route and explain local portfolio contributions, portfolio reviews, ETF thesis checks, fund overlap, and evidence-limited individual-equity reviews through SteadyFolio's deterministic engine. Use for SteadyFolio maintenance and structured investment reviews; do not use it to execute trades, invent live data, or provide tax or legal conclusions.
 ---
 
 # SteadyFolio
@@ -57,16 +57,17 @@ persist, trade, publish, commit, or push.
 
 ## Synthetic verification
 
-Run the six public demonstrations with:
+Run the public demonstrations with:
 
 ```powershell
 python tools/generate_synthetic_committee.py
+python tools/generate_synthetic_equity.py
 ```
 
 Run the integration and skill-structure tests with:
 
 ```powershell
-python -m unittest tests.test_committee tests.test_skill
+python -m unittest tests.test_committee tests.test_equity_review tests.test_skill
 ```
 
 Installation, private-state maintenance, and the complete verification gate are

@@ -2,8 +2,8 @@
 
 ## Active phase
 
-Phase 6 - Final Hardening and Documentation is complete in the working tree and is
-at its approval checkpoint. The Phase 6 changes are not staged, committed, pushed,
+Phase 7 - Evidence-Limited Equity Review is complete in the working tree and is at
+its approval checkpoint. The Phase 7 changes are not staged, committed, pushed,
 packaged, or published.
 
 ## Completed technical work
@@ -59,6 +59,39 @@ packaged, or published.
   constraints, rejecting contribution amounts joined to identifier characters,
   and versioning the three-observation research contract as schema `1.1` with
   explicit read compatibility for schema `1.0`.
+- Added strict stock identity matching across recorded instrument name, ISIN, and
+  optional listing ID, MIC, ticker, and trading currency; duplicate non-null ISINs
+  can no longer create separate economic instruments.
+- Added the offline `equity_quality_v1` model with a positive-free-cash-flow hard
+  screen, eight disclosed criteria, unavailable-data denominator handling,
+  completeness gates, and a separate circle-of-competence result.
+- Added hierarchical DCF, reverse-DCF, and forward-P/E valuation anchors with
+  explicit margin of safety, conflict detection without averaging, and optional
+  owner-earnings evidence for high-CapEx cases.
+- Added a configurable private portfolio-policy contract for direct-weight,
+  fragmentation, satellite, and named factor-group checks while explicitly
+  limiting the current denominator to invested positions.
+- Added deterministic committee routing for individual-equity review, public JSON
+  contracts, private non-overwriting persistence, synthetic examples and reports,
+  documentation, skill routing, and CI regeneration.
+
+## Phase 7 local verification record
+
+Verification on 2026-09-28 completed with these results:
+
+- 133 unit, integration, privacy, invariant, repository-safety, skill-structure,
+  equity-review, and portfolio-policy tests passed with zero skips.
+- Python compilation passed for `src/`, `tests/`, and `tools/`.
+- All public synthetic generators reproduced the examples byte for byte.
+- The bundled skill validator reported `Skill is valid!`.
+- Repository safety passed 13 ignored-path expectations and 12 public-path
+  expectations against 73 tracked files and 92 current public candidate files.
+- Gitleaks 8.30.1 passed for available Git history and all 92 public candidates.
+- Searches found no copied personal stock-skill terms, local machine paths, or
+  Cyrillic text in project-authored public files, and the patch whitespace check
+  passed.
+- Ruff and Pyright were unavailable locally. The local interpreter remains Python
+  3.9.7, while the supported runtime and CI target remain Python 3.11 or newer.
 
 ## Phase 6 local verification record
 
@@ -104,7 +137,7 @@ attest to deleted remote refs, unavailable objects, forks, or private systems.
 
 ## Next approval gate
 
-Phase 6 is the final approved project phase. Any commit, push, package publication,
-live-provider work, broker integration, transaction recording, policy mutation, or
-new product scope requires a separate explicit instruction. No approval is inferred
-from this file.
+Phase 7 is complete at its approval checkpoint. Any stage, commit, push, package
+publication, live-provider work, broker integration, tax adapter, transaction
+recording, policy mutation, or new product scope requires a separate explicit
+instruction. No approval is inferred from this file.

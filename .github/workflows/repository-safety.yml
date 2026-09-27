@@ -48,6 +48,7 @@ jobs:
           python tools/generate_synthetic_example.py
           python tools/generate_synthetic_intelligence.py
           python tools/generate_synthetic_committee.py
+          python tools/generate_synthetic_equity.py
           git diff --exit-code -- examples
 
       - name: Run tests and public-repository safety checks

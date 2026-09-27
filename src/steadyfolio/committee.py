@@ -18,6 +18,8 @@ from .committee_models import (
     WorkflowTrace,
 )
 from .errors import ProviderUnavailableError, ValidationError
+from .equity import review_equity
+from .equity_models import EquityReviewInput, EquityReviewResult
 from .intelligence import analyze_portfolio_intelligence
 from .models import (
     AnalysisResult,
@@ -42,7 +44,7 @@ from .thesis import review_investment_thesis
 _IDENTIFIER = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$")
 _AMOUNT = re.compile(
     r"\b(?P<currency>[A-Z]{3})\s*"
-    r"(?P<amount>[0-9]+(?:[.,][0-9]{1,2})?)\b(?![.,][0-9])"
+    r"(?P<amount>[0-9]+(?:[.,][0-9]{1,2})?)\b(?![.,][0-9.,])"
 )
 _EXECUTION_MODE = (
     "deterministic engine with sequential review lenses; no independent agents"
@@ -85,11 +87,24 @@ def route_request(request: CommitteeRequest) -> str:
     _validate_request(request)
     normalized = " ".join(request.message.lower().split())
     intents: list[str] = []
+    equity_requested = request.instrument_id is not None and any(
+        phrase in normalized
+        for phrase in (
+            "analyze this stock",
+            "analyze the stock",
+            "equity review",
+            "equity quality",
+            "stock analysis",
+            "quality score",
+        )
+    )
+    if equity_requested:
+        intents.append("equity_review")
     if "overlap" in normalized or "overlapping" in normalized:
         intents.append("overlap_review")
     if (
         request.thesis_id is not None
-        or request.instrument_id is not None
+        or (request.instrument_id is not None and not equity_requested)
         or "still be in my portfolio" in normalized
         or "investment thesis" in normalized
     ):
@@ -191,7 +206,7 @@ def _market_sources(
 
 
 def _research_sources(
-    result: PortfolioIntelligenceResult | ThesisReviewResult,
+    result: PortfolioIntelligenceResult | ThesisReviewResult | EquityReviewResult,
 ) -> tuple[SourceDisclosure, ...]:
     return tuple(
         SourceDisclosure(
@@ -258,6 +273,8 @@ def _clarification_result(request: CommitteeRequest, route: str) -> CommitteeRes
         missing = "A contribution amount and currency are required."
     elif route == "thesis_review":
         missing = "An instrument and an active thesis are required for thesis review."
+    elif route == "equity_review":
+        missing = "Identified, dated equity evidence is required for equity review."
     return CommitteeResult(
         id=f"committee:{request.id}:{request.as_of}",
         committee_version=COMMITTEE_VERSION,
@@ -723,6 +740,114 @@ def _run_overlap_review(
     )
 
 
+def _run_equity_review(
+    request: CommitteeRequest,
+    state: PortfolioState,
+    equity_input: EquityReviewInput | None,
+) -> CommitteeResult:
+    if equity_input is None:
+        return _clarification_result(request, "equity_review")
+    if request.instrument_id != equity_input.identity.instrument_id:
+        raise ValidationError(
+            "Committee request and equity evidence reference different instruments."
+        )
+    review = review_equity(state, equity_input)
+    score = (
+        f"{review.score_percent}%"
+        if review.score_percent is not None
+        else "unavailable"
+    )
+    facts = (
+        f"Instrument identity matched for {review.instrument_id}.",
+        f"Free-cash-flow hard screen: {review.hard_screen_status}.",
+        f"Quality score: {score} ({review.points_awarded} of "
+        f"{review.points_available} available points; "
+        f"{review.criteria_available} of {review.criteria_total} criteria).",
+        f"Quality classification: {review.quality_classification}.",
+        f"Valuation status: {review.valuation.status} using "
+        f"{review.valuation.selected_method or 'no supported anchor'}.",
+    )
+    quality_lens = SpecialistInterpretation(
+        role="equity-quality",
+        conclusion=review.quality_classification,
+        interpretation=(
+            "The quality conclusion uses the disclosed versioned criteria and excludes "
+            "unavailable criteria from the denominator."
+        ),
+        evidence_references=(review.id, *review.source_ids),
+        limitations=review.limitations,
+    )
+    valuation_lens = SpecialistInterpretation(
+        role="valuation-evidence",
+        conclusion=review.valuation.status,
+        interpretation=(
+            "Valuation remains separate from business quality; conflicting methods are "
+            "reported without averaging."
+        ),
+        evidence_references=(review.id, *review.valuation.source_ids),
+        limitations=review.valuation.limitations,
+    )
+    insufficient = review.conclusion in {
+        "insufficient_evidence",
+        "insufficient_valuation",
+    }
+    status = (
+        "insufficient_evidence"
+        if insufficient
+        else "limited"
+        if review.conclusion
+        in {
+            "limited_competence",
+            "limited_margin",
+            "quality_at_premium",
+            "watch",
+        }
+        else "complete"
+    )
+    return CommitteeResult(
+        id=f"committee:{request.id}:{request.as_of}",
+        committee_version=COMMITTEE_VERSION,
+        request_id=request.id,
+        request_text=request.message,
+        route="equity_review",
+        status=status,
+        as_of=request.as_of,
+        deterministic_facts=facts,
+        sources=_research_sources(review),
+        data_limitations=review.limitations,
+        assumptions=(
+            "The supplied evidence is structured and attributable.",
+            "Quality and valuation are separate conclusions.",
+        ),
+        specialist_interpretations=(quality_lens, valuation_lens),
+        disagreements=(
+            ("Supported valuation methods disagree and were not averaged.",)
+            if review.valuation.status == "conflicting"
+            else ()
+        ),
+        final_synthesis=(
+            f"The deterministic equity review concluded {review.conclusion}; it "
+            "does not authorize a transaction or policy change."
+        ),
+        proposed_next_actions=review.proposed_next_actions,
+        requires_user_approval=False,
+        approval_reasons=(
+            "Any later transaction or policy change requires separate explicit approval.",
+        ),
+        mutation_performed=False,
+        trace=WorkflowTrace(
+            route="equity_review",
+            deterministic_tools=("review_equity",),
+            review_lenses=("equity-quality", "valuation-evidence"),
+            provider_calls=0,
+            external_calls=0,
+            critic_passes=0,
+            revisions=0,
+            execution_mode=_EXECUTION_MODE,
+        ),
+    )
+
+
 def _resolve_thesis_id(request: CommitteeRequest, state: PortfolioState) -> str | None:
     if request.thesis_id is not None:
         return next(
@@ -899,6 +1024,7 @@ def run_committee_workflow(
     stress_windows: Sequence[StressWindow] = (),
     thesis_evidence: Sequence[ThesisEvidence] = (),
     observed_review_triggers: Sequence[str] = (),
+    equity_review_input: EquityReviewInput | None = None,
 ) -> CommitteeResult:
     """Run one bounded workflow and return an explanation-ready structured result."""
 
@@ -933,4 +1059,6 @@ def run_committee_workflow(
             thesis_evidence,
             observed_review_triggers,
         )
+    if route == "equity_review":
+        return _run_equity_review(request, state, equity_review_input)
     return _clarification_result(request, route)

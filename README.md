@@ -4,7 +4,9 @@ SteadyFolio is a local-first, deterministic portfolio-maintenance core and
 repository-local conversational skill for contribution-based investors. It values
 a portfolio, reports current weights and signed drift, produces buy-only simple or
 drift-aware contribution plans, adds coverage-aware portfolio intelligence, and
-routes bounded review workflows over structured results.
+routes bounded review workflows over structured results. It also supports offline,
+evidence-limited individual-equity quality and valuation review plus explicit
+portfolio-policy checks.
 
 The project does not place orders, connect to brokers, provide tax or suitability
 advice, forecast returns, or infer missing market data. All tracked examples are
@@ -47,6 +49,7 @@ Regenerate the public synthetic result and English report:
 python tools/generate_synthetic_example.py
 python tools/generate_synthetic_intelligence.py
 python tools/generate_synthetic_committee.py
+python tools/generate_synthetic_equity.py
 ```
 
 The inputs are `examples/portfolio.example.json`,
@@ -54,7 +57,10 @@ The inputs are `examples/portfolio.example.json`,
 `examples/contribution-request.example.json` for Phase 3, plus
 `examples/research-snapshot.example.json`, `examples/stress-windows.example.json`,
 and `examples/thesis-evidence.example.json` for Phase 4. Generated output remains
-synthetic and is written only below `examples/results/` and `examples/reports/`.
+synthetic. Phase 7 adds the synthetic equity evidence and portfolio-policy examples.
+Generated Phase 3 through Phase 5 output is written below `examples/results/` and
+`examples/reports/`; the paired Phase 7 examples are kept directly under
+`examples/`.
 After regeneration, `git diff --exit-code -- examples` must succeed.
 
 ## Conversational skill
@@ -62,6 +68,8 @@ After regeneration, `git diff --exit-code -- examples` must succeed.
 The canonical repo-local skill is at
 `.agents/skills/steadyfolio/SKILL.md`. It routes monthly contributions, portfolio
 reviews, ETF thesis checks, and overlap questions through the deterministic engine.
+It also routes individual-stock review when dated structured equity evidence is
+supplied.
 Routine contributions do not invoke research or a committee. Evidence-dependent
 reviews use only relevant sequential review lenses, at most one critic pass, and no
 live external calls.
@@ -89,6 +97,19 @@ conventions, distribution treatment, and corporate-action treatment.
 
 No live data provider is included. Provider interfaces and exact methodology are
 documented in `docs/RESEARCH.md`.
+
+## Individual-equity review
+
+The offline equity route validates ISIN, instrument name, and optional listing
+identity before scoring. It keeps business quality, circle of competence,
+valuation, and owner-earnings interpretation separate. Missing criteria remain
+unavailable rather than becoming zero, and conflicting valuation methods are not
+averaged.
+
+Portfolio-policy thresholds and classifications are explicit data rather than
+global constants. Real policy instances belong under `private/`. The current
+policy denominator is invested positions and therefore excludes unmodelled cash.
+See `docs/EQUITY_REVIEW.md` for the contracts and limitations.
 
 ## Private workspace boundary
 

@@ -23,6 +23,7 @@ from steadyfolio.committee import (  # noqa: E402
 from steadyfolio.committee_models import CommitteeRequest  # noqa: E402
 from steadyfolio.committee_reporting import render_committee_report  # noqa: E402
 from steadyfolio.errors import ProviderUnavailableError, ValidationError  # noqa: E402
+from steadyfolio.equity_validation import equity_review_input_from_dict  # noqa: E402
 from steadyfolio.models import to_json_value  # noqa: E402
 from steadyfolio.providers import StaticResearchProvider  # noqa: E402
 from steadyfolio.research_models import ResearchSnapshot  # noqa: E402
@@ -115,6 +116,15 @@ class RoutingTests(unittest.TestCase):
                 "overlap_review",
             ),
             (
+                CommitteeRequest(
+                    "request-equity",
+                    "Analyze this stock with an equity quality review.",
+                    AS_OF,
+                    instrument_id="synthetic-compute-company",
+                ),
+                "equity_review",
+            ),
+            (
                 CommitteeRequest("request-unknown", "Hello there.", AS_OF),
                 "clarification",
             ),
@@ -127,6 +137,9 @@ class RoutingTests(unittest.TestCase):
         for token in (
             "EUR 1,000",
             "EUR 400.000",
+            "EUR 400..000",
+            "EUR 1,,000",
+            "EUR 400.,00",
             "EUR 400USD",
             "EUR 400abc",
             "EUR 400_foo",
@@ -178,6 +191,35 @@ class RoutingTests(unittest.TestCase):
 
 
 class CommitteeIntegrationTests(unittest.TestCase):
+    def test_equity_review_uses_structured_evidence_without_live_calls(self) -> None:
+        state = state_from_dict(_read(EXAMPLES / "equity-portfolio.example.json"))
+        equity_input = equity_review_input_from_dict(
+            _read(EXAMPLES / "equity-evidence.example.json")
+        )
+        request = CommitteeRequest(
+            "request-equity",
+            "Analyze this stock with an equity quality review.",
+            AS_OF,
+            instrument_id="synthetic-compute-company",
+        )
+
+        result = run_committee_workflow(
+            request,
+            state,
+            equity_review_input=equity_input,
+        )
+
+        self.assertEqual(result.route, "equity_review")
+        self.assertEqual(result.status, "complete")
+        self.assertEqual(result.trace.deterministic_tools, ("review_equity",))
+        self.assertEqual(
+            result.trace.review_lenses,
+            ("equity-quality", "valuation-evidence"),
+        )
+        self.assertEqual(result.trace.provider_calls, 0)
+        self.assertEqual(result.trace.external_calls, 0)
+        self.assertFalse(result.mutation_performed)
+
     def test_routine_contribution_skips_research_and_committee(self) -> None:
         state, prices, fx_rates, constraints, snapshot, _, _, _ = _inputs()
         original = deepcopy(state)

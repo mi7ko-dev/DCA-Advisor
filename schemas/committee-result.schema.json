@@ -27,11 +27,11 @@
   ],
   "properties": {
     "id": {"type": "string", "minLength": 1},
-    "committee_version": {"type": "string", "const": "1.0"},
+    "committee_version": {"type": "string", "const": "1.1"},
     "request_id": {"type": "string", "minLength": 1},
     "request_text": {"type": "string", "minLength": 1},
     "route": {
-      "enum": ["clarification", "contribution", "portfolio_review", "overlap_review", "thesis_review"]
+      "enum": ["clarification", "contribution", "portfolio_review", "overlap_review", "thesis_review", "equity_review"]
     },
     "status": {
       "enum": ["complete", "limited", "needs_clarification", "insufficient_evidence"]

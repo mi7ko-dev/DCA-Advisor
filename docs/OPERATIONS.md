@@ -37,7 +37,10 @@ The public profile, holdings, goals, market observations, and research evidence 
 - `examples/contribution-request.example.json` for the EUR 400 contribution and
   trading constraints; and
 - the research, stress-window, and thesis-evidence examples for intelligence and
-  committee routes.
+  committee routes; and
+- `examples/equity-portfolio.example.json`,
+  `examples/equity-evidence.example.json`, and
+  `examples/portfolio-policy.example.json` for the offline equity and policy route.
 
 Regenerate the contribution result, intelligence result, thesis review, and six
 committee demonstrations:
@@ -46,6 +49,7 @@ committee demonstrations:
 python tools/generate_synthetic_example.py
 python tools/generate_synthetic_intelligence.py
 python tools/generate_synthetic_committee.py
+python tools/generate_synthetic_equity.py
 git diff --exit-code -- examples
 ```
 
@@ -54,12 +58,16 @@ third demonstrates contribution, portfolio review, thesis review, partial overla
 residual drift, and missing or stale evidence. Inspect the paired JSON in
 `examples/results/` and Markdown in `examples/reports/`.
 
+The fourth generator produces the Phase 7 equity review and portfolio-policy JSON
+and Markdown examples directly under `examples/`.
+
 To request the same routes conversationally, use `$steadyfolio` with a narrow
 request such as:
 
 ```text
 Use $steadyfolio to plan a synthetic EUR 400 monthly contribution.
 Use $steadyfolio to review whether the synthetic global ETF thesis still holds.
+Use $steadyfolio to run an equity review from the supplied synthetic evidence.
 ```
 
 The skill must use the engine output. It must not calculate portfolio values in
@@ -96,6 +104,12 @@ encryption, migration, concurrent-write, or deletion automation.
 The API requires a separate explicit call to save a result or review. Do not use
 `overwrite=True` without immediate user approval. Saving a review does not mutate
 portfolio state, approve a target change, or record a transaction.
+
+Phase 7 equity and policy outputs use `save_equity_review` and
+`save_portfolio_policy_result`. Both validate the structured result, write below
+`private/reviews/`, and refuse overwrite by default. Creating or replacing a real
+policy instance is a separate approval-gated operation and is not implemented by
+these result-saving functions.
 
 ## Data flow and provider boundary
 
@@ -142,6 +156,7 @@ Common stops are intentional:
 
 - a missing price, FX rate, target version, source date, or required coverage must
   be supplied rather than inferred;
+- an equity ISIN, name, or listing mismatch stops before scoring;
 - stale or incomplete evidence may produce `insufficient_evidence`;
 - an existing private output is not overwritten by default;
 - any symlink in a private output path is rejected; and

@@ -1,0 +1,26 @@
+{
+  "analysis_base": "invested_positions",
+  "direct_weight_exempt_instrument_ids": [
+    "instrument-global"
+  ],
+  "factor_groups": [
+    {
+      "change_alert_threshold": "0.05",
+      "id": "synthetic-shared-factor",
+      "instrument_ids": [
+        "instrument-global",
+        "instrument-bond"
+      ],
+      "previous_reported_weight": "0.95"
+    }
+  ],
+  "fragmentation_weight_threshold": "0.02",
+  "id": "synthetic-portfolio-policy",
+  "max_direct_weight": "0.15",
+  "max_fragmented_positions": 5,
+  "max_satellite_weight": "0.30",
+  "satellite_instrument_ids": [
+    "instrument-bond"
+  ],
+  "version": "1.0"
+}

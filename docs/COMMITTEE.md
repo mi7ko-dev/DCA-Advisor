@@ -8,6 +8,9 @@ contributions, portfolio reviews, ETF thesis checks, and fund-overlap questions.
 It does not execute transactions, change policy, fetch live data, or provide tax,
 legal, regulatory, or suitability advice.
 
+Phase 7 extends the router with an `equity_review` path over supplied structured
+evidence. It does not add a live provider or relax any approval boundary.
+
 The workflow is:
 
 ```text
@@ -31,6 +34,7 @@ vote. No score or agreement count is used as evidence.
 | `portfolio_review` | `analyze_portfolio`, optional `ResearchProvider.fetch`, `analyze_portfolio_intelligence` | Allocation/diversification and risk/cost/evidence lenses; critic only when useful |
 | `overlap_review` | `analyze_portfolio`, `ResearchProvider.fetch`, `analyze_portfolio_intelligence` | Diversification and evidence-quality lenses; incomplete coverage stays explicit |
 | `thesis_review` | `ResearchProvider.fetch`, `review_investment_thesis` | Thesis-fit and evidence-quality lenses; price movement alone is not thesis failure |
+| `equity_review` | `review_equity` | Equity-quality and valuation-evidence lenses; identity mismatch stops before scoring |
 | `clarification` | None | Stop without calculation or mutation |
 
 Every request is limited to one research pass, one critic pass, one revision, and

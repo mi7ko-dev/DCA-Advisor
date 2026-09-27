@@ -295,3 +295,26 @@ Approval to execute Phase 6 and address its consolidated review feedback accepte
 D-019 through D-021 for final hardening and documentation. It did not authorize
 staging, committing, pushing, publishing, plugin generation, live providers,
 broker connections, transactions, or policy mutation.
+
+## D-022: Add evidence-limited equity review and explicit private policy
+
+- **Status:** Accepted
+- **Decision:** Add a versioned offline individual-equity review with a strict
+  ISIN/name/listing identity gate, a positive-free-cash-flow hard screen,
+  transparent criteria with unavailable-data handling, a separate valuation
+  result, and optional owner-earnings evidence. Add a separate configurable
+  portfolio-policy evaluator whose real instances remain private.
+- **Why:** These concepts improve evidence discipline without copying a personal
+  monolithic stock-analysis prompt, hard-coding current market or jurisdiction
+  claims, or turning model output into execution authority.
+- **Consequence:** The engine accepts only supplied dated evidence and supported
+  valuation methods. It performs no live retrieval, broker access, tax conclusion,
+  target mutation, or transaction. Policy checks currently use invested positions
+  and explicitly disclose that unmodelled cash is absent from the denominator.
+
+## Phase 7 approval effects
+
+The user's instruction to implement the reviewed stock-analysis concepts accepted
+D-022 for this bounded public implementation. It did not authorize staging,
+committing, pushing, live providers, broker connections, tax adapters, target
+changes, transactions, or publication.

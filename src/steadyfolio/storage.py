@@ -11,7 +11,13 @@ from typing import Any
 
 from .errors import StorageSafetyError, ValidationError
 from .committee_models import CommitteeResult
+from .equity import validate_equity_review_result
+from .equity_models import EquityReviewResult
 from .models import AnalysisResult, ContributionPlan, PortfolioState, to_json_value
+from .portfolio_policy import (
+    PortfolioPolicyResult,
+    validate_portfolio_policy_result,
+)
 from .research_models import PortfolioIntelligenceResult, ThesisReviewResult
 from .validation import state_from_dict, state_to_dict
 from .validation import validate_analysis_result, validate_contribution_plan
@@ -268,6 +274,38 @@ def save_committee_review(
 ) -> Path:
     """Persist an explicitly authorized review without changing portfolio state."""
 
+    target = _safe_target(workspace_root, "reviews", filename)
+    return _atomic_write_text(
+        target, _json_text(to_json_value(result)), overwrite=overwrite
+    )
+
+
+def save_equity_review(
+    workspace_root: str | Path,
+    result: EquityReviewResult,
+    *,
+    filename: str = "equity-review.json",
+    overwrite: bool = False,
+) -> Path:
+    """Persist an explicitly authorized equity review below private/reviews."""
+
+    validate_equity_review_result(result)
+    target = _safe_target(workspace_root, "reviews", filename)
+    return _atomic_write_text(
+        target, _json_text(to_json_value(result)), overwrite=overwrite
+    )
+
+
+def save_portfolio_policy_result(
+    workspace_root: str | Path,
+    result: PortfolioPolicyResult,
+    *,
+    filename: str = "portfolio-policy-result.json",
+    overwrite: bool = False,
+) -> Path:
+    """Persist an explicitly authorized policy check below private/reviews."""
+
+    validate_portfolio_policy_result(result)
     target = _safe_target(workspace_root, "reviews", filename)
     return _atomic_write_text(
         target, _json_text(to_json_value(result)), overwrite=overwrite
