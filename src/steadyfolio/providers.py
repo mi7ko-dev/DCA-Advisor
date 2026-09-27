@@ -17,7 +17,7 @@ class ResearchProvider(Protocol):
     name: str
 
     def fetch(self, request: ResearchRequest) -> ResearchSnapshot:
-        """Fetch data for explicit public instrument and listing identifiers."""
+        """Fetch data for explicit public instrument, listing, and source IDs."""
 
 
 class StaticResearchProvider:
@@ -39,8 +39,8 @@ class StaticResearchProvider:
             raise ValidationError("Research request instrument identifiers must be unique.")
         if len(set(request.listing_ids)) != len(request.listing_ids):
             raise ValidationError("Research request listing identifiers must be unique.")
-        if any(date.fromisoformat(source.as_of) > request_date for source in self._snapshot.sources):
-            raise ValidationError("A provider snapshot cannot use data after the request date.")
+        if len(set(request.source_ids)) != len(request.source_ids):
+            raise ValidationError("Research request source identifiers must be unique.")
         instrument_ids = set(request.instrument_ids)
         listing_ids = set(request.listing_ids)
         funds = tuple(
@@ -66,11 +66,15 @@ class StaticResearchProvider:
         source_ids = {
             item.source_id for item in (*funds, *holdings, *exposures, *series)
         }
+        source_ids.update(request.source_ids)
+        sources = tuple(
+            item for item in self._snapshot.sources if item.id in source_ids
+        )
+        if any(date.fromisoformat(source.as_of) > request_date for source in sources):
+            raise ValidationError("A provider snapshot cannot use data after the request date.")
         return ResearchSnapshot(
             schema_version=self._snapshot.schema_version,
-            sources=tuple(
-                item for item in self._snapshot.sources if item.id in source_ids
-            ),
+            sources=sources,
             funds=funds,
             fund_holdings=holdings,
             classified_exposures=exposures,

@@ -9,6 +9,7 @@ from .errors import ValidationError
 from .models import PortfolioState
 from .research_models import (
     INTELLIGENCE_CALCULATION_VERSION,
+    THESIS_EVIDENCE_KINDS,
     ResearchSnapshot,
     SourceAssessment,
     ThesisEvidence,
@@ -42,6 +43,8 @@ def review_investment_thesis(
     thesis = thesis_by_id.get(thesis_id)
     if thesis is None:
         raise ValidationError("The requested investment thesis does not exist.")
+    if thesis.status != "active":
+        raise ValidationError("Only an active investment thesis can be reviewed.")
 
     if len({item.id for item in evidence}) != len(evidence):
         raise ValidationError("Thesis evidence identifiers must be unique.")
@@ -67,6 +70,8 @@ def review_investment_thesis(
             raise ValidationError("Thesis evidence references a different instrument.")
         if item.assessment not in {"supports", "neutral", "contradicts"}:
             raise ValidationError("Unknown thesis evidence assessment.")
+        if item.kind not in THESIS_EVIDENCE_KINDS:
+            raise ValidationError("Unknown thesis evidence kind.")
         if _as_date(item.observed_at, "thesis_evidence[].observed_at") > review_date:
             raise ValidationError("Thesis evidence cannot be newer than the review date.")
         source = sources.get(item.source_id)

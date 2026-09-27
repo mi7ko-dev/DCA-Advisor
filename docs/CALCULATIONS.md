@@ -3,20 +3,25 @@
 ## Numeric and currency rules
 
 Persisted quantities, prices, FX rates, fees, weights, and monetary amounts are
-decimal strings. Runtime arithmetic uses `decimal.Decimal` with a local precision
-of 36 digits. Outputs retain deterministic decimal values; Markdown presentation
-rounds money and percentages to two decimal places without changing structured
-results.
+canonical decimal strings: optional leading minus sign, digits, and an optional
+fractional part. Exponents, leading plus signs, separators, and surrounding
+whitespace are rejected. Runtime arithmetic uses `decimal.Decimal` with a local
+precision of 36 digits. Outputs retain deterministic decimal values; Markdown
+presentation rounds money and percentages to two decimal places without changing
+structured results.
 
 Every price must match its listing's trading currency. An instrument's economic
 currency remains separate metadata and is not inferred from its ticker, exchange,
 or trading currency.
 
 For valuation in the investor's base currency, SteadyFolio uses the latest supplied
-price and direct or inverse FX rate whose date is not later than the valuation date.
-The source ID for each used price and FX rate is retained. No triangulation, live
-lookup, or assumed one-to-one conversion occurs. Missing prices or FX rates fail the
-calculation explicitly.
+price whose date is not later than the valuation date. For FX, it compares the
+latest eligible direct and inverse observations and uses the newer observation;
+an equal-date tie prefers the direct orientation. Conflicting values for the same
+listing or currency-pair orientation on the same date are rejected instead of
+being resolved by input order. The source ID for each used price and FX rate is
+retained. No triangulation, live lookup, or assumed one-to-one conversion occurs.
+Missing prices or FX rates fail the calculation explicitly.
 
 ## Portfolio analysis
 
@@ -31,6 +36,11 @@ drift = current weight - approved target weight
 Positive drift means overweight and negative drift means underweight. With a zero
 portfolio value, current weights are zero and the result contains an explicit
 warning rather than dividing by zero.
+
+Target weights accepted within the schema tolerance are normalized to sum exactly
+to one before valuation, drift, contribution budgeting, and expected-weight
+calculations. This prevents a tolerated rounding residual from becoming unallocated
+cash or inconsistent drift.
 
 The current weighted annual fee rate is:
 
@@ -81,10 +91,19 @@ The plan supports:
 - a minimum trade value;
 - fixed, variable, and minimum estimated trade fees.
 
+A listing's fractional-trading and quantity-increment fields are hard exchange or
+broker constraints. A planning override may tighten them but cannot enable
+fractional trading where the listing forbids it or use an incompatible increment.
+Whole-share round lots such as 10 shares remain 10-share increments; they are not
+collapsed to one share.
+
 For a positive purchase value `x`, the estimated fee is the greater of the minimum
 fee and `fixed fee + variable rate * x`, rounded upward to the nearest cent. Quantity
 is always rounded down to the permitted increment. A line that cannot meet its
 minimum trade value remains unexecuted and its cash remains residual.
+
+An allocation target with normalized weight zero is not a purchase candidate and
+does not require a listing or market price merely to produce a zero trade.
 
 The following invariant is exact in structured output:
 
@@ -107,6 +126,11 @@ remaining drift = expected instrument weight - approved target weight
 
 The plan is a proposal. It does not create an actual transaction, mutate a holding,
 or change an approved target.
+
+Each plan ID includes a deterministic SHA-256 fingerprint of its calculation
+version, approved allocation, analysis, market inputs, contribution amount,
+constraints, and preferred listings. Reordering equivalent input collections does
+not change the ID, while a plan-defining input change does.
 
 ## MVP limitations
 

@@ -28,7 +28,7 @@ from .research_models import (
     StressMetric,
     StressWindow,
 )
-from .research_validation import validate_research_snapshot
+from .research_validation import validate_research_snapshot, validate_stress_windows
 from .validation import validate_state
 
 
@@ -229,6 +229,16 @@ def _overlap(
         right_coverage = sum(
             (item.weight for item in right.values()), Decimal("0")  # type: ignore[attr-defined]
         )
+        left_dates = {item.as_of for item in left.values()}  # type: ignore[attr-defined]
+        right_dates = {item.as_of for item in right.values()}  # type: ignore[attr-defined]
+        if len(left_dates) > 1 or len(right_dates) > 1:
+            raise ValidationError(
+                "Each fund needs one holdings as-of date for overlap analysis."
+            )
+        if left_dates and right_dates and left_dates != right_dates:
+            raise ValidationError(
+                "Fund overlap requires compatible same-date holdings."
+            )
         observed = sum(
             (
                 min(left[key].weight, right[key].weight)  # type: ignore[attr-defined]
@@ -276,7 +286,8 @@ def _company_concentration(
     for holding in snapshot.fund_holdings:
         holdings[holding.fund_instrument_id].append(holding)
     sources = {source.id: source for source in snapshot.sources}
-    weights: dict[tuple[str, str], Decimal] = defaultdict(lambda: Decimal("0"))
+    weights: dict[str, Decimal] = defaultdict(lambda: Decimal("0"))
+    names: dict[str, str] = {}
     covered = Decimal("0")
     total_weight = Decimal("0")
     dates: set[str] = set()
@@ -288,27 +299,31 @@ def _company_concentration(
         total_weight += position.current_weight
         instrument = instruments[position.instrument_id]
         if instrument.kind == "stock":
-            weights[(instrument.id, instrument.name)] += position.current_weight
+            weights[instrument.id] += position.current_weight
+            names[instrument.id] = instrument.name
             covered += position.current_weight
             continue
         rows = holdings.get(instrument.id, [])
         fund_coverage = sum((row.weight for row in rows), Decimal("0"))  # type: ignore[attr-defined]
         covered += position.current_weight * fund_coverage
         for row in rows:
-            weights[(row.constituent_id, row.constituent_name)] += (  # type: ignore[attr-defined]
+            weights[row.constituent_id] += (  # type: ignore[attr-defined]
                 position.current_weight * row.weight  # type: ignore[attr-defined]
             )
+            names.setdefault(row.constituent_id, row.constituent_name)  # type: ignore[attr-defined]
             dates.add(row.as_of)  # type: ignore[attr-defined]
             source_ids.add(row.source_id)  # type: ignore[attr-defined]
 
     used_sources.update(source_ids)
     exposures = tuple(
         CompanyExposure(
-            constituent_id=key[0],
-            name=key[1],
+            constituent_id=constituent_id,
+            name=names[constituent_id],
             observed_portfolio_weight=value,
         )
-        for key, value in sorted(weights.items(), key=lambda item: (-item[1], item[0]))
+        for constituent_id, value in sorted(
+            weights.items(), key=lambda item: (-item[1], item[0])
+        )
     )
     source_limitations = [
         limitation
@@ -422,7 +437,9 @@ def _cumulative_return(series: HistoricalSeries) -> Decimal:
 def _annualized_volatility(series: HistoricalSeries) -> Decimal:
     values = _returns(series)
     if len(values) < 2:
-        return Decimal("0")
+        raise ValidationError(
+            "Annualized volatility requires at least two periodic returns."
+        )
     mean = sum(values, Decimal("0")) / Decimal(len(values))
     variance = sum(((item - mean) ** 2 for item in values), Decimal("0")) / Decimal(
         len(values) - 1
@@ -697,8 +714,7 @@ def analyze_portfolio_intelligence(
     _validate_analysis(state, analysis, analysis_date)
     parsed_date = _as_date(analysis_date, "analysis_date")
     _validate_references(state, snapshot, parsed_date)
-    if len({window.id for window in stress_windows}) != len(stress_windows):
-        raise ValidationError("Stress window identifiers must be unique.")
+    validate_stress_windows(stress_windows)
     if any(
         _as_date(window.end_date, "stress_windows[].end_date") > parsed_date
         for window in stress_windows

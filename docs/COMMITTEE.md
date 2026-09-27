@@ -39,6 +39,16 @@ approved implementation. Provider failures, absent evidence, or stale and missin
 evidence produce an explicit `insufficient_evidence` result rather than additional
 retries or artificial consensus.
 
+If a request contains more than one supported intent, routing stops for
+clarification instead of silently selecting the first keyword match. A critic pass
+is used only for a material disagreement, not merely because evidence is partial.
+The revision limit is enforced independently: allowing a critic does not authorize
+a revision when `max_revisions` is zero.
+
+Currency-first contribution parsing accepts only an unsigned decimal token with at
+most two fractional digits. Unsupported grouped or over-precise forms such as
+`EUR 1,000` and `EUR 400.000` are not partially interpreted as smaller amounts.
+
 ## Output contract
 
 `CommitteeResult` separates:
@@ -129,5 +139,7 @@ python tools/run_repository_checks.py --require-gitleaks
   offline structured snapshot.
 - Lenses are rule-based sequential interpretations, not separately hosted agents.
 - Partial holdings remain partial, and missing evidence remains unknown.
+- Empty snapshots and zero-coverage overlap inputs are insufficient evidence, not
+  evidence of no exposure or no overlap.
 - The workflow proposes actions but does not place orders or mutate policy.
 - Packaging and broader host compatibility remain Phase 6 or later work.

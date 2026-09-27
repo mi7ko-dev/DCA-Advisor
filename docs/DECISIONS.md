@@ -242,3 +242,56 @@ Approval to execute Phase 5 accepted D-016 through D-018 for the bounded local
 Codex workflow. It did not authorize a live provider, external data transfer, trade
 execution, policy mutation, global skill installation, plugin packaging, Phase 6
 work, publication, or pushing Phase 5 changes.
+
+## D-019: Distribute the supported product as repository source
+
+- **Status:** Accepted
+- **Decision:** Support the Python source package and the repo-local Codex skill in
+  this repository. Do not create a plugin archive merely to complete Phase 6.
+- **Why:** Current Codex documentation and the verified host session support
+  repository-local discovery from `.agents/skills/`. A second bundle would add a
+  drift and privacy-review surface without enabling the selected host.
+- **Consequence:** A clean-machine host test and any future plugin or cross-host
+  package remain separate work. If required, the artifact must be built from an
+  explicit allowlist, inspected, clean-installed, and separately authorized before
+  publication.
+
+## D-020: Fail closed at storage, provider, and CI boundaries
+
+- **Status:** Accepted
+- **Decision:** Reject symlinks at every private output path component, redact raw
+  provider failure details while recording the bounded call, and make CI install
+  the source package, regenerate synthetic artifacts, run tests, and scan public
+  candidates plus available history with a checksum-pinned Gitleaks binary.
+- **Why:** These are the boundaries where an apparently valid local workflow could
+  otherwise escape the private root, conceal a failed data dependency, drift from
+  committed examples, or publish sensitive content.
+- **Consequence:** Expected provider failures return `insufficient_evidence` after
+  one call. CI uses only synthetic repository content and uploads no diagnostic or
+  scan artifact.
+
+## D-021: Make deterministic ambiguity fail closed
+
+- **Status:** Accepted
+- **Decision:** Reject conflicting same-date market inputs, non-canonical decimal
+  strings, timezone-free retrieval timestamps, incompatible trading overrides,
+  non-comparable holdings dates, undersized historical series, invalid evidence
+  kinds, inactive thesis reviews, partial numeric-token matches, and rewrites of
+  approved allocation versions. Normalize only target weights already valid within
+  tolerance. Fingerprint every plan-defining input in contribution IDs. Treat empty
+  or zero-coverage research as missing evidence, and apply critic and revision
+  limits independently.
+- **Why:** Input order, implicit coercion, missing coverage, and loosely coupled
+  orchestration limits can otherwise produce reproducible-looking but unsupported
+  financial output.
+- **Consequence:** Ambiguous data stops explicitly, zero-target assets need no
+  market input, round-lot constraints remain authoritative, derived results are
+  validated before persistence, and reports use neutral labels with escaped
+  user-controlled table cells.
+
+## Phase 6 approval effects
+
+Approval to execute Phase 6 and address its consolidated review feedback accepted
+D-019 through D-021 for final hardening and documentation. It did not authorize
+staging, committing, pushing, publishing, plugin generation, live providers,
+broker connections, transactions, or policy mutation.

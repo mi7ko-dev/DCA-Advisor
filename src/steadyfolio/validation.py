@@ -13,6 +13,8 @@ from .models import (
     SCHEMA_VERSION,
     Account,
     AllocationTarget,
+    AnalysisResult,
+    ContributionPlan,
     DataSource,
     FxRate,
     Goal,
@@ -35,6 +37,10 @@ _CURRENCY = re.compile(r"^[A-Z]{3}$")
 _MIC = re.compile(r"^[A-Z0-9]{4}$")
 _ISIN = re.compile(r"^[A-Z]{2}[A-Z0-9]{9}[0-9]$")
 _IDENTIFIER = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$")
+_DECIMAL_TEXT = re.compile(r"^-?(0|[1-9][0-9]*)(\.[0-9]+)?$")
+_DATE_TIME = re.compile(
+    r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$"
+)
 _WEIGHT_TOLERANCE = Decimal("0.00000001")
 
 
@@ -235,6 +241,8 @@ def _decimal(value: Any, field: str, *, optional: bool = False) -> Decimal | Non
         return None
     if not isinstance(value, str):
         raise ValidationError(f"{field} must be a decimal string.")
+    if not _DECIMAL_TEXT.fullmatch(value):
+        raise ValidationError(f"{field} is not a canonical decimal string.")
     try:
         parsed = Decimal(value)
     except InvalidOperation as error:
@@ -278,10 +286,14 @@ def _require_date(value: str, field: str) -> None:
 
 
 def _require_datetime(value: str, field: str) -> None:
+    if not _DATE_TIME.fullmatch(value):
+        raise ValidationError(f"{field} must be a timezone-aware ISO date-time.")
     try:
-        datetime.fromisoformat(value.replace("Z", "+00:00"))
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
     except ValueError as error:
         raise ValidationError(f"{field} must be an ISO date-time.") from error
+    if parsed.utcoffset() is None:
+        raise ValidationError(f"{field} must include a timezone offset.")
 
 
 def _ensure_unique(items: Iterable[Any], collection: str) -> dict[str, Any]:
@@ -870,3 +882,183 @@ def validate_state(state: PortfolioState) -> None:
 
     for review in state.review_history:
         _require_datetime(review.reviewed_at, "review_history[].reviewed_at")
+
+
+def _require_finite(value: Decimal, field: str) -> None:
+    if not isinstance(value, Decimal) or not value.is_finite():
+        raise ValidationError(f"{field} must be a finite decimal.")
+
+
+def validate_analysis_result(result: AnalysisResult) -> None:
+    """Validate the internal invariants of a derived portfolio analysis."""
+
+    if not result.id.strip() or not result.calculation_version.strip():
+        raise ValidationError("Analysis identifiers and version cannot be empty.")
+    _require_date(result.valuation_date, "analysis.valuation_date")
+    _require_currency(result.base_currency, "analysis.base_currency")
+    numeric_fields = (
+        (result.total_value, "analysis.total_value"),
+        (result.weighted_annual_fee_rate, "analysis.weighted_annual_fee_rate"),
+        (result.maximum_direct_weight, "analysis.maximum_direct_weight"),
+        (result.herfindahl_index, "analysis.herfindahl_index"),
+    )
+    for value, field in numeric_fields:
+        _require_finite(value, field)
+        if value < 0:
+            raise ValidationError(f"{field} cannot be negative.")
+
+    instrument_ids: set[str] = set()
+    current_value_total = Decimal("0")
+    current_weight_total = Decimal("0")
+    for position in result.positions:
+        _require_identifier(position.instrument_id, "analysis.positions[].instrument_id")
+        if position.instrument_id in instrument_ids:
+            raise ValidationError("Analysis positions must have unique instruments.")
+        instrument_ids.add(position.instrument_id)
+        for value, field in (
+            (position.current_value, "analysis.positions[].current_value"),
+            (position.current_weight, "analysis.positions[].current_weight"),
+            (position.target_weight, "analysis.positions[].target_weight"),
+            (position.drift, "analysis.positions[].drift"),
+        ):
+            _require_finite(value, field)
+        if position.current_value < 0:
+            raise ValidationError("Analysis position values cannot be negative.")
+        if not 0 <= position.current_weight <= 1:
+            raise ValidationError("Analysis current weights must be between zero and one.")
+        if not 0 <= position.target_weight <= 1:
+            raise ValidationError("Analysis target weights must be between zero and one.")
+        if (
+            abs(
+                position.drift
+                - (position.current_weight - position.target_weight)
+            )
+            > _WEIGHT_TOLERANCE
+        ):
+            raise ValidationError("Analysis position drift is inconsistent.")
+        current_value_total += position.current_value
+        current_weight_total += position.current_weight
+
+    if current_value_total != result.total_value:
+        raise ValidationError("Analysis position values do not reconcile to total value.")
+    expected_weight_total = Decimal("1") if result.total_value > 0 else Decimal("0")
+    if abs(current_weight_total - expected_weight_total) > _WEIGHT_TOLERANCE:
+        raise ValidationError("Analysis current weights do not reconcile.")
+    expected_maximum = max(
+        (position.current_weight for position in result.positions),
+        default=Decimal("0"),
+    )
+    if result.maximum_direct_weight != expected_maximum:
+        raise ValidationError("Analysis maximum direct weight is inconsistent.")
+    expected_herfindahl = sum(
+        (position.current_weight**2 for position in result.positions), Decimal("0")
+    )
+    if abs(result.herfindahl_index - expected_herfindahl) > _WEIGHT_TOLERANCE:
+        raise ValidationError("Analysis Herfindahl index is inconsistent.")
+    if len(set(result.concentrated_instrument_ids)) != len(
+        result.concentrated_instrument_ids
+    ) or not set(result.concentrated_instrument_ids).issubset(instrument_ids):
+        raise ValidationError("Analysis concentration identifiers are inconsistent.")
+    if len(set(result.source_ids)) != len(result.source_ids):
+        raise ValidationError("Analysis source identifiers must be unique.")
+    for source_id in result.source_ids:
+        _require_identifier(source_id, "analysis.source_ids[]")
+
+
+def validate_contribution_plan(plan: ContributionPlan) -> None:
+    """Validate reconciliation and field invariants before persisting a plan."""
+
+    if not plan.id.strip() or not plan.calculation_version.strip():
+        raise ValidationError("Contribution plan identifiers and version cannot be empty.")
+    if plan.method not in {"simple", "drift_aware"}:
+        raise ValidationError("Contribution plan method is unsupported.")
+    _require_date(plan.valuation_date, "contribution_plan.valuation_date")
+    _require_currency(plan.currency, "contribution_plan.currency")
+    for value, field in (
+        (plan.contribution_amount, "contribution_plan.contribution_amount"),
+        (plan.total_purchase_value, "contribution_plan.total_purchase_value"),
+        (
+            plan.total_estimated_trade_cost,
+            "contribution_plan.total_estimated_trade_cost",
+        ),
+        (plan.remaining_cash, "contribution_plan.remaining_cash"),
+        (
+            plan.expected_post_contribution_value,
+            "contribution_plan.expected_post_contribution_value",
+        ),
+    ):
+        _require_finite(value, field)
+    if plan.contribution_amount <= 0:
+        raise ValidationError("Contribution plan amount must be positive.")
+    if any(
+        value < 0
+        for value in (
+            plan.total_purchase_value,
+            plan.total_estimated_trade_cost,
+            plan.remaining_cash,
+        )
+    ):
+        raise ValidationError("Contribution plan totals cannot be negative.")
+    if plan.expected_post_contribution_value <= 0:
+        raise ValidationError("Expected post-contribution value must be positive.")
+
+    instrument_ids: set[str] = set()
+    purchase_total = Decimal("0")
+    fee_total = Decimal("0")
+    for line in plan.lines:
+        _require_identifier(line.instrument_id, "contribution_plan.lines[].instrument_id")
+        _require_identifier(line.listing_id, "contribution_plan.lines[].listing_id")
+        if line.instrument_id in instrument_ids:
+            raise ValidationError("Contribution plan lines must have unique instruments.")
+        instrument_ids.add(line.instrument_id)
+        values = (
+            line.current_weight,
+            line.target_weight,
+            line.drift,
+            line.quantity,
+            line.proposed_contribution,
+            line.estimated_trade_cost,
+            line.expected_post_contribution_weight,
+            line.remaining_drift,
+        )
+        for value in values:
+            _require_finite(value, "contribution_plan.lines[]")
+        if any(
+            value < 0
+            for value in (
+                line.quantity,
+                line.proposed_contribution,
+                line.estimated_trade_cost,
+            )
+        ):
+            raise ValidationError("Contribution line quantities and costs cannot be negative.")
+        if not 0 <= line.current_weight <= 1 or not 0 <= line.target_weight <= 1:
+            raise ValidationError("Contribution line weights must be between zero and one.")
+        if not 0 <= line.expected_post_contribution_weight <= 1:
+            raise ValidationError("Expected contribution weights must be between zero and one.")
+        if (
+            abs(line.drift - (line.current_weight - line.target_weight))
+            > _WEIGHT_TOLERANCE
+        ):
+            raise ValidationError("Contribution line drift is inconsistent.")
+        if abs(
+            line.remaining_drift
+            - (line.expected_post_contribution_weight - line.target_weight)
+        ) > _WEIGHT_TOLERANCE:
+            raise ValidationError("Contribution line remaining drift is inconsistent.")
+        purchase_total += line.proposed_contribution
+        fee_total += line.estimated_trade_cost
+
+    if purchase_total != plan.total_purchase_value:
+        raise ValidationError("Contribution purchases do not reconcile.")
+    if fee_total != plan.total_estimated_trade_cost:
+        raise ValidationError("Contribution costs do not reconcile.")
+    if (
+        purchase_total + fee_total + plan.remaining_cash
+        != plan.contribution_amount
+    ):
+        raise ValidationError("Contribution plan does not reconcile to available cash.")
+    if len(set(plan.source_ids)) != len(plan.source_ids):
+        raise ValidationError("Contribution plan source identifiers must be unique.")
+    for source_id in plan.source_ids:
+        _require_identifier(source_id, "contribution_plan.source_ids[]")

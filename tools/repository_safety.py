@@ -32,6 +32,7 @@ IGNORED_PATHS: tuple[str, ...] = (
 TRACKABLE_PATHS: tuple[str, ...] = (
     "README.md",
     "AGENTS.md",
+    ".gitattributes",
     ".gitignore",
     ".env.example",
     ".agents/skills/steadyfolio/SKILL.md",

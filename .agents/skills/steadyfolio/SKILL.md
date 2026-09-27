@@ -33,7 +33,7 @@ portfolio arithmetic in prose or replace structured results with model estimates
    sequential review lenses. Lenses consume computed results and sourced facts;
    they do not recalculate them.
 5. Use at most one research pass, one critic pass, one revision, and no live
-   external call in the Phase 5 implementation. Stop with insufficient evidence
+   external call in the current implementation. Stop with insufficient evidence
    instead of manufacturing agreement.
 6. Format the answer using
    [references/response-contract.md](references/response-contract.md).
@@ -63,8 +63,11 @@ Run the six public demonstrations with:
 python tools/generate_synthetic_committee.py
 ```
 
-Run the Phase 5 integration tests with:
+Run the integration and skill-structure tests with:
 
 ```powershell
-python -m unittest tests.test_committee
+python -m unittest tests.test_committee tests.test_skill
 ```
+
+Installation, private-state maintenance, and the complete verification gate are
+documented in `docs/OPERATIONS.md` and `docs/MAINTENANCE.md` at the repository root.

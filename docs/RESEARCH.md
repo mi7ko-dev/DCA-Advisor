@@ -3,9 +3,10 @@
 ## Provider boundary
 
 Phase 4 defines a replaceable `ResearchProvider` protocol. A request contains only
-explicit public instrument IDs, listing IDs, and an as-of date. It does not contain
-holdings quantities, balances, account identifiers, goals, theses, or personal
-context.
+explicit public instrument IDs, listing IDs, evidence source IDs, and an as-of
+date. Evidence source IDs are included only when supplied thesis evidence needs its
+public provenance retained. The request does not contain holdings quantities,
+balances, account identifiers, goals, theses, or personal context.
 
 The implemented `StaticResearchProvider` reads structured synthetic snapshots for
 offline examples and deterministic tests. No live provider or network integration
@@ -23,6 +24,11 @@ The public example uses only project-authored synthetic data whose caching and
 redistribution are allowed. A future live adapter must review and encode the actual
 provider terms before caching or redistributing any response. Raw live responses
 must not become public fixtures.
+
+The offline provider first selects records referenced by the request, then enforces
+the as-of boundary on those selected records. Unrelated future-dated records do not
+invalidate an otherwise valid request, while any selected future-dated record is
+rejected.
 
 ## Fund facts and identity
 
@@ -45,6 +51,9 @@ Each fund's holdings coverage is the sum of its supplied constituent weights. Th
 algorithm does not scale top holdings to 100%, infer omitted constituents, or treat
 missing holdings as zero exposure.
 
+An overlap comparison requires both funds' supplied holdings to use the same as-of
+date. Zero coverage is absence of overlap evidence, not observed zero overlap.
+
 Observed portfolio company or issuer exposure is:
 
 ```text
@@ -52,9 +61,10 @@ ETF contribution = portfolio weight * supplied constituent weight
 direct stock contribution = portfolio weight
 ```
 
-The result reports covered and unclassified portfolio weight. Company
-concentration is therefore a lower-bound observation over supplied coverage, not a
-complete look-through result.
+Contributions with the same company or issuer ID are aggregated across direct and
+look-through holdings before ranking. The result reports covered and unclassified
+portfolio weight. Company concentration is therefore a lower-bound observation
+over supplied coverage, not a complete look-through result.
 
 ## Sector, geography, and currency exposure
 
@@ -83,7 +93,9 @@ The Phase 4 MVP accepts positive index levels with an explicit:
 Portfolio series used together must have identical observation dates, currency,
 frequency, return convention, distribution treatment, and corporate-action
 treatment. The MVP requires the portfolio base currency and does not perform a
-second implicit historical FX conversion.
+second implicit historical FX conversion. Each series requires at least three
+levels so volatility is based on at least two returns rather than reporting a
+misleading zero from one return.
 
 Simple periodic return is `current / previous - 1`. Cumulative return is
 `last / first - 1`. Annualized volatility is sample standard deviation multiplied
@@ -95,19 +107,24 @@ series has zero variance or too few returns.
 Benchmark comparison requires the same compatibility rules and reports simple
 cumulative-return difference over the shared period. Stress analysis uses supplied
 observations inside an explicit date window and reports the actual covered dates.
-These metrics describe historical inputs and are not predictions.
+Stress-window IDs are stable public identifiers and must be unique. These metrics
+describe historical inputs and are not predictions.
 
 ## Thesis review
 
-An active holding thesis can record its role, rationale, approved target reference,
-target range, benchmark, risks, configured review triggers, last review, and next
-review. The approved target allocation remains authoritative; a thesis target must
-match it.
+Only an active holding thesis can be reviewed. It can record its role, rationale,
+approved target reference, target range, benchmark, risks, configured review
+triggers, last review, and next review. The approved target allocation remains
+authoritative; a thesis target must match it.
 
 Review output separates attributable evidence facts from deterministic
 interpretation. Configured trigger hits or non-price contradictory evidence propose
 `review`; missing evidence proposes `investigate`; otherwise the proposal is
 `retain`. A price change alone is not treated as thesis failure.
+
+Evidence kinds are a closed vocabulary: `benchmark_change`, `cost_change`,
+`fund_structure`, `fundamental_change`, `price_change`, and `risk_event`. Unknown
+kinds are rejected for both parsed and directly constructed evidence.
 
 All actions are proposals for user review. The review function does not mutate the
 thesis, holdings, transactions, or approved policy.
