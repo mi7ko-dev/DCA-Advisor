@@ -82,7 +82,11 @@ The status is `acceptable` at 20% or more, `limited` from zero to below 20%, and
 `conflicting`; the values are not averaged. Missing anchors produce `unavailable`.
 
 When CapEx/revenue is at least 15%, optional owner-earnings evidence can distinguish
-maintenance from growth investment. The engine does not infer maintenance CapEx.
+maintenance from growth investment. Reported earnings, depreciation and
+amortization, and maintenance CapEx must use one reporting date; depreciation and
+amortization and maintenance CapEx are non-negative outflows. The engine does not
+infer maintenance CapEx, and an explicit funding red flag cannot produce an
+`eligible_for_consideration` conclusion.
 
 ## Configurable portfolio policy
 
@@ -97,7 +101,10 @@ global engine. It supports:
 The only supported denominator is currently `invested_positions`. The result
 therefore warns that unmodelled cash is excluded. It must not be described as a net
 liquidation value or complete account allocation. User-specific policy instances
-belong under `private/`; only the schema and synthetic example are public.
+belong under `private/`; only the schema and synthetic example are public. Before
+evaluating policy thresholds, the engine validates the complete analysis and
+requires its instrument coverage and base currency to match the current portfolio
+state.
 
 ## Public examples
 

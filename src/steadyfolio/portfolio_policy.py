@@ -9,7 +9,7 @@ from typing import Any
 
 from .errors import ValidationError
 from .models import AnalysisResult, PortfolioState
-from .validation import validate_state
+from .validation import validate_analysis_result, validate_state
 
 
 PORTFOLIO_POLICY_VERSION = "1.0"
@@ -193,6 +193,7 @@ def evaluate_portfolio_policy(
     """Evaluate explicit user policy without changing state or inventing cash."""
 
     validate_state(state)
+    validate_analysis_result(analysis)
     if policy.version != PORTFOLIO_POLICY_VERSION:
         raise ValidationError("Unsupported portfolio policy version.")
     if not _IDENTIFIER.fullmatch(policy.id):
@@ -220,8 +221,27 @@ def evaluate_portfolio_policy(
         "satellite_instrument_ids",
     )
     position_ids = {position.instrument_id for position in analysis.positions}
-    if not position_ids <= known:
-        raise ValidationError("Portfolio analysis references an unknown instrument.")
+    approved = next(
+        allocation
+        for allocation in state.target_allocations
+        if allocation.status == "approved"
+    )
+    listing_instruments = {
+        listing.id: listing.instrument_id for listing in state.listings
+    }
+    expected_position_ids = {
+        target.instrument_id for target in approved.targets
+    } | {
+        listing_instruments[holding.listing_id]
+        for holding in state.holdings
+        if holding.quantity > 0
+    }
+    if position_ids != expected_position_ids:
+        raise ValidationError(
+            "Portfolio analysis coverage must match current holdings and approved targets."
+        )
+    if analysis.base_currency != state.investor_profile.base_currency:
+        raise ValidationError("Portfolio analysis base currency differs from portfolio state.")
 
     group_ids: set[str] = set()
     for group in policy.factor_groups:
