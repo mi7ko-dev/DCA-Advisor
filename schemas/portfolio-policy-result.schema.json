@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://steadyfolio.example/schemas/portfolio-policy-result.schema.json",
+  "title": "SteadyFolio Portfolio Policy Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "calculation_version", "policy_id", "policy_version", "analysis_id", "analysis_base", "direct_weight_breaches", "fragmented_instrument_ids", "fragmentation_limit_breached", "satellite_weight", "satellite_limit_breached", "factor_groups", "warnings", "mutation_performed"],
+  "properties": {
+    "id": {"$ref": "#/$defs/id"},
+    "calculation_version": {"const": "1.0"},
+    "policy_id": {"$ref": "#/$defs/id"},
+    "policy_version": {"const": "1.0"},
+    "analysis_id": {"$ref": "#/$defs/id"},
+    "analysis_base": {"const": "invested_positions"},
+    "direct_weight_breaches": {"$ref": "#/$defs/id_array"},
+    "fragmented_instrument_ids": {"$ref": "#/$defs/id_array"},
+    "fragmentation_limit_breached": {"type": "boolean"},
+    "satellite_weight": {"$ref": "#/$defs/decimal"},
+    "satellite_limit_breached": {"type": "boolean"},
+    "factor_groups": {"type": "array", "items": {"$ref": "#/$defs/factor_group"}},
+    "warnings": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "mutation_performed": {"const": false}
+  },
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"},
+    "decimal": {"type": "string", "pattern": "^-?(0|[1-9][0-9]*)(\\.[0-9]+)?$"},
+    "id_array": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/id"}},
+    "factor_group": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "current_weight", "change_alert", "instrument_ids"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "current_weight": {"$ref": "#/$defs/decimal"},
+        "previous_reported_weight": {"$ref": "#/$defs/decimal"},
+        "change": {"$ref": "#/$defs/decimal"},
+        "change_alert": {"type": "boolean"},
+        "instrument_ids": {"$ref": "#/$defs/id_array"}
+      }
+    }
+  }
+}

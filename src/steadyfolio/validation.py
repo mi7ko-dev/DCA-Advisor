@@ -736,6 +736,7 @@ def validate_state(state: PortfolioState) -> None:
         if goal.currency is not None:
             _require_currency(goal.currency, "goals[].currency")
 
+    instrument_isins: set[str] = set()
     for instrument in state.instruments:
         if instrument.kind not in {"etf", "stock"}:
             raise ValidationError("The MVP supports only ETF and stock instruments.")
@@ -744,6 +745,12 @@ def validate_state(state: PortfolioState) -> None:
         )
         if instrument.isin is not None and not _ISIN.fullmatch(instrument.isin):
             raise ValidationError("instruments[].isin is not a valid ISIN shape.")
+        if instrument.isin is not None and instrument.isin in instrument_isins:
+            raise ValidationError(
+                "Duplicate ISIN values cannot identify separate economic instruments."
+            )
+        if instrument.isin is not None:
+            instrument_isins.add(instrument.isin)
         if not Decimal("0") <= instrument.annual_fee_rate <= Decimal("1"):
             raise ValidationError("Annual fee rates must be between zero and one.")
 

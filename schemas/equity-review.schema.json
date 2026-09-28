@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://steadyfolio.example/schemas/equity-review.schema.json",
+  "title": "SteadyFolio Equity Review Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "calculation_version", "quality_model", "evidence_schema_version", "instrument_id", "as_of", "identity_status", "circle_of_competence", "hard_screen_status", "criteria", "points_awarded", "points_available", "criteria_available", "criteria_total", "score_status", "quality_classification", "valuation", "owner_earnings", "source_assessments", "source_ids", "limitations", "conclusion", "proposed_next_actions", "mutation_performed"],
+  "properties": {
+    "id": {"$ref": "#/$defs/id"},
+    "calculation_version": {"const": "1.0"},
+    "quality_model": {"const": "equity_quality_v1"},
+    "evidence_schema_version": {"const": "1.0"},
+    "instrument_id": {"$ref": "#/$defs/id"},
+    "as_of": {"type": "string", "format": "date"},
+    "identity_status": {"const": "matched"},
+    "circle_of_competence": {"$ref": "#/$defs/circle"},
+    "hard_screen_status": {"enum": ["passed", "failed", "insufficient"]},
+    "criteria": {"type": "array", "items": {"$ref": "#/$defs/criterion"}},
+    "points_awarded": {"$ref": "#/$defs/decimal"},
+    "points_available": {"$ref": "#/$defs/decimal"},
+    "score_percent": {"$ref": "#/$defs/decimal"},
+    "criteria_available": {"type": "integer", "minimum": 0, "maximum": 8},
+    "criteria_total": {"const": 8},
+    "score_status": {"enum": ["complete", "incomplete", "not_scored"]},
+    "quality_classification": {"enum": ["quality", "mid_tier", "exit_zone", "not_applied"]},
+    "valuation": {"$ref": "#/$defs/valuation"},
+    "owner_earnings": {"$ref": "#/$defs/owner_earnings"},
+    "source_assessments": {"type": "array", "items": {"$ref": "#/$defs/source_assessment"}},
+    "source_ids": {"$ref": "#/$defs/id_array"},
+    "limitations": {"$ref": "#/$defs/string_array"},
+    "conclusion": {"type": "string", "minLength": 1},
+    "proposed_next_actions": {"$ref": "#/$defs/string_array"},
+    "mutation_performed": {"const": false}
+  },
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"},
+    "decimal": {"type": "string", "pattern": "^-?(0|[1-9][0-9]*)(\\.[0-9]+)?$"},
+    "id_array": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/id"}},
+    "string_array": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "currency": {"type": "string", "pattern": "^[A-Z]{3}$"},
+    "date": {"type": "string", "format": "date"},
+    "date_time": {"type": "string", "format": "date-time"},
+    "circle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "findings"],
+      "properties": {
+        "status": {"enum": ["inside", "limited", "untracked_dependency"]},
+        "findings": {"$ref": "#/$defs/string_array"}
+      }
+    },
+    "criterion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["criterion", "status", "points_awarded", "maximum_points", "rationale", "source_ids"],
+      "properties": {
+        "criterion": {"enum": ["free_cash_flow", "debt_to_ebitda", "revenue_growth", "operating_margin", "capex_to_revenue", "institutional_ownership", "benchmark_outperformance", "moat_and_management"]},
+        "status": {"enum": ["scored", "not_available"]},
+        "points_awarded": {"$ref": "#/$defs/decimal"},
+        "maximum_points": {"$ref": "#/$defs/decimal"},
+        "observed_value": {"type": "string", "minLength": 1},
+        "rationale": {"type": "string", "minLength": 1},
+        "source_ids": {"$ref": "#/$defs/id_array"}
+      }
+    },
+    "valuation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "source_ids", "limitations"],
+      "properties": {
+        "status": {"enum": ["acceptable", "limited", "premium", "conflicting", "unavailable"]},
+        "selected_method": {"enum": ["dcf", "reverse_dcf", "forward_pe"]},
+        "current_price": {"$ref": "#/$defs/decimal"},
+        "fair_value": {"$ref": "#/$defs/decimal"},
+        "currency": {"$ref": "#/$defs/currency"},
+        "margin_of_safety": {"$ref": "#/$defs/decimal"},
+        "source_ids": {"$ref": "#/$defs/id_array"},
+        "limitations": {"$ref": "#/$defs/string_array"}
+      }
+    },
+    "owner_earnings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "interpretation", "source_ids"],
+      "properties": {
+        "status": {"enum": ["not_required", "unavailable", "incomplete", "calculated_with_limited_funding_evidence", "growth_investment", "funding_red_flag"]},
+        "owner_earnings": {"$ref": "#/$defs/decimal"},
+        "currency": {"$ref": "#/$defs/currency"},
+        "interpretation": {"type": "string", "minLength": 1},
+        "source_ids": {"$ref": "#/$defs/id_array"}
+      }
+    },
+    "source_assessment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_id", "provider", "reference", "as_of", "retrieved_at", "age_days", "freshness", "methodology", "limitations", "terms_reference", "cache_permitted", "redistribution_permitted"],
+      "properties": {
+        "source_id": {"$ref": "#/$defs/id"},
+        "provider": {"type": "string", "minLength": 1},
+        "reference": {"type": "string", "minLength": 1},
+        "as_of": {"$ref": "#/$defs/date"},
+        "retrieved_at": {"$ref": "#/$defs/date_time"},
+        "age_days": {"type": "integer", "minimum": 0},
+        "freshness": {"enum": ["fresh", "stale"]},
+        "methodology": {"type": "string", "minLength": 1},
+        "limitations": {"$ref": "#/$defs/string_array"},
+        "terms_reference": {"type": "string", "minLength": 1},
+        "cache_permitted": {"type": "boolean"},
+        "redistribution_permitted": {"type": "boolean"}
+      }
+    }
+  }
+}

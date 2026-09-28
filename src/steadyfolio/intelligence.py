@@ -548,7 +548,19 @@ def _historical_analysis(
             )
         selected[position.instrument_id] = series
 
-    selected_values = tuple(selected.values())
+    metric_series: dict[str, HistoricalSeries] = {}
+    for instrument_id, series in selected.items():
+        used_sources.add(series.source_id)
+        if len(series.observations) < 3:
+            warnings.append(
+                "Historical volatility is unavailable for "
+                f"{instrument_id}; the legacy research series has fewer than "
+                "three observations."
+            )
+            continue
+        metric_series[instrument_id] = series
+
+    selected_values = tuple(metric_series.values())
     for left, right in combinations(selected_values, 2):
         if not _compatible(left, right):
             raise ValidationError(
@@ -561,15 +573,7 @@ def _historical_analysis(
         if thesis.status == "active"
     }
     metrics: list[HistoricalMetric] = []
-    for instrument_id, series in selected.items():
-        used_sources.add(series.source_id)
-        if len(series.observations) < 3:
-            warnings.append(
-                "Historical volatility is unavailable for "
-                f"{instrument_id}; the legacy research series has fewer than "
-                "three observations."
-            )
-            continue
+    for instrument_id, series in metric_series.items():
         thesis = theses.get(instrument_id)
         benchmark_series: HistoricalSeries | None = None
         benchmark_listing_id: str | None = None
@@ -637,7 +641,9 @@ def _historical_analysis(
         )
 
     correlations: list[CorrelationMetric] = []
-    for (left_id, left), (right_id, right) in combinations(selected.items(), 2):
+    for (left_id, left), (right_id, right) in combinations(
+        metric_series.items(), 2
+    ):
         correlation = _correlation(left, right)
         if correlation is None:
             warnings.append(

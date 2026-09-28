@@ -357,6 +357,21 @@ evidence, an empty snapshot, or zero overlap coverage can stop the workflow with
 `insufficient_evidence`; agreement between lenses is never treated as correctness.
 Details are in `docs/COMMITTEE.md`.
 
+## Phase 7 equity-review boundary
+
+Phase 7 adds a strict public `EquityReviewInput` contract, deterministic instrument
+identity matching, transparent individual-equity quality criteria, separate
+valuation and owner-earnings results, and an explicit portfolio-policy evaluator.
+The skill routes an individual-stock request to `review_equity` only when structured
+dated evidence is supplied. Sequential equity-quality and valuation-evidence lenses
+interpret the result without recalculating it.
+
+Personal holdings, thresholds, exemptions, factor groups, and outputs remain under
+`private/`. The public repository contains only schemas and synthetic examples.
+There is still no live market provider, broker connection, net-liquidation cash
+model, tax or regulatory adapter, forecast, transaction execution, or policy
+mutation. Exact methodology is in `docs/EQUITY_REVIEW.md`.
+
 The selected host is local Codex in this repository. The skill is discovered in the
 current repository session, and its structure and metadata pass the bundled skill
 validator. No clean-machine or global installation, generated plugin, ChatGPT host,

@@ -1,0 +1,32 @@
+{
+  "analysis_base": "invested_positions",
+  "analysis_id": "analysis:synthetic-investor:2026-01-31",
+  "calculation_version": "1.0",
+  "direct_weight_breaches": [
+    "instrument-bond"
+  ],
+  "factor_groups": [
+    {
+      "change": "0.05",
+      "change_alert": false,
+      "current_weight": "1",
+      "id": "synthetic-shared-factor",
+      "instrument_ids": [
+        "instrument-global",
+        "instrument-bond"
+      ],
+      "previous_reported_weight": "0.95"
+    }
+  ],
+  "fragmentation_limit_breached": false,
+  "fragmented_instrument_ids": [],
+  "id": "policy-check:synthetic-portfolio-policy:2026-01-31",
+  "mutation_performed": false,
+  "policy_id": "synthetic-portfolio-policy",
+  "policy_version": "1.0",
+  "satellite_limit_breached": false,
+  "satellite_weight": "0.2",
+  "warnings": [
+    "Weights use invested positions only; unmodelled cash is excluded from the denominator."
+  ]
+}

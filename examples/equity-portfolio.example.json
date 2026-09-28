@@ -1,0 +1,51 @@
+{
+  "accounts": [],
+  "data_sources": [],
+  "goals": [],
+  "holdings": [],
+  "investment_theses": [],
+  "instruments": [
+    {
+      "annual_fee_rate": "0",
+      "economic_currency": "EUR",
+      "id": "synthetic-compute-company",
+      "isin": "IE00SYNTH035",
+      "kind": "stock",
+      "name": "Synthetic Compute Company"
+    }
+  ],
+  "investor_profile": {
+    "base_currency": "EUR",
+    "goal_ids": [],
+    "id": "synthetic-equity-investor",
+    "jurisdiction": "EU-SYNTHETIC"
+  },
+  "listings": [
+    {
+      "fractional_allowed": true,
+      "id": "synthetic-compute-xetr",
+      "instrument_id": "synthetic-compute-company",
+      "mic": "XETR",
+      "quantity_increment": "0.001",
+      "ticker": "SYCO",
+      "trading_currency": "EUR"
+    }
+  ],
+  "review_history": [],
+  "schema_version": "1.0",
+  "target_allocations": [
+    {
+      "effective_date": "2026-01-01",
+      "id": "synthetic-equity-allocation",
+      "rationale": "Synthetic target used only to validate the public example.",
+      "status": "approved",
+      "targets": [
+        {
+          "instrument_id": "synthetic-compute-company",
+          "weight": "1"
+        }
+      ]
+    }
+  ],
+  "transactions": []
+}

@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://steadyfolio.example/schemas/portfolio-policy.schema.json",
+  "title": "SteadyFolio Portfolio Policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "version", "analysis_base", "max_direct_weight", "direct_weight_exempt_instrument_ids", "fragmentation_weight_threshold", "max_fragmented_positions", "satellite_instrument_ids", "max_satellite_weight", "factor_groups"],
+  "properties": {
+    "id": {"$ref": "#/$defs/id"},
+    "version": {"const": "1.0"},
+    "analysis_base": {"const": "invested_positions"},
+    "max_direct_weight": {"$ref": "#/$defs/weight"},
+    "direct_weight_exempt_instrument_ids": {"$ref": "#/$defs/id_array"},
+    "fragmentation_weight_threshold": {"$ref": "#/$defs/weight"},
+    "max_fragmented_positions": {"type": "integer", "minimum": 0},
+    "satellite_instrument_ids": {"$ref": "#/$defs/id_array"},
+    "max_satellite_weight": {"$ref": "#/$defs/weight"},
+    "factor_groups": {"type": "array", "items": {"$ref": "#/$defs/factor_group"}}
+  },
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"},
+    "weight": {"type": "string", "pattern": "^(0|1|0\\.[0-9]+|1\\.0+)$"},
+    "id_array": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/id"}},
+    "factor_group": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "instrument_ids", "change_alert_threshold"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "instrument_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/id"}},
+        "previous_reported_weight": {"$ref": "#/$defs/weight"},
+        "change_alert_threshold": {"$ref": "#/$defs/weight"}
+      }
+    }
+  }
+}

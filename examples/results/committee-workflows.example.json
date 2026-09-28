@@ -9,7 +9,7 @@
         "The approved target remains policy and the method is drift_aware.",
         "Prices, FX, fees, and trading constraints are supplied inputs, not forecasts."
       ],
-      "committee_version": "1.0",
+      "committee_version": "1.1",
       "data_limitations": [],
       "deterministic_facts": [
         "Portfolio value is 1000.00 EUR on 2026-01-31.",
@@ -69,7 +69,7 @@
         "The approved target is the policy baseline.",
         "Missing research is unknown and is never treated as zero exposure."
       ],
-      "committee_version": "1.0",
+      "committee_version": "1.1",
       "data_limitations": [
         "Research source synthetic-classified-exposures is stale at 31 days old.",
         "Research source synthetic-fund-holdings is stale at 31 days old.",
@@ -211,7 +211,7 @@
       "assumptions": [
         "The active thesis and approved target remain unchanged unless separately approved."
       ],
-      "committee_version": "1.0",
+      "committee_version": "1.1",
       "data_limitations": [
         "This is a synthetic demonstration fact.",
         "The facts do not describe a real fund.",
@@ -315,7 +315,7 @@
       "assumptions": [
         "Only supplied holdings contribute to observed overlap."
       ],
-      "committee_version": "1.0",
+      "committee_version": "1.1",
       "data_limitations": [
         "Research source synthetic-classified-exposures is stale at 31 days old.",
         "Research source synthetic-fund-holdings is stale at 31 days old.",
@@ -473,7 +473,7 @@
         "The approved target remains policy and the method is drift_aware.",
         "Prices, FX, fees, and trading constraints are supplied inputs, not forecasts."
       ],
-      "committee_version": "1.0",
+      "committee_version": "1.1",
       "data_limitations": [],
       "deterministic_facts": [
         "Portfolio value is 1000.00 EUR on 2026-01-31.",
@@ -533,7 +533,7 @@
         "The approved target is the policy baseline.",
         "Missing research is unknown and is never treated as zero exposure."
       ],
-      "committee_version": "1.0",
+      "committee_version": "1.1",
       "data_limitations": [
         "Sector exposure is unavailable; missing data was not treated as zero.",
         "Geography exposure is unavailable; missing data was not treated as zero.",

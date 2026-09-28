@@ -8,6 +8,8 @@ Use only the narrow route needed for the request.
 | Portfolio review | `analyze_portfolio`, optional `ResearchProvider.fetch`, `analyze_portfolio_intelligence` | Allocation/diversification and risk/cost/evidence | Once when conclusions materially differ or evidence is incomplete | Missing or stale evidence prevents the requested conclusion |
 | ETF thesis review | `ResearchProvider.fetch`, `review_investment_thesis` | Thesis-fit and evidence-quality | Once when conclusions materially differ | No active thesis, no dated evidence, or stale evidence prevents a conclusion |
 | Fund overlap | `analyze_portfolio`, `ResearchProvider.fetch`, `analyze_portfolio_intelligence` | Allocation/diversification and evidence-quality | Once for incomplete coverage | No dated holdings or incompatible coverage |
+| Individual equity review | `review_equity` over supplied `EquityReviewInput` | Equity-quality and valuation-evidence | No by default | Identity mismatch, stale or missing required evidence, failed FCF hard screen, or unavailable/conflicting valuation |
+| Explicit portfolio-policy check | `analyze_portfolio`, `evaluate_portfolio_policy` | None by default | No | Unknown instruments, invalid thresholds, or a denominator other than `invested_positions` |
 
 ## Required inputs
 
@@ -21,6 +23,11 @@ The Phase 5 provider is offline. A provider call reads a supplied structured
 snapshot and is not a live integration. Do not claim current market knowledge from
 it.
 
+The equity route is also offline. Require a dated, attributable
+`EquityReviewInput`; never convert unsourced prose or remembered market values into
+structured evidence. A portfolio policy instance contains user-specific thresholds
+and instrument classifications and therefore belongs under ignored `private/`.
+
 ## Interpretation boundaries
 
 - Positive drift means current weight minus approved target is positive.
@@ -31,6 +38,10 @@ it.
 - A price decline alone does not invalidate a thesis.
 - Tax, legal, regulatory, suitability, and transaction-execution conclusions remain
   outside this workflow.
+- An ISIN identifies the economic instrument, while MIC, ticker, and trading
+  currency identify a listing. A mismatch stops the equity route.
+- Individual-equity quality and valuation are separate conclusions. Do not turn a
+  high quality score into a claim that the current price is attractive.
 - When a policy-preserving drift action is possible but research is missing or
   stale, distinguish those facts: existing-policy maintenance may be calculable
   while an evidence-dependent target or thesis change is not supported.

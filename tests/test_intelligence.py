@@ -244,6 +244,56 @@ class ProviderAndValidationTests(unittest.TestCase):
             )
         )
 
+    def test_legacy_short_series_is_excluded_from_compatibility_checks(self) -> None:
+        state, analysis, snapshot, _ = _inputs()
+        original_series = snapshot.historical_series[0]
+        original_source = next(
+            source
+            for source in snapshot.sources
+            if source.id == original_series.source_id
+        )
+        short_source = replace(
+            original_source,
+            id="synthetic-legacy-short-history",
+            reference="synthetic-legacy-short-history",
+        )
+        short_series = replace(
+            original_series,
+            observations=original_series.observations[:2],
+            source_id=short_source.id,
+        )
+        legacy = replace(
+            snapshot,
+            schema_version="1.0",
+            sources=(*snapshot.sources, short_source),
+            historical_series=(short_series, *snapshot.historical_series[1:]),
+        )
+
+        result = analyze_portfolio_intelligence(
+            state,
+            analysis,
+            legacy,
+            ANALYSIS_DATE,
+        )
+
+        self.assertEqual(
+            {metric.instrument_id for metric in result.historical_metrics},
+            {"instrument-bond"},
+        )
+        self.assertFalse(result.correlations)
+        self.assertIn(short_source.id, result.source_ids)
+        self.assertIn(
+            short_source.id,
+            {assessment.source_id for assessment in result.source_assessments},
+        )
+        self.assertTrue(
+            any(
+                "legacy research series has fewer than three observations"
+                in warning
+                for warning in result.warnings
+            )
+        )
+
     def test_research_schema_versions_the_observation_minimum(self) -> None:
         schema = _read(REPOSITORY_ROOT / "schemas" / "research-snapshot.schema.json")
         self.assertEqual(
