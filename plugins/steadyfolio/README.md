@@ -10,7 +10,7 @@ trade execution, or tax/legal conclusions.
 From the repository root:
 
 ```powershell
-codex plugin marketplace add ./.agents/plugins
+codex plugin marketplace add .
 codex plugin add steadyfolio@steadyfolio-local
 ```
 

@@ -25,7 +25,7 @@ To install the plugin from a checkout, register the repository marketplace and a
 the plugin:
 
 ```powershell
-codex plugin marketplace add ./.agents/plugins
+codex plugin marketplace add .
 codex plugin add steadyfolio@steadyfolio-local
 ```
 

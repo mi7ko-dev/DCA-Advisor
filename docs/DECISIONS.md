@@ -326,7 +326,8 @@ changes, transactions, or publication.
   `steadyfolio` plugin in the repo-local `steadyfolio-local` marketplace. Generate
   the bundle from a literal tracked-file allowlist into a temporary directory,
   validate its manifest and skill, test its isolated runtime, and keep an exact
-  tracked mirror under `.agents/plugins/`.
+  tracked marketplace manifest under `.agents/plugins/marketplace.json` with the
+  corresponding plugin under `plugins/steadyfolio/`.
 - **Why:** A real installable plugin removes repository-local discovery as a usage
   requirement while preserving the existing offline engine and privacy boundary.
   A generated allowlist prevents ignored user state, credentials, caches, Git

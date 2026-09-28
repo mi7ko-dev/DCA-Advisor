@@ -16,8 +16,9 @@ the personal Codex profile, or published.
 - Defined the proposed component boundaries, host-independent Python engine, canonical skill location, private workspace boundary, JSON/Markdown persistence, domain model, financial invariants, and bounded review workflow in `docs/ARCHITECTURE.md`.
 - Recorded the proposed foundation, runtime, storage, schema, committee, provenance, license, Phase 3 scope, and packaging decisions in `docs/DECISIONS.md`.
 - Verified the proposed repo-local skill and future plugin portability path against current official OpenAI skill and plugin documentation; target-host compatibility remains something to test, not assume.
-- Added a self-contained `steadyfolio` Codex plugin and repo-local
-  `steadyfolio-local` marketplace generated from a literal public-file allowlist.
+- Added a self-contained `steadyfolio` Codex plugin under `plugins/steadyfolio/`
+  and repo-local `steadyfolio-local` marketplace manifest generated from a literal
+  public-file allowlist.
 - Added exact plugin-inventory, canonical-skill, isolated-runtime, manifest, and
   reproducibility tests plus a Python 3.11 CI smoke installation.
 - Addressed repository-safety review findings by restoring legacy private-path patterns, scanning staged index blobs rather than edited working-tree copies, and forcing the pinned Gitleaks installer to replace and verify its local executable.

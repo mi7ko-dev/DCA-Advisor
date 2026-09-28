@@ -68,9 +68,10 @@ refs, forks, or objects unavailable to the clone are clean.
 ## Distribution and licensing
 
 The supported repository now contains a Python source package, the canonical skill
-under `.agents/skills/steadyfolio/`, and the installable local marketplace under
-`.agents/plugins/`. Never edit bundled plugin copies directly. Update canonical
-sources, then build into a temporary directory with:
+under `.agents/skills/steadyfolio/`, the local marketplace manifest under
+`.agents/plugins/`, and the installable plugin under `plugins/steadyfolio/`. Never
+edit bundled plugin copies directly. Update canonical sources, then build into a
+temporary directory with:
 
 ```powershell
 python tools/build_plugin.py --output <temporary-marketplace-root>
@@ -78,10 +79,11 @@ python tools/build_plugin.py --output <temporary-marketplace-root>
 
 The builder accepts only the explicit tracked-file allowlist in
 `tools/build_plugin.py`, rejects symlinked sources and unexpected output files, and
-emits an exact inventory. Compare the validated temporary build with
-`.agents/plugins/` before replacing the tracked mirror. `private/`, `.git/`,
-credentials, caches, local outputs, tests, and repository history are not package
-inputs. A local build or installation is not permission to publish it.
+emits an exact repository-shaped inventory. Compare the validated temporary build
+with `.agents/plugins/marketplace.json` and `plugins/steadyfolio/` before replacing
+the tracked mirror. `private/`, `.git/`, credentials, caches, local outputs, tests,
+and repository history are not package inputs. A local build or installation is
+not permission to publish it.
 
 The project license is MIT. The current implementation has no runtime third-party
 dependency and contains no copied upstream code, so no third-party notice file is

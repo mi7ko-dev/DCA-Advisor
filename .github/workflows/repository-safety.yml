@@ -56,7 +56,10 @@ jobs:
           plugin_marketplace="$RUNNER_TEMP/steadyfolio-plugin-marketplace"
           plugin_site="$RUNNER_TEMP/steadyfolio-plugin-site"
           python tools/build_plugin.py --output "$plugin_marketplace"
-          diff --recursive --brief .agents/plugins "$plugin_marketplace"
+          diff --recursive --brief \
+            .agents/plugins "$plugin_marketplace/.agents/plugins"
+          diff --recursive --brief \
+            plugins/steadyfolio "$plugin_marketplace/plugins/steadyfolio"
           python -m pip install --disable-pip-version-check --no-deps \
             --target "$plugin_site" \
             "$plugin_marketplace/plugins/steadyfolio"

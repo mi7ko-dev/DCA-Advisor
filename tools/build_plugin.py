@@ -157,7 +157,7 @@ trade execution, or tax/legal conclusions.
 From the repository root:
 
 ```powershell
-codex plugin marketplace add ./.agents/plugins
+codex plugin marketplace add .
 codex plugin add steadyfolio@steadyfolio-local
 ```
 
@@ -182,7 +182,7 @@ def expected_inventory() -> tuple[str, ...]:
 
     plugin_prefix = f"plugins/{PLUGIN_NAME}/"
     generated = {
-        "marketplace.json",
+        ".agents/plugins/marketplace.json",
         plugin_prefix + ".codex-plugin/plugin.json",
         plugin_prefix + "README.md",
     }
@@ -259,7 +259,10 @@ def build_plugin(output_root: Path) -> tuple[str, ...]:
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(source, destination, follow_symlinks=False)
 
-    _write_json(output_root / "marketplace.json", MARKETPLACE_MANIFEST)
+    _write_json(
+        output_root / ".agents" / "plugins" / "marketplace.json",
+        MARKETPLACE_MANIFEST,
+    )
     _write_json(plugin_root / ".codex-plugin" / "plugin.json", PLUGIN_MANIFEST)
     with (plugin_root / "README.md").open(
         "w", encoding="utf-8", newline="\n"
@@ -288,7 +291,7 @@ def main() -> int:
         "--output",
         required=True,
         type=Path,
-        help="Marketplace root to create or refresh.",
+        help="Repository-shaped marketplace root to create or refresh.",
     )
     args = parser.parse_args()
     inventory = build_plugin(args.output)

@@ -35,7 +35,7 @@ For Codex, either open this repository and invoke the discovered repo-local skil
 with `$steadyfolio`, or install the reproducible local plugin marketplace:
 
 ```powershell
-codex plugin marketplace add ./.agents/plugins
+codex plugin marketplace add .
 codex plugin add steadyfolio@steadyfolio-local
 ```
 
@@ -142,9 +142,10 @@ change, verification, distribution, and license process is in
 `docs/MAINTENANCE.md`.
 
 The repository contains the source package, repo-local skill, and a reproducible
-Codex marketplace under `.agents/plugins/`. `tools/build_plugin.py` assembles the
-self-contained plugin only from an explicit public allowlist and CI compares a
-clean temporary build byte-for-byte with the tracked package. No release archive
-is published; publication still requires separate authorization.
+Codex marketplace manifest at `.agents/plugins/marketplace.json` whose plugin is at
+`plugins/steadyfolio/`. `tools/build_plugin.py` assembles the self-contained plugin
+only from an explicit public allowlist and CI compares a clean temporary build
+byte-for-byte with the tracked package. No release archive is published;
+publication still requires separate authorization.
 
 SteadyFolio is provided under the MIT License. It is not financial advice.

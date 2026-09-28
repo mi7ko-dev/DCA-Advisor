@@ -17,7 +17,10 @@ sys.path.insert(0, str(REPOSITORY_ROOT / "tools"))
 import build_plugin  # noqa: E402
 
 
-TRACKED_MARKETPLACE_ROOT = REPOSITORY_ROOT / ".agents" / "plugins"
+TRACKED_PLUGIN_ROOT = REPOSITORY_ROOT / "plugins" / "steadyfolio"
+TRACKED_MARKETPLACE = (
+    REPOSITORY_ROOT / ".agents" / "plugins" / "marketplace.json"
+)
 
 
 class PluginPackageTests(unittest.TestCase):
@@ -57,7 +60,12 @@ class PluginPackageTests(unittest.TestCase):
             )
         )
         marketplace = json.loads(
-            (self.generated_root / "marketplace.json").read_text(encoding="utf-8")
+            (
+                self.generated_root
+                / ".agents"
+                / "plugins"
+                / "marketplace.json"
+            ).read_text(encoding="utf-8")
         )
 
         self.assertEqual(manifest["name"], build_plugin.PLUGIN_NAME)
@@ -77,18 +85,21 @@ class PluginPackageTests(unittest.TestCase):
         self.assertEqual(bundled.read_bytes(), canonical.read_bytes())
 
     def test_tracked_marketplace_reproduces_from_the_allowlist(self) -> None:
+        tracked_files = [TRACKED_MARKETPLACE]
+        tracked_files.extend(
+            path for path in TRACKED_PLUGIN_ROOT.rglob("*") if path.is_file()
+        )
         tracked_inventory = tuple(
             sorted(
-                path.relative_to(TRACKED_MARKETPLACE_ROOT).as_posix()
-                for path in TRACKED_MARKETPLACE_ROOT.rglob("*")
-                if path.is_file()
+                path.relative_to(REPOSITORY_ROOT).as_posix()
+                for path in tracked_files
             )
         )
         self.assertEqual(tracked_inventory, self.inventory)
         for relative in self.inventory:
             with self.subTest(path=relative):
                 self.assertEqual(
-                    (TRACKED_MARKETPLACE_ROOT / relative).read_bytes(),
+                    (REPOSITORY_ROOT / relative).read_bytes(),
                     (self.generated_root / relative).read_bytes(),
                 )
 
