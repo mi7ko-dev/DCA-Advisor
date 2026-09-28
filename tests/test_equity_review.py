@@ -23,6 +23,7 @@ from steadyfolio.equity_models import (  # noqa: E402
     EquityReviewInput,
     FreeCashFlowObservation,
     InstrumentIdentityEvidence,
+    OwnerEarningsEvidence,
     ValuationAnchor,
 )
 from steadyfolio.equity_validation import equity_review_input_from_dict  # noqa: E402
@@ -272,6 +273,71 @@ class EquityReviewTests(unittest.TestCase):
         )
         self.assertEqual(capex.points_awarded, 0)
 
+    def test_owner_earnings_components_require_one_reporting_date(self) -> None:
+        owner = OwnerEarningsEvidence(
+            currency="EUR",
+            reported_earnings=_decimal("100"),
+            depreciation_and_amortization=replace(
+                _decimal("20"), as_of="2026-01-30"
+            ),
+            maintenance_capex=_decimal("30"),
+            growth_capex_funded_from_fcf=_boolean(
+                True, "Synthetic free-cash-flow funding evidence."
+            ),
+        )
+        quality = replace(
+            _review_input().quality,
+            capex_to_revenue=_decimal("0.20"),
+            owner_earnings=owner,
+        )
+
+        with self.assertRaisesRegex(ValidationError, "same reporting date"):
+            review_equity(_stock_state(), _review_input(quality=quality))
+
+    def test_owner_earnings_outflow_components_cannot_be_negative(self) -> None:
+        for field in ("depreciation_and_amortization", "maintenance_capex"):
+            with self.subTest(field=field):
+                owner = OwnerEarningsEvidence(
+                    currency="EUR",
+                    reported_earnings=_decimal("100"),
+                    depreciation_and_amortization=_decimal("20"),
+                    maintenance_capex=_decimal("30"),
+                    growth_capex_funded_from_fcf=_boolean(
+                        True, "Synthetic free-cash-flow funding evidence."
+                    ),
+                )
+                owner = replace(owner, **{field: _decimal("-1")})
+                quality = replace(
+                    _review_input().quality,
+                    capex_to_revenue=_decimal("0.20"),
+                    owner_earnings=owner,
+                )
+
+                with self.assertRaisesRegex(ValidationError, "cannot be negative"):
+                    review_equity(_stock_state(), _review_input(quality=quality))
+
+    def test_funding_red_flag_prevents_an_eligible_conclusion(self) -> None:
+        owner = OwnerEarningsEvidence(
+            currency="EUR",
+            reported_earnings=_decimal("100"),
+            depreciation_and_amortization=_decimal("20"),
+            maintenance_capex=_decimal("30"),
+            growth_capex_funded_from_fcf=_boolean(
+                False, "Synthetic growth CapEx requires external funding."
+            ),
+        )
+        quality = replace(
+            _review_input().quality,
+            capex_to_revenue=_decimal("0.20"),
+            owner_earnings=owner,
+        )
+
+        result = review_equity(_stock_state(), _review_input(quality=quality))
+
+        self.assertEqual(result.quality_classification, "quality")
+        self.assertEqual(result.owner_earnings.status, "funding_red_flag")
+        self.assertEqual(result.conclusion, "funding_red_flag")
+
     def test_conflicting_valuation_directions_are_not_averaged(self) -> None:
         first = _review_input().valuation_anchors[0]
         second = replace(
@@ -447,6 +513,68 @@ class PortfolioPolicyTests(unittest.TestCase):
 
         with self.assertRaisesRegex(ValidationError, "unknown instrument"):
             evaluate_portfolio_policy(state, analysis, policy)
+
+    def test_policy_rejects_invalid_analysis_invariants(self) -> None:
+        state, analysis = self._analysis()
+        policy = portfolio_policy_from_dict(
+            _read(EXAMPLES / "portfolio-policy.example.json")
+        )
+        first, second = analysis.positions
+        invalid_analyses = (
+            replace(analysis, positions=(first, first)),
+            replace(
+                analysis,
+                positions=(replace(first, current_weight=Decimal("NaN")), second),
+            ),
+            replace(
+                analysis,
+                positions=(
+                    replace(
+                        first,
+                        current_weight=Decimal("0.7"),
+                        drift=Decimal("0.2"),
+                    ),
+                    second,
+                ),
+                maximum_direct_weight=Decimal("0.7"),
+                herfindahl_index=Decimal("0.53"),
+            ),
+        )
+
+        for invalid in invalid_analyses:
+            with self.subTest(invalid=invalid):
+                with self.assertRaises(ValidationError):
+                    evaluate_portfolio_policy(state, invalid, policy)
+
+    def test_policy_requires_complete_current_state_coverage(self) -> None:
+        state, analysis = self._analysis()
+        approved = next(
+            allocation
+            for allocation in state.target_allocations
+            if allocation.status == "approved"
+        )
+        zero_weight_target = replace(
+            approved.targets[0],
+            instrument_id="instrument-policy-benchmark",
+            weight=Decimal("0"),
+        )
+        expanded_approved = replace(
+            approved,
+            targets=(*approved.targets, zero_weight_target),
+        )
+        expanded_state = replace(
+            state,
+            target_allocations=tuple(
+                expanded_approved if allocation.id == approved.id else allocation
+                for allocation in state.target_allocations
+            ),
+        )
+        policy = portfolio_policy_from_dict(
+            _read(EXAMPLES / "portfolio-policy.example.json")
+        )
+
+        with self.assertRaisesRegex(ValidationError, "coverage"):
+            evaluate_portfolio_policy(expanded_state, analysis, policy)
 
     def test_public_policy_example_parses_and_reproduces_result(self) -> None:
         state, analysis = self._analysis()

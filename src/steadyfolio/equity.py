@@ -576,15 +576,32 @@ def _validate_input(state: PortfolioState, review_input: EquityReviewInput) -> N
     if owner is not None:
         if not _CURRENCY.fullmatch(owner.currency):
             raise ValidationError("Owner-earnings currency must be an uppercase ISO code.")
-        for item, field in (
+        owner_components = (
             (owner.reported_earnings, "quality.owner_earnings.reported_earnings"),
             (
                 owner.depreciation_and_amortization,
                 "quality.owner_earnings.depreciation_and_amortization",
             ),
             (owner.maintenance_capex, "quality.owner_earnings.maintenance_capex"),
-        ):
+        )
+        for item, field in owner_components:
             _validate_decimal_evidence(item, field, review_date, sources)
+        component_dates = {
+            item.as_of for item, _ in owner_components if item is not None
+        }
+        if len(component_dates) > 1:
+            raise ValidationError(
+                "Owner-earnings components must use the same reporting date."
+            )
+        if (
+            owner.depreciation_and_amortization is not None
+            and owner.depreciation_and_amortization.value < 0
+        ):
+            raise ValidationError(
+                "Owner-earnings depreciation and amortization cannot be negative."
+            )
+        if owner.maintenance_capex is not None and owner.maintenance_capex.value < 0:
+            raise ValidationError("Owner-earnings maintenance CapEx cannot be negative.")
         _validate_boolean_evidence(
             owner.growth_capex_funded_from_fcf,
             "quality.owner_earnings.growth_capex_funded_from_fcf",
@@ -741,6 +758,12 @@ def review_equity(
     elif classification == "mid_tier":
         conclusion = "watch"
         next_actions = ("Keep the instrument under observation; no transaction is proposed.",)
+    elif owner_earnings.status == "funding_red_flag":
+        conclusion = "funding_red_flag"
+        next_actions = (
+            "Do not treat the instrument as eligible while growth CapEx is not "
+            "funded from free cash flow.",
+        )
     elif valuation.status in {"conflicting", "unavailable"}:
         conclusion = "insufficient_valuation"
         next_actions = (

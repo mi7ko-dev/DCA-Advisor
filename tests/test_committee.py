@@ -220,6 +220,25 @@ class CommitteeIntegrationTests(unittest.TestCase):
         self.assertEqual(result.trace.external_calls, 0)
         self.assertFalse(result.mutation_performed)
 
+    def test_equity_review_requires_request_and_evidence_dates_to_match(self) -> None:
+        state = state_from_dict(_read(EXAMPLES / "equity-portfolio.example.json"))
+        equity_input = equity_review_input_from_dict(
+            _read(EXAMPLES / "equity-evidence.example.json")
+        )
+        request = CommitteeRequest(
+            "request-equity-date-mismatch",
+            "Analyze this stock with an equity quality review.",
+            "2026-02-01",
+            instrument_id="synthetic-compute-company",
+        )
+
+        with self.assertRaisesRegex(ValidationError, "same as-of date"):
+            run_committee_workflow(
+                request,
+                state,
+                equity_review_input=equity_input,
+            )
+
     def test_routine_contribution_skips_research_and_committee(self) -> None:
         state, prices, fx_rates, constraints, snapshot, _, _, _ = _inputs()
         original = deepcopy(state)

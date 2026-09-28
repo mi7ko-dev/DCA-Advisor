@@ -751,6 +751,10 @@ def _run_equity_review(
         raise ValidationError(
             "Committee request and equity evidence reference different instruments."
         )
+    if request.as_of != equity_input.as_of:
+        raise ValidationError(
+            "Committee request and equity evidence must use the same as-of date."
+        )
     review = review_equity(state, equity_input)
     score = (
         f"{review.score_percent}%"
