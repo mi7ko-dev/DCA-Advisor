@@ -1,5 +1,9 @@
 # Maintenance Guide
 
+This guide is source-checkout-only. The installed plugin intentionally omits the
+repository tests, package builder, hooks, and repository-safety tooling referenced
+below.
+
 ## Change boundary
 
 Keep changes narrow and preserve the public/private split. Every tracked fixture,

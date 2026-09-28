@@ -21,18 +21,23 @@ it explicitly with `$steadyfolio` when deterministic portfolio routing is wanted
 The current repository session has discovered the skill, and its files pass the
 bundled skill validator.
 
-To install the plugin from a checkout, register the repository marketplace and add
-the plugin:
+To install the plugin from a checkout, first verify the bundled runtime through its
+explicit source path, then register the repository marketplace and add the plugin.
+The Codex plugin command installs plugin files; it does not `pip install` the
+bundled `src`-layout package.
 
 ```powershell
+$pluginRoot = (Resolve-Path .\plugins\steadyfolio).Path
+py -3.11 -S -c "import sys; sys.path.insert(0, r'$pluginRoot\src'); import steadyfolio; assert callable(steadyfolio.run_committee_workflow)"
 codex plugin marketplace add .
 codex plugin add steadyfolio@steadyfolio-local
 ```
 
 Start a new Codex thread after installation. The plugin manifest and skill pass the
-bundled validators, and its bundled Python runtime imports independently of the
-repository source path. A general ChatGPT host, MCP service, and clean-machine
-cross-platform installation are not claimed.
+bundled validators. The installed skill resolves its plugin runtime root and applies
+the same explicit `src` bootstrap before direct imports, so it does not depend on a
+separate SteadyFolio installation or ambient `PYTHONPATH`. A general ChatGPT host,
+MCP service, and clean-machine cross-platform installation are not claimed.
 
 No environment variable or credential is required for the implemented offline
 core. Do not add broker or provider keys for this version. If a future adapter is
@@ -91,7 +96,9 @@ to save or execute anything.
 
 Choose the workspace root explicitly. The storage layer creates and writes only
 below its `private/` child, validates the complete state, rejects unsafe filenames
-and symlinks, writes atomically, and refuses overwrite by default.
+and symlinks, writes atomically, and refuses overwrite by default. If the workspace
+is inside a Git worktree, the exact private target must be ignored and untracked
+before any directory is created or any value is read or written.
 
 ```python
 import json
@@ -154,7 +161,9 @@ not expose the raw exception text in the result.
 
 ## Checks and troubleshooting
 
-Run the full local gate from the repository root:
+The following checks are source-checkout-only; the installed plugin intentionally
+omits tests, build scripts, hooks, and repository-safety tooling. Run the full local
+gate from the repository root:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File tools/install_gitleaks.ps1

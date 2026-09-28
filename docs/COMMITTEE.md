@@ -130,7 +130,8 @@ server, live provider, or true multi-agent runtime. A new host session is requir
 after plugin installation.
 
 The deterministic package requires Python 3.11 or newer and has no third-party
-runtime dependency. Run focused and full validation with:
+runtime dependency. The following validation commands are source-checkout-only;
+the installed plugin intentionally omits tests and repository-safety tooling:
 
 ```powershell
 python -m unittest tests.test_committee

@@ -27,11 +27,15 @@ def _read_json(path: Path) -> object:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def _write_json(path: Path, value: object) -> None:
+def _write_text(path: Path, value: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(value, indent=2, ensure_ascii=True, sort_keys=True) + "\n",
-        encoding="utf-8",
+    with path.open("w", encoding="utf-8", newline="\n") as stream:
+        stream.write(value)
+
+
+def _write_json(path: Path, value: object) -> None:
+    _write_text(
+        path, json.dumps(value, indent=2, ensure_ascii=True, sort_keys=True) + "\n"
     )
 
 
@@ -67,8 +71,7 @@ def main() -> int:
     )
     report = render_contribution_report(state, analysis, plan)
     report_path = examples / "reports" / "monthly-contribution.md"
-    report_path.parent.mkdir(parents=True, exist_ok=True)
-    report_path.write_text(report.rstrip() + "\n", encoding="utf-8")
+    _write_text(report_path, report.rstrip() + "\n")
     return 0
 
 

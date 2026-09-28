@@ -60,6 +60,11 @@ jobs:
             .agents/plugins "$plugin_marketplace/.agents/plugins"
           diff --recursive --brief \
             plugins/steadyfolio "$plugin_marketplace/plugins/steadyfolio"
+          (
+            cd "$plugin_marketplace/plugins/steadyfolio"
+            python -S -c \
+              "import sys; from pathlib import Path; sys.path.insert(0, str(Path.cwd() / 'src')); import steadyfolio; assert callable(steadyfolio.run_committee_workflow); assert callable(steadyfolio.review_equity)"
+          )
           python -m pip install --disable-pip-version-check --no-deps \
             --target "$plugin_site" \
             "$plugin_marketplace/plugins/steadyfolio"

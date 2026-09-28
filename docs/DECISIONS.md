@@ -63,7 +63,9 @@ packaging, publishing, later phases, or tracked real user data.
   to inspect and migrate than an early database.
 - **Consequence:** SQLite is deferred until concurrent access, query complexity,
   scale, integrity, or migration evidence justifies it. Storage writes must validate
-  first, be atomic, and avoid overwriting existing state during initialization.
+  first, be atomic, and avoid overwriting existing state during initialization. A
+  target inside a Git worktree must be ignored and untracked before storage creates
+  or accesses it; a workspace outside Git remains an explicit safe alternative.
 
 ## D-006: Make arithmetic and currency semantics explicit
 
@@ -334,9 +336,11 @@ changes, transactions, or publication.
   history, or unrelated development files from entering the package.
 - **Consequence:** The plugin is self-contained for local Codex and requires Python
   3.11 or newer. Canonical sources remain outside the generated mirror; CI rebuilds
-  and compares it. Plugin installation does not authorize live data, broker access,
-  transactions, policy mutation, publication, or compatibility claims for other
-  hosts.
+  and compares it. The Codex install command copies plugin files but does not install
+  the bundled Python package, so direct imports explicitly prepend the plugin's
+  `src` directory and never trust ambient `PYTHONPATH`. Plugin installation does not
+  authorize live data, broker access, transactions, policy mutation, publication,
+  or compatibility claims for other hosts.
 
 ## Plugin packaging approval effects
 

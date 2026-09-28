@@ -188,7 +188,9 @@ tracked and distributable                ignored and never packaged
 The workspace root must be supplied explicitly by the caller or a documented CLI
 argument. It must not be inferred from a home directory, recent file, or hidden host
 state. The storage layer resolves `private/` from that root, rejects traversal and
-symlink escapes, and never writes to the skill installation directory.
+symlink escapes, and never writes to the skill installation directory. When that
+root is inside a Git worktree, the storage layer fails before creating or accessing
+a target unless the exact path is ignored and untracked.
 
 Public examples and test fixtures must be obviously synthetic. Logs, debug dumps,
 provider responses, reports, and intermediate calculations derived from a real user
@@ -378,7 +380,10 @@ schemas, synthetic examples, and operating documentation. The plugin is generate
 from an explicit tracked-file allowlist and exposed through the repo-local
 `steadyfolio-local` marketplace. Its manifest, skill structure, exact inventory,
 and isolated runtime import are tested. No general ChatGPT host, MCP service, live
-provider, or true multi-agent runtime is implemented or claimed.
+provider, or true multi-agent runtime is implemented or claimed. Plugin installation
+does not install the bundled Python package; the skill uses an explicit, validated
+`src` path for direct imports, and CI tests that documented bootstrap independently
+of repository source paths or ambient `PYTHONPATH`.
 
 ## Verification strategy
 

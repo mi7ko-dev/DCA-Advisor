@@ -157,13 +157,18 @@ trade execution, or tax/legal conclusions.
 From the repository root:
 
 ```powershell
+$pluginRoot = (Resolve-Path .\plugins\steadyfolio).Path
+py -3.11 -S -c "import sys; sys.path.insert(0, r'$pluginRoot\src'); import steadyfolio; assert callable(steadyfolio.run_committee_workflow)"
 codex plugin marketplace add .
 codex plugin add steadyfolio@steadyfolio-local
 ```
 
-Start a new Codex thread after installation and invoke `$steadyfolio`. Real user
-state and every derived output must remain under an ignored `private/` workspace in
-the active project, never inside the installed plugin.
+The Codex plugin command installs plugin files; it does not `pip install` the
+bundled `src`-layout package. The installed skill resolves its runtime root and
+prepends the bundled `src` path for direct engine imports. Start a new Codex thread
+after installation and invoke `$steadyfolio`. Real user state and every derived
+output must remain under an ignored `private/` workspace in the active project,
+never inside the installed plugin.
 
 Python 3.11 or newer is required for the bundled deterministic engine. The project
 is licensed under the MIT License.
@@ -212,13 +217,28 @@ def _write_json(path: Path, value: object) -> None:
         stream.write(json.dumps(value, ensure_ascii=True, indent=2) + "\n")
 
 
+def _reject_output_symlinks(output_root: Path) -> None:
+    for component in (output_root, *output_root.parents):
+        if component.is_symlink():
+            raise RuntimeError("Plugin output cannot traverse a symlink.")
+    if not output_root.exists():
+        return
+    for path in output_root.rglob("*"):
+        if path.is_symlink():
+            raise RuntimeError("Plugin output cannot contain symlinks.")
+
+
 def build_plugin(output_root: Path) -> tuple[str, ...]:
     """Build a marketplace root and fail closed on source or inventory drift."""
 
+    output_root = output_root.absolute()
+    _reject_output_symlinks(output_root)
     output_root = output_root.resolve()
     repository_root = REPOSITORY_ROOT.resolve()
-    if output_root == repository_root:
-        raise ValueError("Plugin output cannot be the repository root.")
+    if output_root == repository_root or output_root.is_relative_to(repository_root):
+        raise ValueError(
+            "Plugin output must be outside the repository in a temporary directory."
+        )
 
     tracked = _tracked_files()
     missing_from_index = sorted(set(PUBLIC_SOURCE_FILES) - tracked)
@@ -269,6 +289,7 @@ def build_plugin(output_root: Path) -> tuple[str, ...]:
     ) as stream:
         stream.write(PLUGIN_README)
 
+    _reject_output_symlinks(output_root)
     actual = {
         path.relative_to(output_root).as_posix()
         for path in output_root.rglob("*")

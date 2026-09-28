@@ -37,10 +37,15 @@ def _read(path: Path) -> object:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def _write_text(path: Path, value: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8", newline="\n") as stream:
+        stream.write(value)
+
+
 def _write_json(path: Path, value: object) -> None:
-    path.write_text(
-        json.dumps(value, indent=2, ensure_ascii=True, sort_keys=True) + "\n",
-        encoding="utf-8",
+    _write_text(
+        path, json.dumps(value, indent=2, ensure_ascii=True, sort_keys=True) + "\n"
     )
 
 
@@ -54,9 +59,9 @@ def main() -> int:
         EXAMPLES / "equity-review.example.json",
         to_json_value(equity_result),
     )
-    (EXAMPLES / "equity-review.example.md").write_text(
+    _write_text(
+        EXAMPLES / "equity-review.example.md",
         render_equity_review_report(equity_result) + "\n",
-        encoding="utf-8",
     )
 
     portfolio_state = state_from_dict(_read(EXAMPLES / "portfolio.example.json"))
@@ -75,9 +80,9 @@ def main() -> int:
         EXAMPLES / "portfolio-policy-result.example.json",
         to_json_value(policy_result),
     )
-    (EXAMPLES / "portfolio-policy-result.example.md").write_text(
+    _write_text(
+        EXAMPLES / "portfolio-policy-result.example.md",
         render_portfolio_policy_report(policy_result) + "\n",
-        encoding="utf-8",
     )
     return 0
 

@@ -6,7 +6,11 @@ This repository is public. Source code, deterministic tools, schemas, synthetic 
 
 The boundary includes holdings, balances, transactions, goals, account identifiers, broker statements, personal notes, prompts containing private context, runtime memory, provider responses, query histories, reports, screenshots, and credentials. Public examples and tests must be created from scratch with synthetic data; they must never be anonymized copies of a real portfolio.
 
-Ignore rules are a safety net, not a storage design. Application-owned private state belongs under `private/`, even when another ignored directory exists.
+Ignore rules are a safety net, not a storage design. Application-owned private
+state belongs under `private/`, even when another ignored directory exists. Before
+accessing a private target inside a Git worktree, the storage layer verifies that
+the exact target is ignored and not already tracked; it fails before creating
+`private/` when that guarantee is absent.
 
 ## Local and external processing
 
@@ -46,7 +50,9 @@ result cannot appear to have skipped the boundary.
 
 ## Required checks
 
-Run the complete local check from the repository root:
+These commands are source-checkout-only; the installed plugin intentionally omits
+repository tests, hooks, and safety tooling. Run the complete local check from the
+repository root:
 
 ```powershell
 python tools/run_repository_checks.py --require-gitleaks

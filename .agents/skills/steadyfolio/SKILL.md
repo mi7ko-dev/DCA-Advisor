@@ -12,10 +12,12 @@ portfolio arithmetic in prose or replace structured results with model estimates
 
 Resolve the nearest ancestor of this skill that contains both `pyproject.toml` and
 `src/steadyfolio/`; that is the runtime root in both the repository and the
-installable plugin. Run engine and verification commands from that root. Stop with
-a clear installation error if those files are absent. Real user state belongs in
-the active project's ignored `private/` workspace, never in the plugin installation
-tree.
+installable plugin. Run engine commands from that root. Bundled tools bootstrap
+`src/` themselves. Before any direct engine import, start Python with `-S` and
+insert `<runtime-root>/src` at `sys.path[0]`; do not assume the package was installed
+or trust an ambient `PYTHONPATH`. Stop with a clear installation error if those
+files are absent. Real user state belongs in the active project's ignored
+`private/` workspace, never in the plugin installation tree.
 
 ## Privacy boundary
 
@@ -73,7 +75,9 @@ python tools/generate_synthetic_committee.py
 python tools/generate_synthetic_equity.py
 ```
 
-Run the integration and skill-structure tests with:
+The integration and skill-structure tests are source-checkout-only because the
+installed plugin intentionally omits `tests/` and repository-safety tooling. From a
+source checkout, run:
 
 ```powershell
 python -m unittest tests.test_committee tests.test_equity_review tests.test_skill

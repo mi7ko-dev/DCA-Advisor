@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import re
+import subprocess
 import tempfile
 from typing import Any
 
@@ -35,6 +36,68 @@ def _workspace_root(workspace_root: str | Path) -> Path:
     return supplied.resolve(strict=True)
 
 
+def _containing_git_worktree(root: Path) -> Path | None:
+    for candidate in (root, *root.parents):
+        marker = candidate / ".git"
+        if marker.exists() or marker.is_symlink():
+            return candidate
+    return None
+
+
+def _require_ignored_git_target(root: Path, target: Path) -> None:
+    worktree = _containing_git_worktree(root)
+    if worktree is None:
+        return
+    relative = target.relative_to(worktree).as_posix()
+    try:
+        tracked = subprocess.run(
+            [
+                "git",
+                "-C",
+                str(worktree),
+                "--literal-pathspecs",
+                "ls-files",
+                "--error-unmatch",
+                "--",
+                relative,
+            ],
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False,
+        )
+        ignored = subprocess.run(
+            [
+                "git",
+                "-C",
+                str(worktree),
+                "check-ignore",
+                "--quiet",
+                "--no-index",
+                "--",
+                relative,
+            ],
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False,
+        )
+    except OSError as error:
+        raise StorageSafetyError(
+            "Git safety could not be verified for the private output."
+        ) from error
+    if tracked.returncode == 0:
+        raise StorageSafetyError("The private output target is already tracked by Git.")
+    if tracked.returncode not in {0, 1} or ignored.returncode not in {0, 1}:
+        raise StorageSafetyError(
+            "Git safety could not be verified for the private output."
+        )
+    if ignored.returncode != 0:
+        raise StorageSafetyError(
+            "The private output target must be ignored by its containing Git repository."
+        )
+
+
 def _private_root(workspace_root: str | Path, *, create: bool) -> Path:
     root = _workspace_root(workspace_root)
     private = root / "private"
@@ -59,7 +122,9 @@ def _safe_target(
 ) -> Path:
     if not _SAFE_FILENAME.fullmatch(category) or not _SAFE_FILENAME.fullmatch(filename):
         raise StorageSafetyError("Private output names contain unsafe characters.")
-    private = _private_root(workspace_root, create=create_directories)
+    root = _workspace_root(workspace_root)
+    _require_ignored_git_target(root, root / "private" / category / filename)
+    private = _private_root(root, create=create_directories)
     directory = private / category
     if directory.is_symlink():
         raise StorageSafetyError("A private output directory cannot be a symlink.")
