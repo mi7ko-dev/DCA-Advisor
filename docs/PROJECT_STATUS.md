@@ -2,9 +2,9 @@
 
 ## Active phase
 
-Phase 7 - Evidence-Limited Equity Review is complete in the working tree and is at
-its approval checkpoint. The Phase 7 changes are not staged, committed, pushed,
-packaged, or published.
+Plugin packaging is implemented in the working tree and is at its verification
+checkpoint. The package changes are not staged, committed, pushed, installed into
+the personal Codex profile, or published.
 
 ## Completed technical work
 
@@ -16,6 +16,10 @@ packaged, or published.
 - Defined the proposed component boundaries, host-independent Python engine, canonical skill location, private workspace boundary, JSON/Markdown persistence, domain model, financial invariants, and bounded review workflow in `docs/ARCHITECTURE.md`.
 - Recorded the proposed foundation, runtime, storage, schema, committee, provenance, license, Phase 3 scope, and packaging decisions in `docs/DECISIONS.md`.
 - Verified the proposed repo-local skill and future plugin portability path against current official OpenAI skill and plugin documentation; target-host compatibility remains something to test, not assume.
+- Added a self-contained `steadyfolio` Codex plugin and repo-local
+  `steadyfolio-local` marketplace generated from a literal public-file allowlist.
+- Added exact plugin-inventory, canonical-skill, isolated-runtime, manifest, and
+  reproducibility tests plus a Python 3.11 CI smoke installation.
 - Addressed repository-safety review findings by restoring legacy private-path patterns, scanning staged index blobs rather than edited working-tree copies, and forcing the pinned Gitleaks installer to replace and verify its local executable.
 - Accepted the Phase 2 architecture and decision record as the Phase 3 baseline.
 - Implemented a dependency-free Python 3.11 portfolio core with immutable domain models, strict validation, Decimal arithmetic, dated prices and FX rates, current weights, signed drift, weighted fees, and direct-concentration metrics.
@@ -75,6 +79,29 @@ packaged, or published.
   contracts, private non-overwriting persistence, synthetic examples and reports,
   documentation, skill routing, and CI regeneration.
 
+## Plugin packaging local verification record
+
+Verification on 2026-09-28 completed with these results:
+
+- The allowlist builder reproduced an exact 76-file marketplace containing the
+  `steadyfolio` plugin, canonical skill, deterministic engine, schemas, operating
+  documentation, and synthetic examples.
+- The bundled plugin validator reported `Plugin validation passed`, and both the
+  canonical and bundled skill validators reported `Skill is valid!`.
+- The bundled runtime imported with repository `src/` excluded from `PYTHONPATH`.
+- 144 unit, integration, privacy, invariant, repository-safety, skill-structure,
+  plugin-package, equity-review, and portfolio-policy tests passed with zero skips.
+- Python compilation passed for `src/`, `tests/`, and `tools/`, and every synthetic
+  generator reproduced its committed output.
+- Repository safety passed 13 ignored-path expectations and 12 public-path
+  expectations. Gitleaks 8.30.1 passed for available history and 170 current public
+  candidate files.
+- Bundle searches found no local user name, machine path, approval token, private
+  key marker, or credential filename. The patch whitespace check passed.
+- The local Python launcher exposes only Python 3.9.7. The supported Python 3.11
+  clean `pip --target` smoke installation is configured in CI and awaits an
+  authorized commit and push; no personal Codex installation was performed.
+
 ## Phase 7 local verification record
 
 Verification on 2026-09-28 completed with these results:
@@ -113,31 +140,31 @@ Verification on 2026-09-27 completed with these results:
   searches returned no finding, and the patch whitespace check passed.
 
 The local interpreter is Python 3.9.7 32-bit; Python 3.11, Ruff, and Pyright are not
-installed locally. Therefore a clean install on the supported Python version and
-those optional static tools were unavailable locally. CI is configured to install
-and import the source package on Python 3.11, but that updated workflow cannot run
-until an authorized commit and push. No release artifact was built because the
-supported repo-local distribution does not require one.
+installed locally. Therefore the supported-version plugin smoke installation and
+those optional static tools are deferred to CI. The local plugin manifest and skill
+validators pass, and the bundled runtime imports in isolation from repository
+source. No release archive is built or published.
 
 History coverage includes only objects and refs available in this clone. It cannot
 attest to deleted remote refs, unavailable objects, forks, or private systems.
 
 ## Open technical issues
 
-- Local Codex remains the only supported host. Discovery is verified in the current
-  repository session, but a clean-machine host test, global installation, generated
-  plugin, and general ChatGPT compatibility have not been tested or claimed.
+- Local Codex remains the only supported host. Repo-local discovery and the
+  generated plugin structure are verified, but an actual personal-profile install,
+  a clean-machine cross-platform host test, and general ChatGPT compatibility have
+  not been tested or claimed.
 - No upstream test suite was executed during the static audit; the review distinguishes inspected test coverage from locally reproduced results.
 - Hook templates are not enabled automatically because an existing local hook workflow must not be replaced without review.
 - The MVP supports ETF and stock positions only, direct or inverse FX pairs only, and does not model an existing portfolio cash balance.
-- Live market-data retrieval, broker connectivity, true independent research agents, tax optimization, rebalancing sales, user interface, and plugin packaging remain outside the implemented boundary.
+- Live market-data retrieval, broker connectivity, true independent research agents, tax optimization, rebalancing sales, and a user interface remain outside the implemented boundary.
 - No live research provider is implemented; provider-specific authentication, terms validation, rate limits, caching, and optional live integration tests remain deferred.
 - Look-through data is deliberately partial, historical samples are illustrative, and all metrics are descriptive rather than predictive.
 - Tax and regulatory questions remain unresolved without current jurisdiction-specific primary sources.
 
 ## Next approval gate
 
-Phase 7 is complete at its approval checkpoint. Any stage, commit, push, package
-publication, live-provider work, broker integration, tax adapter, transaction
-recording, policy mutation, or new product scope requires a separate explicit
-instruction. No approval is inferred from this file.
+Plugin packaging is at its approval checkpoint. Any stage, commit, push, personal
+installation, package publication, live-provider work, broker integration, tax
+adapter, transaction recording, policy mutation, or new product scope requires a
+separate explicit instruction. No approval is inferred from this file.

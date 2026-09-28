@@ -31,8 +31,15 @@ py -3.11 -m venv .venv
 .venv\Scripts\python -c "import steadyfolio; assert callable(steadyfolio.run_committee_workflow)"
 ```
 
-For Codex, open this repository and invoke the discovered repo-local skill with
-`$steadyfolio`. No global skill installation, credential, or environment variable
+For Codex, either open this repository and invoke the discovered repo-local skill
+with `$steadyfolio`, or install the reproducible local plugin marketplace:
+
+```powershell
+codex plugin marketplace add ./.agents/plugins
+codex plugin add steadyfolio@steadyfolio-local
+```
+
+Start a new Codex thread after installation. No credential or environment variable
 is required by the implemented offline version. See `docs/OPERATIONS.md` for the
 synthetic walkthrough, private initialization, provider flow, and troubleshooting.
 
@@ -134,9 +141,10 @@ in `docs/COMMITTEE.md`. Operational setup is in `docs/OPERATIONS.md`, and the na
 change, verification, distribution, and license process is in
 `docs/MAINTENANCE.md`.
 
-The supported distribution is this repository's source package and repo-local
-skill. No plugin archive or release package is produced. Any future package must be
-built from an explicit public allowlist, inspected, and clean-installed before a
-separately authorized publication.
+The repository contains the source package, repo-local skill, and a reproducible
+Codex marketplace under `.agents/plugins/`. `tools/build_plugin.py` assembles the
+self-contained plugin only from an explicit public allowlist and CI compares a
+clean temporary build byte-for-byte with the tracked package. No release archive
+is published; publication still requires separate authorization.
 
 SteadyFolio is provided under the MIT License. It is not financial advice.

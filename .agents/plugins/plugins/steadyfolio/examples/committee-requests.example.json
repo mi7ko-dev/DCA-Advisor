@@ -1,0 +1,42 @@
+{
+  "synthetic": true,
+  "requests": [
+    {
+      "id": "demo-monthly-contribution",
+      "message": "I have EUR 400 to invest this month.",
+      "as_of": "2026-01-31",
+      "scenario": "standard"
+    },
+    {
+      "id": "demo-portfolio-review",
+      "message": "Review my portfolio.",
+      "as_of": "2026-01-31",
+      "scenario": "standard"
+    },
+    {
+      "id": "demo-etf-thesis",
+      "message": "Should this ETF still be in my portfolio?",
+      "as_of": "2026-01-31",
+      "instrument_id": "instrument-global",
+      "scenario": "standard"
+    },
+    {
+      "id": "demo-overlap",
+      "message": "Review overlapping funds with incomplete holdings coverage.",
+      "as_of": "2026-01-31",
+      "scenario": "standard"
+    },
+    {
+      "id": "demo-incomplete-drift",
+      "message": "I have EUR 400 to invest this month; show any drift that cannot be corrected.",
+      "as_of": "2026-01-31",
+      "scenario": "standard"
+    },
+    {
+      "id": "demo-stale-missing",
+      "message": "Review my portfolio with missing and stale research and show specialist disagreements.",
+      "as_of": "2026-03-31",
+      "scenario": "missing_stale_research"
+    }
+  ]
+}
