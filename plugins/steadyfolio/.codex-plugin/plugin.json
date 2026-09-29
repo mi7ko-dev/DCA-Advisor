@@ -1,6 +1,6 @@
 {
   "name": "steadyfolio",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Deterministic portfolio maintenance with current-source research, private cache, and bounded host-native Codex perspectives.",
   "author": {
     "name": "mi7ko-dev",

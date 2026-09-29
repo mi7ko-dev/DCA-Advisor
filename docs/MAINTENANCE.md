@@ -95,7 +95,7 @@ Create a reproducible release archive only at an outside-repository path whose
 filename matches the current release:
 
 ```powershell
-python tools/build_release.py --output <outside-directory>\steadyfolio-0.3.0.zip
+python tools/build_release.py --output <outside-directory>\steadyfolio-0.3.1.zip
 ```
 
 The archive builder first creates the allowlisted marketplace in a temporary

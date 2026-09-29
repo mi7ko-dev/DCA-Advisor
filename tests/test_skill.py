@@ -62,6 +62,12 @@ class SkillStructureTests(unittest.TestCase):
         self.assertIn("Unknown or ambiguous cache terms fail closed", normalized)
         self.assertIn("symlink", normalized)
         self.assertIn("exclusive-create", normalized)
+        self.assertIn("`list_research_cache_records`", normalized)
+        self.assertIn("`save_research_cache_record`", normalized)
+        self.assertIn("`save_durable_context_record`", normalized)
+        self.assertIn("use it only in memory", normalized)
+        self.assertNotIn("cannot be cached safely", normalized)
+        self.assertIn("routine contribution is missing a price", normalized)
         for category in (
             "confirmed_fact",
             "user_decision",
@@ -88,6 +94,12 @@ class SkillStructureTests(unittest.TestCase):
         self.assertIn("reject every unknown field", normalized)
         self.assertIn("remain memory-only by default", normalized)
         self.assertIn("`single_thread_sequential`", normalized)
+        self.assertIn("`generic_agent_result_from_dict`", normalized)
+        self.assertIn("`validate_generic_agent_result`", normalized)
+        self.assertIn("`build_generic_critic_packet`", normalized)
+        self.assertIn("generic-specialist-result.schema.json", normalized)
+        self.assertIn("fewer than two valid independent specialist results", normalized)
+        self.assertIn("A routine contribution stops", " ".join(skill.split()))
         self.assertIn("Broker access and order placement are prohibited", skill)
 
     def test_skill_contains_no_runtime_state_directories(self) -> None:

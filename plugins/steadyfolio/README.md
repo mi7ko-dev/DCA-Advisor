@@ -6,7 +6,7 @@ documentation, and synthetic examples. It does not include private portfolio
 state, credentials, a Python live-provider adapter, broker connectivity, trade
 execution, background monitoring, or tax/legal conclusions.
 
-Plugin version: `0.3.0`.
+Plugin version: `0.3.1`.
 
 The contribution route never starts agents by default. A consequential review may
 start two to four Codex specialist threads and one critic thread, which adds
@@ -25,7 +25,7 @@ From the repository root:
 
 ```powershell
 $pluginRoot = (Resolve-Path .\plugins\steadyfolio).Path
-py -3.11 -B -S -c "import sys; sys.path.insert(0, r'$pluginRoot\src'); import steadyfolio; assert callable(steadyfolio.run_committee_workflow); assert callable(steadyfolio.prepare_multi_agent_equity_review)"
+py -3.11 -B -S -c "import sys; sys.path.insert(0, r'$pluginRoot\src'); import steadyfolio; assert callable(steadyfolio.run_committee_workflow); assert callable(steadyfolio.prepare_multi_agent_equity_review); assert callable(steadyfolio.save_research_cache_record); assert callable(steadyfolio.validate_generic_agent_result)"
 codex plugin marketplace add .
 codex plugin add steadyfolio@steadyfolio-local
 codex plugin list
@@ -33,17 +33,17 @@ codex plugin list
 
 ## Install from the release archive
 
-The archive is named `steadyfolio-0.3.0.zip` and contains the
+The archive is named `steadyfolio-0.3.1.zip` and contains the
 marketplace root directly. From the directory containing the archive:
 
 ```powershell
-$archive = (Resolve-Path .\steadyfolio-0.3.0.zip).Path
-$installRoot = Join-Path (Get-Location) "steadyfolio-0.3.0"
+$archive = (Resolve-Path .\steadyfolio-0.3.1.zip).Path
+$installRoot = Join-Path (Get-Location) "steadyfolio-0.3.1"
 New-Item -ItemType Directory -Path $installRoot | Out-Null
 Expand-Archive -LiteralPath $archive -DestinationPath $installRoot
 Set-Location $installRoot
 $pluginRoot = (Resolve-Path .\plugins\steadyfolio).Path
-py -3.11 -B -S -c "import sys; sys.path.insert(0, r'$pluginRoot\src'); import steadyfolio; assert callable(steadyfolio.run_committee_workflow); assert callable(steadyfolio.prepare_multi_agent_equity_review)"
+py -3.11 -B -S -c "import sys; sys.path.insert(0, r'$pluginRoot\src'); import steadyfolio; assert callable(steadyfolio.run_committee_workflow); assert callable(steadyfolio.prepare_multi_agent_equity_review); assert callable(steadyfolio.save_research_cache_record); assert callable(steadyfolio.validate_generic_agent_result)"
 codex plugin marketplace add .
 codex plugin add steadyfolio@steadyfolio-local
 codex plugin list

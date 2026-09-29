@@ -116,7 +116,9 @@ class PluginPackageTests(unittest.TestCase):
                     "import steadyfolio; "
                     "assert callable(steadyfolio.run_committee_workflow); "
                     "assert callable(steadyfolio.review_equity); "
-                    "assert callable(steadyfolio.prepare_multi_agent_equity_review)"
+                    "assert callable(steadyfolio.prepare_multi_agent_equity_review); "
+                    "assert callable(steadyfolio.save_research_cache_record); "
+                    "assert callable(steadyfolio.validate_generic_agent_result)"
                 ),
             ],
             cwd=self.plugin_root,

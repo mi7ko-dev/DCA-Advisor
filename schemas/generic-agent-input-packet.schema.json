@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://steadyfolio.example/schemas/generic-agent-input-packet.schema.json",
+  "title": "SteadyFolio Generic Non-Equity Agent Packet",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "packet_id", "route", "review_date", "role", "question", "deterministic_result_id", "instrument_aliases", "facts", "sources", "assumptions", "aggregates", "allowed_evidence_references", "instructions", "mutation_allowed", "external_research_allowed"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "packet_id": {"$ref": "#/$defs/id"},
+    "route": {"enum": ["portfolio_review", "overlap_review", "thesis_review"]},
+    "review_date": {"type": "string", "format": "date"},
+    "role": {"enum": ["allocation_diversification", "risk_cost", "evidence_quality", "thesis_fit", "critic"]},
+    "question": {"type": "string", "minLength": 1},
+    "deterministic_result_id": {"$ref": "#/$defs/id"},
+    "instrument_aliases": {"$ref": "#/$defs/idArray"},
+    "facts": {"type": "array", "items": {"$ref": "#/$defs/fact"}},
+    "sources": {"type": "array", "items": {"$ref": "#/$defs/source"}},
+    "assumptions": {"$ref": "#/$defs/stringArray"},
+    "aggregates": {"type": "array", "items": {"$ref": "#/$defs/aggregate"}},
+    "allowed_evidence_references": {"$ref": "#/$defs/idArray"},
+    "instructions": {"$ref": "#/$defs/stringArray"},
+    "mutation_allowed": {"const": false},
+    "external_research_allowed": {"const": false}
+  },
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"},
+    "idArray": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/id"}},
+    "stringArray": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "fact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fact_id", "category", "statement", "evidence_references"],
+      "properties": {
+        "fact_id": {"$ref": "#/$defs/id"},
+        "category": {"type": "string", "minLength": 1},
+        "statement": {"type": "string", "minLength": 1},
+        "evidence_references": {"$ref": "#/$defs/idArray"}
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_id", "as_of", "retrieved_at", "freshness", "coverage", "limitations"],
+      "properties": {
+        "source_id": {"$ref": "#/$defs/id"},
+        "as_of": {"type": "string", "format": "date"},
+        "retrieved_at": {"type": "string", "format": "date-time"},
+        "freshness": {"enum": ["fresh", "stale"]},
+        "coverage": {"type": "string", "minLength": 1},
+        "limitations": {"$ref": "#/$defs/stringArray"}
+      }
+    },
+    "aggregate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["aggregate_id", "kind", "value", "unit", "evidence_references"],
+      "properties": {
+        "aggregate_id": {"$ref": "#/$defs/id"},
+        "kind": {"enum": ["normalized_weight", "drift", "approved_aggregate_limit", "aggregate_exposure", "fee", "constraint", "downside", "coverage"]},
+        "value": {"type": "string", "minLength": 1},
+        "unit": {"type": "string", "minLength": 1},
+        "evidence_references": {"$ref": "#/$defs/idArray"}
+      }
+    }
+  }
+}

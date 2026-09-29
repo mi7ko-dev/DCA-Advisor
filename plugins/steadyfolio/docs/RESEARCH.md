@@ -14,11 +14,13 @@ is implemented. Consequently there are no live provider integration tests.
 
 Phase 9 adds a separate Codex host-native research layer. When a requested
 conclusion materially depends on time-sensitive facts, the lead first inspects
-compatible immutable records below `private/research/` and performs at most one
+compatible immutable records through `list_research_cache_records` and performs at most one
 foreground web research pass when the cache is absent, stale, contradictory, or
 inadequate. This does not implement or impersonate the Python `ResearchProvider`.
 The lead prefers primary sources and converts only attributable dated facts into
-validated engine inputs. Specialists never browse independently.
+validated engine inputs. A routine contribution stops on missing or stale price,
+FX, approved-target, or constraint inputs instead of browsing unless a material
+conflict beyond the calculation is explicitly escalated. Specialists never browse independently.
 
 Every source record retains:
 
@@ -32,6 +34,9 @@ The public example uses only project-authored synthetic data whose caching and
 redistribution are allowed. Host-native research records the source terms and
 caches only what those terms permit. When content caching is not permitted, the
 private record retains only the minimum allowed citation and freshness metadata.
+A source that permits current access, analysis, and citation may still be used in
+memory when retention is prohibited; inability to cache alone is not an evidence
+failure, and the source must be retrieved again for a later review.
 A future live adapter must separately review and encode the actual provider terms
 before caching or redistributing any response. Raw live responses must not become
 public fixtures.
@@ -151,7 +156,9 @@ Real provider responses, query history, caches, analysis results, thesis reviews
 and reports belong under ignored `private/`. New host-research records are
 append-only and retain public instrument identity, currency, data kind, source and
 retrieval dates, methodology, coverage, limitations, freshness basis, assumptions,
-and cache permissions. A compatible record is reused only when it remains adequate
+and cache permissions. They are created, saved, and listed only through the public
+typed record APIs, which validate the schema and reuse the storage layer's ignored
+target, symlink, and exclusive-create checks. A compatible record is reused only when it remains adequate
 for the current conclusion; material events and higher-consequence decisions can
 require an earlier refresh. Public examples are synthetic and may be regenerated
 with `tools/generate_synthetic_intelligence.py`.

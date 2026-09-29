@@ -3,10 +3,13 @@
 ## Active phase
 
 Phase 9 current-source research, append-only private cache/context, and bounded
-multi-agent review expansion are implemented and verified in the working tree as
-development version `0.3.0`. The latest separately verified installed release and
-archive remain `0.2.1`. The Phase 9 source and plugin mirror are not staged,
-committed, pushed, installed, published, or released.
+multi-agent review expansion plus the automated-review remediations are implemented
+and verified as development version `0.3.1`. The owner explicitly authorized this
+version generation, personal Codex reinstall, commit, and feature-branch push on
+2026-09-29. Version `0.3.1` is installed locally through the development
+cachebuster `0.3.1+codex.20260929205739` and has a verified local archive;
+this revision is committed to the Phase 9 feature branch but is not merged,
+published, or declared released. The latest published release remains `0.2.1`.
 
 ## Completed technical work
 
@@ -106,7 +109,42 @@ committed, pushed, installed, published, or released.
   uncertain, conflicting, or bias-sensitive non-equity reviews while retaining the
   strict Phase 8 equity contract and routine-contribution exclusion.
 
-## Phase 9 local verification record
+## Version 0.3.1 review-remediation verification record
+
+Verification completed on 2026-09-30 with these results:
+
+- Added typed public create/save/list APIs for append-only research-cache and
+  durable-context records. The writers validate schemas and reuse ignored-target,
+  symlink, atomic, and exclusive-create safeguards; context corrections must link
+  an existing prior record.
+- Added version `1.0` generic non-equity packet and result schemas, content-bound
+  packet IDs, exact-field parsers, evidence-reference validation, host-owned
+  execution metadata, and a critic builder that accepts only validated specialist
+  results.
+- Clarified that routine contributions stop instead of browsing for missing or
+  stale required inputs, and that verified evidence may remain in memory when its
+  terms allow current use but prohibit retention.
+- Python compilation passed for `src/`, `tests/`, and `tools/`; all 195 unit,
+  integration, privacy, invariant, release, plugin, skill, equity, multi-agent,
+  private-record, generic-agent, and repository-safety tests passed.
+- All five synthetic generators reproduced the tracked example tree without a
+  diff. The canonical and bundled skills reported `Skill is valid!`, the plugin
+  reported `Plugin validation passed`, and the bundled runtime imported with an
+  explicit Python 3.11 `src` path.
+- A 95-file allowlisted marketplace reproduced the tracked plugin mirror exactly.
+  Repository safety passed 13 ignored-path and 12 public-path expectations against
+  213 tracked files; Gitleaks 8.30.1 passed for available history and 213 current
+  public candidate files.
+- The deterministic `steadyfolio-0.3.1.zip` archive was generated outside the
+  repository with SHA-256
+  `5ccfb5a8b6340ecda03ed23224ecc091f2e5c4a2ecc54b88960a1e8388f3e706`.
+- The local `steadyfolio-local` marketplace installed and enabled development
+  version `0.3.1+codex.20260929205739`; its code, skill, and documentation matched
+  canonical version `0.3.1`, whose manifest was restored before commit. No
+  publication, merge, transaction, portfolio mutation, private overwrite, or real
+  user-data operation was performed.
+
+## Phase 9 local verification record (historical pre-commit checkpoint)
 
 Verification on 2026-09-29 completed with these results:
 
@@ -255,10 +293,10 @@ attest to deleted remote refs, unavailable objects, forks, or private systems.
 
 ## Open technical issues
 
-- Local Codex remains the only supported host. Repo-local discovery and the
-  generated plugin structure are verified, but an actual personal-profile install,
-  a clean-machine cross-platform host test, and general ChatGPT compatibility have
-  not been tested or claimed.
+- Local Codex remains the only supported host. Repo-local discovery, the generated
+  plugin structure, and a personal-profile install are verified, but a clean-machine
+  cross-platform host test and general ChatGPT compatibility have not been tested
+  or claimed.
 - No upstream test suite was executed during the static audit; the review distinguishes inspected test coverage from locally reproduced results.
 - Hook templates are not enabled automatically because an existing local hook workflow must not be replaced without review.
 - The MVP supports ETF and stock positions only, direct or inverse FX pairs only, and does not model an existing portfolio cash balance.
@@ -268,15 +306,17 @@ attest to deleted remote refs, unavailable objects, forks, or private systems.
 - Host-native web research depends on the selected Codex host. No provider-specific
   authentication, rate-limit integration, raw-response cache, or optional live
   provider integration test is implemented.
-- Non-equity subagent executions are disclosed in the answer but are not serialized
-  through the equity-specific agent envelope.
+- Generic non-equity packet, result, and critic contracts are validated by Python,
+  but the live Codex spawning step remains host-orchestrated rather than a Python
+  model-service adapter or persisted committee envelope.
 - Look-through data is deliberately partial, historical samples are illustrative, and all metrics are descriptive rather than predictive.
 - Tax and regulatory questions remain unresolved without current jurisdiction-specific primary sources.
 
 ## Next approval gate
 
-Phase 9 is at its approval checkpoint. Any stage, commit, push, personal
-installation, release archive, package publication, Python live-provider work,
-broker integration, tax adapter, transaction recording, holdings/thesis/target or
-policy mutation, private overwrite, background monitoring, or new product scope
-requires a separate explicit instruction. No approval is inferred from this file.
+The authorized version `0.3.1` generation, local install, commit, and feature-branch
+push are complete. Merge, release declaration, archive or package publication,
+additional commit or push, Python live-provider work, broker integration, tax
+adapter, transaction recording, holdings/thesis/target or policy mutation, private
+overwrite, background monitoring, or new product scope requires a separate explicit
+instruction. No further approval is inferred from this file.

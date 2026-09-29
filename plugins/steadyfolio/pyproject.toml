@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "steadyfolio"
-version = "0.3.0"
+version = "0.3.1"
 description = "Deterministic portfolio maintenance and research core for contribution-based investors"
 readme = "README.md"
 requires-python = ">=3.11"

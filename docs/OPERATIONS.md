@@ -2,11 +2,11 @@
 
 ## Supported installation
 
-SteadyFolio development version `0.3.0` supports Python 3.11 or newer and the
+SteadyFolio development version `0.3.1` supports Python 3.11 or newer and the
 repo-local Codex skill in this repository. It also provides a self-contained local
-Codex plugin. The latest separately verified release archive remains `0.2.1` until
-a new release is authorized. Neither mode has a runtime dependency outside the
-Python standard library.
+Codex plugin. The latest published release remains `0.2.1`; the locally verified
+`0.3.1` candidate archive is not published or declared released. Neither mode has
+a runtime dependency outside the Python standard library.
 
 Phase 9 consequential review additionally requires a Codex host release with
 native subagents enabled. It does not require an OpenAI API key or Agents SDK
@@ -130,7 +130,9 @@ The skill must use the engine output. It must not calculate portfolio values in
 prose, invent a missing price or FX rate, or turn an analysis request into approval
 to save a review or execute anything. It may automatically inspect and create new
 append-only records under `private/research/` and `private/context/` under the
-Phase 9 standing authorization.
+Phase 9 standing authorization. A routine contribution stops on a missing or stale
+price, FX rate, approved target, or executable constraint instead of researching,
+unless a material conflict beyond the calculation is explicitly escalated.
 
 For equity review, the skill first creates immutable packets in memory, then asks
 Codex to start one subagent for each specialist and one later critic. If the host
@@ -143,8 +145,13 @@ route-specific roles and one later critic. The lead completes any required web
 research before delegation; specialists receive prepared role-minimal facts and do
 not browse, use tools, read files, or recalculate. Packets use route-specific field
 allowlists, opaque user-owned identifiers, and a context with no inherited chat
-history. If safe packet validation, packet-only isolation, or native subagents are
-unavailable, the skill uses the existing sequential lenses, reports
+history. `create_generic_agent_packet` and `validate_generic_agent_packet` enforce
+the input contract. Every response is parsed with
+`generic_agent_result_from_dict`, validated with
+`validate_generic_agent_result`, and only then admitted to
+`build_generic_critic_packet` or synthesis. Unknown fields or evidence references
+fail closed. If fewer than two valid specialists remain, or safe packet validation,
+packet-only isolation, or native subagents are unavailable, the skill uses the existing sequential lenses, reports
 `single_thread_sequential`, and clearly discloses that no multi-agent run occurred.
 
 ## Private-state initialization
@@ -181,12 +188,20 @@ The API requires a separate explicit call to save a result or review. Do not use
 portfolio state, approve a target change, or record a transaction.
 
 The skill may create new immutable research-cache and durable-context records
-without another prompt. Use timestamped collision-resistant filenames under
-`private/research/` and `private/context/`, verify the target is ignored and
-untracked, and never edit a prior record. Context records distinguish
+without another prompt. Use `create_research_cache_record` with
+`save_research_cache_record`, or `create_durable_context_record` with
+`save_durable_context_record`; inspect them only through the corresponding
+`list_*` APIs. These functions choose timestamped collision-resistant filenames,
+verify ignored and untracked targets, reject symlinks, and never expose an
+overwrite option. Context records distinguish
 `confirmed_fact`, `user_decision`, `temporary_assumption`, `proposal`, and
 `external_evidence`. A correction creates a superseding record; it does not
 rewrite history.
+
+When source terms prohibit retention but permit current access, analysis, and
+citation, use the verified evidence only in memory and disclose that it was not
+cached. Do not return `insufficient_evidence` solely because persistence is
+unavailable; return it when evidence cannot be accessed, verified, or lawfully used.
 
 Phase 7 equity and policy outputs use `save_equity_review` and
 `save_portfolio_policy_result`. Both validate the structured result, write below

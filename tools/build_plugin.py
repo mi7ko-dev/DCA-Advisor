@@ -12,7 +12,7 @@ import subprocess
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 PLUGIN_NAME = "steadyfolio"
 MARKETPLACE_NAME = "steadyfolio-local"
-PLUGIN_VERSION = "0.3.0"
+PLUGIN_VERSION = "0.3.1"
 
 PUBLIC_SOURCE_FILES = (
     "LICENSE",
@@ -61,8 +61,11 @@ PUBLIC_SOURCE_FILES = (
     "schemas/agent-input-packet.schema.json",
     "schemas/committee-result.schema.json",
     "schemas/contribution-plan.schema.json",
+    "schemas/durable-context-record.schema.json",
     "schemas/equity-evidence.schema.json",
     "schemas/equity-review.schema.json",
+    "schemas/generic-agent-input-packet.schema.json",
+    "schemas/generic-specialist-result.schema.json",
     "schemas/intelligence-result.schema.json",
     "schemas/market-input.schema.json",
     "schemas/multi-agent-equity-review.schema.json",
@@ -70,6 +73,7 @@ PUBLIC_SOURCE_FILES = (
     "schemas/portfolio-policy.schema.json",
     "schemas/portfolio.schema.json",
     "schemas/research-snapshot.schema.json",
+    "schemas/research-cache-record.schema.json",
     "schemas/specialist-result.schema.json",
     "schemas/thesis-review.schema.json",
     "src/steadyfolio/__init__.py",
@@ -83,11 +87,14 @@ PUBLIC_SOURCE_FILES = (
     "src/steadyfolio/equity_reporting.py",
     "src/steadyfolio/equity_validation.py",
     "src/steadyfolio/errors.py",
+    "src/steadyfolio/generic_agent_models.py",
+    "src/steadyfolio/generic_agents.py",
     "src/steadyfolio/intelligence.py",
     "src/steadyfolio/intelligence_reporting.py",
     "src/steadyfolio/models.py",
     "src/steadyfolio/multi_agent.py",
     "src/steadyfolio/portfolio_policy.py",
+    "src/steadyfolio/private_records.py",
     "src/steadyfolio/providers.py",
     "src/steadyfolio/reporting.py",
     "src/steadyfolio/research_models.py",
@@ -190,7 +197,7 @@ From the repository root:
 
 ```powershell
 $pluginRoot = (Resolve-Path .\plugins\steadyfolio).Path
-py -3.11 -B -S -c "import sys; sys.path.insert(0, r'$pluginRoot\src'); import steadyfolio; assert callable(steadyfolio.run_committee_workflow); assert callable(steadyfolio.prepare_multi_agent_equity_review)"
+py -3.11 -B -S -c "import sys; sys.path.insert(0, r'$pluginRoot\src'); import steadyfolio; assert callable(steadyfolio.run_committee_workflow); assert callable(steadyfolio.prepare_multi_agent_equity_review); assert callable(steadyfolio.save_research_cache_record); assert callable(steadyfolio.validate_generic_agent_result)"
 codex plugin marketplace add .
 codex plugin add steadyfolio@steadyfolio-local
 codex plugin list
@@ -208,7 +215,7 @@ New-Item -ItemType Directory -Path $installRoot | Out-Null
 Expand-Archive -LiteralPath $archive -DestinationPath $installRoot
 Set-Location $installRoot
 $pluginRoot = (Resolve-Path .\plugins\steadyfolio).Path
-py -3.11 -B -S -c "import sys; sys.path.insert(0, r'$pluginRoot\src'); import steadyfolio; assert callable(steadyfolio.run_committee_workflow); assert callable(steadyfolio.prepare_multi_agent_equity_review)"
+py -3.11 -B -S -c "import sys; sys.path.insert(0, r'$pluginRoot\src'); import steadyfolio; assert callable(steadyfolio.run_committee_workflow); assert callable(steadyfolio.prepare_multi_agent_equity_review); assert callable(steadyfolio.save_research_cache_record); assert callable(steadyfolio.validate_generic_agent_result)"
 codex plugin marketplace add .
 codex plugin add steadyfolio@steadyfolio-local
 codex plugin list
