@@ -37,9 +37,10 @@ architecture records. Do not silently reinterpret existing persisted fields.
 - Treat new dependencies as a design decision. Pin build and CI inputs where
   practical, document their purpose and license, and avoid adding a dependency for
   behavior supported safely by the standard library.
-- A live provider requires a terms, authentication, retention, rate-limit, cache,
-  redistribution, error-redaction, and data-flow review plus network-independent
-  contract tests.
+- A Python live provider requires a terms, authentication, retention, rate-limit,
+  cache, redistribution, error-redaction, and data-flow review plus
+  network-independent contract tests. Phase 9 foreground host research does not
+  waive that requirement or become a provider adapter.
 - Transaction recording, target-policy mutation, and overwrite operations require
   distinct APIs and immediate explicit approval. Analysis never grants it.
 
@@ -94,7 +95,7 @@ Create a reproducible release archive only at an outside-repository path whose
 filename matches the current release:
 
 ```powershell
-python tools/build_release.py --output <outside-directory>\steadyfolio-0.2.1.zip
+python tools/build_release.py --output <outside-directory>\steadyfolio-0.3.0.zip
 ```
 
 The archive builder first creates the allowlisted marketplace in a temporary
@@ -110,8 +111,10 @@ license review before it enters the repository.
 
 ## Deferred capabilities
 
-Do not imply support for live market data, broker connectivity, order placement,
-tax or suitability conclusions, autonomous browsing, background monitoring,
-unbounded agent debate, automatic target changes, global skill installation, a
-general ChatGPT host, or non-Codex hosts. Each needs a separately approved design,
-security review, tests, and documentation.
+Do not imply support for a Python live market-data provider, real-time feeds,
+broker connectivity, order placement, tax or suitability conclusions, background
+monitoring, unbounded agent debate, automatic target changes, global skill
+installation, a general ChatGPT host, or non-Codex hosts. Phase 9 supports only one
+bounded foreground host research pass and conditional Codex-native subagents.
+Each broader capability needs a separately approved design, security review,
+tests, and documentation.

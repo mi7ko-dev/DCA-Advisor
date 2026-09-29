@@ -2,15 +2,18 @@
 
 ## Supported installation
 
-SteadyFolio release `0.2.1` supports Python 3.11 or newer and the repo-local Codex
-skill in this repository. It also provides a self-contained local Codex plugin.
-Neither mode has a runtime dependency outside the Python standard library.
+SteadyFolio development version `0.3.0` supports Python 3.11 or newer and the
+repo-local Codex skill in this repository. It also provides a self-contained local
+Codex plugin. The latest separately verified release archive remains `0.2.1` until
+a new release is authorized. Neither mode has a runtime dependency outside the
+Python standard library.
 
-Phase 8 equity review additionally requires a Codex host release with native
-subagents enabled. It does not require an OpenAI API key or Agents SDK dependency.
-Each real run starts up to four specialist model contexts and one critic context,
-so it consumes more host tokens and latency than deterministic fallback. The
-contribution route never starts agents.
+Phase 9 consequential review additionally requires a Codex host release with
+native subagents enabled. It does not require an OpenAI API key or Agents SDK
+dependency. Equity review starts up to four specialist contexts and one critic;
+other qualifying reviews use the smallest useful set of two or three specialists
+and one critic. This consumes more host tokens and latency than deterministic
+fallback. A routine contribution never starts agents.
 
 From the repository root on Windows:
 
@@ -125,13 +128,24 @@ Use $steadyfolio to run an equity review from the supplied synthetic evidence.
 
 The skill must use the engine output. It must not calculate portfolio values in
 prose, invent a missing price or FX rate, or turn an analysis request into approval
-to save or execute anything.
+to save a review or execute anything. It may automatically inspect and create new
+append-only records under `private/research/` and `private/context/` under the
+Phase 9 standing authorization.
 
 For equity review, the skill first creates immutable packets in memory, then asks
 Codex to start one subagent for each specialist and one later critic. If the host
 cannot start subagents, it uses `run_deterministic_equity_fallback` and reports
 `runtime_type=none`. Do not describe `in_memory_test_backend` or the fallback as a
 real multi-agent run.
+
+For a consequential non-equity review, the skill selects two or three independent
+route-specific roles and one later critic. The lead completes any required web
+research before delegation; specialists receive prepared role-minimal facts and do
+not browse, use tools, read files, or recalculate. Packets use route-specific field
+allowlists, opaque user-owned identifiers, and a context with no inherited chat
+history. If safe packet validation, packet-only isolation, or native subagents are
+unavailable, the skill uses the existing sequential lenses, reports
+`single_thread_sequential`, and clearly discloses that no multi-agent run occurred.
 
 ## Private-state initialization
 
@@ -166,6 +180,14 @@ The API requires a separate explicit call to save a result or review. Do not use
 `overwrite=True` without immediate user approval. Saving a review does not mutate
 portfolio state, approve a target change, or record a transaction.
 
+The skill may create new immutable research-cache and durable-context records
+without another prompt. Use timestamped collision-resistant filenames under
+`private/research/` and `private/context/`, verify the target is ignored and
+untracked, and never edit a prior record. Context records distinguish
+`confirmed_fact`, `user_decision`, `temporary_assumption`, `proposal`, and
+`external_evidence`. A correction creates a superseding record; it does not
+rewrite history.
+
 Phase 7 equity and policy outputs use `save_equity_review` and
 `save_portfolio_policy_result`. Both validate the structured result, write below
 `private/reviews/`, and refuse overwrite by default. Creating or replacing a real
@@ -178,6 +200,16 @@ these result-saving functions.
 private validated state + explicit dated inputs
                     |
                     v
+      private cache inspection
+                    |
+          adequate / refresh needed
+                    |          |
+                    |          v
+                    |   one lead web research pass
+                    |          |
+                    +----------+
+                    |
+                    v
         deterministic local Python core
                     |
           structured result in memory
@@ -185,10 +217,10 @@ private validated state + explicit dated inputs
             v                   v
     answer in local host   approved private save
 
-role-minimal equity packet
+role-minimal prepared packet
             |
             v
- Codex hosted specialist context x4
+ Codex hosted specialist contexts x2-4
             |
             v
  Codex hosted critic context x1
@@ -210,9 +242,11 @@ validated facts with provenance and coverage
 
 The implemented provider is an offline synthetic provider. It receives only public
 instrument/listing identifiers, explicitly referenced public evidence-source IDs,
-and an as-of date. There is no live network adapter. A provider failure stops the
-evidence-dependent route after one attempt, returns a generic limitation, and does
-not expose the raw exception text in the result.
+and an as-of date. There is no live network adapter. Separately, the Codex lead may
+perform one foreground host-native web research pass when time-sensitive evidence
+is material. A provider or research failure stops the evidence-dependent route
+after one attempt, returns a generic limitation, and does not expose raw exception
+text in the result.
 
 ## Checks and troubleshooting
 
@@ -237,7 +271,8 @@ Common stops are intentional:
 - stale or incomplete evidence may produce `insufficient_evidence`;
 - an existing private output is not overwritten by default;
 - any symlink in a private output path is rejected; and
-- a live provider, broker, or trade request is outside the implemented boundary.
+- a Python live provider, broker, background monitor, or trade request is outside
+  the implemented boundary.
 
 See `docs/CALCULATIONS.md`, `docs/RESEARCH.md`, and `docs/COMMITTEE.md` for the exact
 calculation, evidence, and bounded-review contracts.

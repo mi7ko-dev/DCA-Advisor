@@ -411,3 +411,74 @@ The user's release instruction authorizes the semantic-version update, local
 allowlisted build, local Codex reinstall, and outside-repository installation
 archive. It does not authorize staging, committing, pushing, or publishing the
 archive or marketplace.
+
+## D-027: Use bounded host-native research with immutable private caching
+
+- **Status:** Accepted
+- **Decision:** When a conclusion materially depends on time-sensitive external
+  facts, the Codex lead inspects compatible records under `private/research/` and
+  automatically performs at most one host-native web research pass when the cache
+  is missing, stale, contradictory, or inadequate. It prefers primary sources,
+  records as-of and retrieval dates, methodology, limitations, freshness basis,
+  and cache terms, and creates a new immutable private record rather than
+  overwriting an earlier one. Specialists receive the prepared evidence and do
+  not browse independently.
+- **Why:** Valuation and evidence-sensitive review should not rely on remembered
+  or silently stale facts, while repeated retrieval should be avoided when a
+  compatible and sufficiently current private record already exists.
+- **Consequence:** The skill may use the host's available web capability without
+  asking for advance permission. This is foreground research, not a Python live
+  provider, real-time price feed, background monitor, or authorization to cache
+  content against source terms. Queries contain only public instrument/source
+  identifiers and dates, one pass is capped at four searches and eight documents,
+  and unknown cache terms default to citation metadata only or no persistence.
+  Missing or conflicting current evidence still ends in `insufficient_evidence`.
+
+## D-028: Capture durable context as append-only classified private records
+
+- **Status:** Accepted
+- **Decision:** The skill proactively creates minimal durable records below
+  `private/context/` for confirmed facts, user decisions, temporary assumptions,
+  proposals, and external evidence that are likely to affect later work. Records
+  are append-only, source-labelled, dated, and may supersede but never overwrite a
+  prior record.
+- **Why:** Important constraints and decisions should survive across chats without
+  requiring a separate save instruction, but proposal text and temporary
+  assumptions must not silently become approved policy.
+- **Consequence:** This standing authorization covers creation of new context and
+  research records only. It does not authorize saving a review, changing holdings,
+  transactions, theses, targets, or policy, or overwriting any private output.
+
+## D-029: Generalize bounded host-native perspectives for consequential reviews
+
+- **Status:** Accepted
+- **Decision:** The skill automatically selects the smallest useful set of at
+  least two independent Codex subagent roles plus one later critic for supported
+  analyses that are consequential, uncertain, evidence-conflicted, or materially
+  bias-sensitive. Equity review retains its strict four-specialist schema. Other
+  routes use role-minimal packets and disclose their host execution in the answer
+  without claiming equity-schema validation. Routine deterministic contributions
+  remain single-threaded unless a material conflict is explicitly escalated.
+- **Why:** Independent contexts can expose different evidence, risk, and
+  portfolio-fit failures, while using agents indiscriminately adds cost and does
+  not improve short dependent calculations.
+- **Consequence:** The lead performs research and arithmetic before delegation;
+  specialists do not browse, use tools, read files, or recalculate. Generic
+  packets use route-specific allowlists, opaque aliases, and no inherited
+  conversation history; if packet validation or packet-only isolation is
+  unavailable, the workflow falls back before spawning. Each role runs once,
+  followed by one critic and one synthesis, with no retry or debate loop. Agent
+  artifacts remain memory-only without immediate persistence approval. Equity
+  fallback is `deterministic_only`; non-equity same-thread fallback is
+  `single_thread_sequential`. Agreement is never evidence.
+
+## Phase 9 approval effects
+
+The user's explicit instruction to add automatic current-source checks, reusable
+private research caching, proactive durable context, and conditional multi-agent
+perspectives accepts D-027 through D-029 and Phase 9 implementation. It authorizes
+foreground host research plus creation of new append-only records under the
+selected ignored `private/` workspace. It does not authorize staging, committing,
+pushing, publication, personal installation, background monitoring, a live Python
+provider, broker access, transactions, holdings changes, thesis changes, target or
+policy mutation, saved-review persistence, or overwriting private output.

@@ -15,20 +15,28 @@ Phase 8 replaces the equity route's same-thread lenses with a true bounded
 multi-agent workflow on Codex hosts that expose subagents. It does not change the
 other routes.
 
+Phase 9 adds one lead-owned current-source research pass when time-sensitive
+evidence is material, append-only private research/context records, and automatic
+bounded subagent perspectives for consequential, uncertain, conflicting, or
+bias-sensitive non-equity reviews. The deterministic engine remains authoritative.
+
 The workflow is:
 
 ```text
 user request
     -> deterministic router
     -> deterministic engine tools
-    -> non-equity: only the relevant sequential review lenses
+    -> optional private-cache inspection and one lead research pass
+    -> consequential non-equity: two or three isolated specialists, then one critic
+    -> routine non-equity: only the relevant sequential review lenses
     -> equity: four isolated specialist threads, then one isolated critic
     -> final synthesis with sources and limitations
 ```
 
-The review lenses are deterministic, sequential interpretations in the Phase 5
-implementation. They are not independent agents, independent verification, or a
-vote. No score or agreement count is used as evidence.
+The fallback review lenses are deterministic, sequential interpretations from the
+Phase 5 implementation. They are not independent agents, independent verification,
+or a vote. A Phase 9 multi-agent review exists only when the host records separate
+subagent executions. No score or agreement count is used as evidence.
 
 For Phase 8 equity review, an agent means a separately spawned Codex thread with an
 isolated context and one structured input packet. Local Python functions and the
@@ -40,25 +48,34 @@ thread and deterministic engine output governs every synthesis.
 | Route | Engine tools | Review behavior |
 | --- | --- | --- |
 | `contribution` | `analyze_portfolio`, `plan_contribution` | Direct synthesis; no research, specialist lens, or critic by default |
-| `portfolio_review` | `analyze_portfolio`, optional `ResearchProvider.fetch`, `analyze_portfolio_intelligence` | Allocation/diversification and risk/cost/evidence lenses; critic only when useful |
-| `overlap_review` | `analyze_portfolio`, `ResearchProvider.fetch`, `analyze_portfolio_intelligence` | Diversification and evidence-quality lenses; incomplete coverage stays explicit |
-| `thesis_review` | `ResearchProvider.fetch`, `review_investment_thesis` | Thesis-fit and evidence-quality lenses; price movement alone is not thesis failure |
+| `portfolio_review` | `analyze_portfolio`, optional cached or host-researched evidence, optional `ResearchProvider.fetch`, `analyze_portfolio_intelligence` | Two or three isolated roles plus one critic when consequential; otherwise sequential allocation/diversification and risk/cost/evidence lenses |
+| `overlap_review` | `analyze_portfolio`, cached or host-researched evidence, optional `ResearchProvider.fetch`, `analyze_portfolio_intelligence` | Two isolated roles plus one critic when consequential; incomplete coverage stays explicit |
+| `thesis_review` | Cached or host-researched evidence, optional `ResearchProvider.fetch`, `review_investment_thesis` | Two or three isolated roles plus one critic when consequential; price movement alone is not thesis failure |
 | `equity_review` | `review_equity` exactly once | Evidence, business-quality, valuation, and portfolio-risk subagents once each; one critic; one lead synthesis; no retries |
 | `clarification` | None | Stop without calculation or mutation |
 
-Non-equity requests retain the Phase 5 limit of one research pass, one critic pass,
-one revision, and zero live external calls. Equity review permits one execution of
-each of four specialists, one critic execution, one final synthesis, no retry, and
-zero live market-data calls. Provider failures, agent failures, absent evidence,
-and stale evidence produce a limited or `insufficient_evidence` result rather than
-additional retries or artificial consensus.
+Qualifying non-equity reviews use the smallest useful set of two or three
+specialists, one critic, and one final synthesis. Equity review permits one
+execution of each of four specialists, one critic execution, and one final
+synthesis. The lead may perform one host-native research pass after checking the
+private cache; specialists do not browse. There are no agent or research retries.
+Provider failures, agent failures, absent evidence, and stale evidence produce a
+limited or `insufficient_evidence` result rather than additional retries or
+artificial consensus.
+
+Generic non-equity packets are validated against route-specific field allowlists,
+replace user-owned identifiers with opaque aliases, and exclude quantities,
+balances, accounts, transactions, goals, target amounts, full prompts, free-form
+notes, source paths, and raw payloads. Every subagent starts with no inherited
+conversation history. If packet validation or packet-only context isolation is not
+available, no agent starts.
 
 If a request contains more than one supported intent, routing stops for
-clarification instead of silently selecting the first keyword match. On legacy
-non-equity routes, a critic pass is used only for a material disagreement, not
-merely because evidence is partial. Phase 8 equity review always runs its one
-bounded critic. The revision limit is enforced independently: allowing a critic
-does not authorize a revision when `max_revisions` is zero.
+clarification instead of silently selecting the first keyword match. On sequential
+fallback routes, a critic pass is used only for a material disagreement, not merely
+because evidence is partial. Every actual multi-agent run uses one later critic.
+The revision limit is enforced independently: allowing a critic does not authorize
+a revision when `max_revisions` is zero.
 
 Currency-first contribution parsing accepts only an unsigned decimal token with at
 most two fractional digits. Unsupported grouped or over-precise forms such as
@@ -98,6 +115,15 @@ recorded. A proposed target, thesis, or policy change requires separate explicit
 approval before persistence. Calling `save_committee_review` after authorization
 writes only the structured review below `private/reviews/`; it does not change
 holdings, transactions, theses, or targets.
+
+The skill may create new immutable research records below `private/research/` and
+durable classified context records below `private/context/` without another save
+prompt. That standing permission does not cover a saved review or any overwrite.
+Proposals and temporary assumptions remain non-authoritative context categories.
+Packets and specialist/critic results remain memory-only unless the user gives
+immediate explicit approval to persist the review artifact. The separate standing
+authorization for append-only research/context records does not authorize
+persisting a packet, specialist/critic result, synthesis, or saved review.
 
 Real state, prompts containing private context, provider responses, research
 snapshots, results, reports, and runtime memory stay below the selected ignored
@@ -179,11 +205,11 @@ python tools/run_repository_checks.py --require-gitleaks
 
 - Natural-language parsing is deliberately narrow; ambiguous requests stop for
   clarification.
-- There is no live current-data claim. The implemented research provider is an
-  offline structured snapshot.
-- Lenses are rule-based sequential interpretations, not separately hosted agents.
-- Only the equity route uses true Codex subagents; other routes still use
-  sequential lenses.
+- Host research is foreground and bounded; it is not a real-time feed, background
+  monitor, or Python live provider.
+- Sequential fallback lenses are not separately hosted agents.
+- Non-equity multi-agent output is disclosed in the answer but does not use or
+  claim the equity-specific agent schema.
 - Host-native subagents inherit host capabilities. The role packet forbids tool use
   and file reads, but SteadyFolio cannot provide an operating-system isolation
   guarantee from a skill-only plugin.

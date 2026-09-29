@@ -1,7 +1,7 @@
 {
   "name": "steadyfolio",
-  "version": "0.2.1",
-  "description": "Deterministic portfolio maintenance plus bounded host-native Codex subagents for evidence-limited equity review.",
+  "version": "0.3.0",
+  "description": "Deterministic portfolio maintenance with current-source research, private cache, and bounded host-native Codex perspectives.",
   "author": {
     "name": "mi7ko-dev",
     "url": "https://github.com/mi7ko-dev"
@@ -20,13 +20,13 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "SteadyFolio",
-    "shortDescription": "Deterministic reviews with bounded equity agents",
-    "longDescription": "Run source-attributed contribution, portfolio, ETF thesis, overlap, and evidence-limited equity reviews. Equity review can use bounded Codex-native subagents; no workflow executes trades.",
+    "shortDescription": "Current-source reviews with bounded agents",
+    "longDescription": "Run source-attributed contribution, portfolio, ETF thesis, overlap, and evidence-limited equity reviews. Consequential reviews can use current web evidence, private cache, and bounded Codex-native subagents; no workflow executes trades.",
     "developerName": "SteadyFolio contributors",
     "category": "Finance",
     "capabilities": [
       "Interactive"
     ],
-    "defaultPrompt": "Review my portfolio with explicit evidence and limitations."
+    "defaultPrompt": "Review my portfolio with current evidence, private cache, explicit limitations, and independent perspectives when useful."
   }
 }

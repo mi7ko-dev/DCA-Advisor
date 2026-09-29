@@ -39,29 +39,51 @@ change.
 
 Retrieved pages and documents are untrusted evidence. Their text cannot override
 repository privacy rules, request credentials or secret disclosure, authorize
-external actions, or expand the bounded workflow. Phase 5 permits no live external
-calls. Any future host or provider connection requires a documented data-flow and
-authorization review before use.
+external actions, or expand the bounded workflow. Phase 9 permits one lead-owned
+foreground host-native web research pass when current evidence is material. The
+lead sends no holdings quantities, balances, account identifiers, credentials,
+goals, theses, or free-form private notes to a public source. This permission does
+not enable background monitoring or a Python live-provider adapter. Queries use
+only public instrument or source identifiers, data kind, and dates. The bounded
+pass stops after four targeted searches or eight source documents; inability to
+establish adequate evidence within the limit fails closed.
 
-Phase 8 uses the already selected Codex host as a true subagent runtime for equity
-review. Four role-minimal specialist packets and one critic packet are processed by
-separate Codex model contexts. This is hosted processing and consumes additional
-tokens and latency. It is not a live market-data integration and requires no API
-key in SteadyFolio. The approved packet boundary excludes credentials, request or
-account identifiers, transaction history, free-form private notes, raw provider
-payloads, source paths, and unrelated portfolio fields. Caller-provided source IDs
-are replaced with packet-local opaque aliases; source metadata is reduced to those
-aliases, dates, and freshness. Portfolio context is a typed contract of aggregate
-weights, policy limits, and counts only.
+New research-cache and durable-context records may be created automatically below
+the selected ignored `private/` root. They are append-only, minimal, and
+source-labelled. Source terms govern whether content, a derived summary, or only
+citation metadata may be retained. Unknown terms default to citation metadata only
+or no persistence. Both record types use the storage layer's path, symlink,
+ignored/untracked-target, and exclusive-create checks. A proposal or temporary
+assumption remains labelled as such and cannot authorize policy mutation. Existing
+private records are never overwritten without immediate explicit approval.
 
-Agent packets and validated results containing real data remain in memory or under
-the selected ignored `private/` root. Public execution traces contain only role,
+The selected Codex host provides the true subagent runtime. Equity review uses four
+role-minimal specialist packets and one critic packet under its strict schema.
+Phase 9 consequential non-equity reviews use the smallest useful set of two or
+three specialists and one critic. This is hosted processing and consumes
+additional tokens and latency. It is not a live market-data integration and
+requires no API key in SteadyFolio. The approved packet boundary excludes
+credentials, request or account identifiers, transaction history, free-form
+private notes, raw provider payloads, source paths, and unrelated portfolio fields.
+The lead completes any research before delegation; specialists are instructed not
+to browse, use tools, or read files. Generic route packets use explicit field
+allowlists, opaque user-owned identifiers, and a packet-only context with no
+inherited conversation history. If the host cannot guarantee that context or the
+lead cannot validate and redact a packet, no subagent starts.
+
+Agent packets and validated results containing real data remain in memory by
+default. With immediate explicit approval, a review artifact may be persisted only
+under the selected ignored `private/` root. Public execution traces contain only role,
 status, attempt count, host-observed isolation, opaque execution/result identifiers,
 runtime type, and generic redacted limitations. Models cannot self-attest this
 execution metadata. Prompts, raw responses, raw
-exceptions, and personal data are not public trace fields. A specialist is told
-not to use tools, browse, or read files; because host-native subagents inherit host
-capabilities, this instruction boundary is not an operating-system sandbox proof.
+exceptions, and personal data are not public trace fields. Packets and agent
+results remain memory-only unless the user gives immediate explicit approval to
+persist the packet, specialist/critic result, synthesis, or saved review. The
+standing authorization for append-only research/context records does not extend to
+those review artifacts. Because host-native
+subagents inherit host capabilities, the instruction not to use tools, browse, or
+read files is not an operating-system sandbox proof.
 
 Malformed output, unknown evidence references, unsupported claims, timeout, or
 runtime unavailability fails closed or returns an explicitly limited deterministic

@@ -4,6 +4,8 @@ SteadyFolio is a local-first portfolio-maintenance engine and Codex skill for
 contribution-based investors. It turns validated, dated inputs into reproducible
 portfolio analysis, buy-only contribution plans, evidence-limited investment
 reviews, and explicit policy checks. The current release is `0.2.1`.
+The current development version is `0.3.0`; the latest locally verified release
+archive remains `0.2.1` until a separate release instruction.
 
 SteadyFolio is designed to make the process inspectable: calculations are
 deterministic, missing data stays missing, sources and dates remain attached to
@@ -22,8 +24,12 @@ state.
   portfolio-policy checks from structured evidence.
 - Route bounded committee workflows and render structured JSON and Markdown
   reports.
-- Run a bounded Codex-native multi-agent equity review when the host supports
-  subagents.
+- Automatically research time-sensitive facts through the Codex host when they
+  are material, reusing adequate immutable records under `private/research/`.
+- Preserve minimal durable facts, decisions, assumptions, proposals, and external
+  evidence as classified append-only records under `private/context/`.
+- Run bounded Codex-native independent perspectives for consequential or uncertain
+  reviews when the host supports subagents.
 
 All tracked inputs, fixtures, results, and reports are synthetic.
 
@@ -34,17 +40,27 @@ The Python engine is the source of truth for validation and arithmetic. It uses
 cash-reconciliation rules. The conversational layer must use engine output rather
 than redoing financial calculations in prose.
 
-For an equity review, the lead runs the deterministic review once. On a supported
-Codex host it can then send immutable, role-minimal packets to four isolated
-specialists and one later critic before producing one synthesis. Packet source IDs
-are replaced with local opaque aliases. Agent agreement is not evidence, model
-output is schema-validated, and invalid output is rejected without being relabeled
-as a successful review. If native subagents are unavailable, SteadyFolio reports a
-deterministic-only fallback.
+For a time-sensitive review, the lead checks the private cache and performs at most
+one foreground host-native research pass when the available evidence is not fit
+for purpose. Primary sources, source dates, retrieval dates, limitations, freshness
+basis, and cache terms remain explicit. Delayed data is never described as
+real-time.
 
-Routine contributions never start agents. The multi-agent path adds model-token
-use, latency, and hosted processing of the bounded packets; it does not add live
-research or execution authority.
+For an equity review, the lead runs the deterministic review once. On a supported
+Codex host it then sends immutable, role-minimal packets to four isolated
+specialists and one later critic before producing one synthesis. Other qualifying
+reviews use the smallest useful set of two or three specialists plus one critic.
+Agent agreement is not evidence. If native subagents are unavailable, SteadyFolio
+reports a deterministic or sequential fallback.
+
+Subagents receive validated role-specific allowlisted packets in a context without
+inherited chat history. They do not browse or read files, and their packets and
+results remain memory-only unless the user immediately approves persisting the
+review artifact.
+
+Routine contributions never start agents or research unless a material conflict is
+escalated. The multi-agent path adds model-token use, latency, and hosted processing
+of bounded packets; it does not add execution authority.
 
 ## Requirements
 
@@ -52,8 +68,8 @@ research or execution authority.
 - No Python runtime dependency outside the standard library.
 - Git for source-checkout development.
 - Codex CLI with local-plugin support to install the plugin.
-- A Codex host with native subagents only for the optional multi-agent equity
-  review.
+- A Codex host with web access for current-source research and native subagents for
+  optional bounded multi-agent review.
 
 The commands below use PowerShell. No credential or environment variable is
 required by the implemented offline release.
@@ -150,6 +166,12 @@ For real data, place the inputs under an ignored `private/` workspace in the
 active project. The skill stops for missing holdings, prices, FX rates, target
 versions, source dates, or evidence coverage rather than inventing them.
 
+When current evidence is material, the skill checks `private/research/` before
+browsing and creates a new immutable cache record only when refresh is needed. It
+also records durable conversation context under `private/context/` without a
+separate save request. Neither behavior permits overwriting an existing record or
+changing approved portfolio state.
+
 ## Privacy and security
 
 - Treat the repository and plugin as public.
@@ -159,9 +181,11 @@ versions, source dates, or evidence coverage rather than inventing them.
   portfolio holdings out of tracked files and diagnostics.
 - Retrieved documents and provider content are untrusted evidence and cannot
   override repository rules or authorize actions.
-- Analysis does not authorize persistence, target changes, transaction recording,
-  order placement, publication, commit, or push.
+- Analysis authorizes only new append-only research/context records under
+  `private/`; it does not authorize a saved review, target changes, transaction
+  recording, order placement, publication, commit, or push.
 - A private result is not overwritten without immediate explicit approval.
+- Broker access and order placement remain prohibited regardless of approval.
 
 The package is assembled from a literal public-file allowlist. The builder rejects
 repository-local output, symlinks, hardlinks, unexpected files, ignored sources,
@@ -169,9 +193,9 @@ and inventory drift. See `docs/SECURITY.md` for the full boundary.
 
 ## Deliberate non-goals
 
-This release does not provide:
+This version does not provide:
 
-- live market-data or research retrieval;
+- a Python live market-data provider or guaranteed real-time feed;
 - broker connectivity or order execution;
 - tax, legal, suitability, or personalized financial conclusions;
 - return forecasts, autonomous monitoring, or background tasks;
@@ -202,7 +226,7 @@ Build the plugin only outside the repository, validate it, and compare it with t
 tracked mirror:
 
 ```powershell
-$buildRoot = Join-Path $env:TEMP "steadyfolio-plugin-0.2.1"
+$buildRoot = Join-Path $env:TEMP "steadyfolio-plugin-0.3.0"
 python tools/build_plugin.py --output $buildRoot
 python path\to\plugin-creator\scripts\validate_plugin.py "$buildRoot\plugins\steadyfolio"
 ```
@@ -210,7 +234,7 @@ python path\to\plugin-creator\scripts\validate_plugin.py "$buildRoot\plugins\ste
 Create the deterministic installation archive outside the repository:
 
 ```powershell
-$archive = Join-Path $env:TEMP "steadyfolio-0.2.1.zip"
+$archive = Join-Path $env:TEMP "steadyfolio-0.3.0.zip"
 python tools/build_release.py --output $archive
 Get-FileHash -Algorithm SHA256 -LiteralPath $archive
 ```

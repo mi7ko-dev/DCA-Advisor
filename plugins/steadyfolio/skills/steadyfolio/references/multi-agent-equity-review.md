@@ -1,6 +1,7 @@
 # Host-native multi-agent equity review
 
-Use this workflow only for `equity_review`. It relies on Codex host-native
+Use this strict specialization only for `equity_review`, after applying the common
+trigger and lead rules in `multi-agent-review.md`. It relies on Codex host-native
 subagents: separate agent threads with isolated contexts, coordinated by the main
 Codex thread. It does not use the OpenAI Agents API or Agents SDK, does not require
 an API key in SteadyFolio, and adds no Python runtime dependency.
@@ -16,22 +17,27 @@ payloads, source paths, request IDs, or fields a role does not need. Source IDs 
 replaced with packet-local opaque aliases, and portfolio risk receives only typed
 aggregate weights, limits, and counts.
 
-Keep real packets, validated results, and derived reports in memory or below the
-active project's ignored `private/` workspace. Do not persist anything unless the
-user gives immediate explicit approval. Public traces contain role, status,
-execution ID, bounds, runtime type, and generic limitations only. They never
-contain prompts or raw model responses.
+Keep real packets, validated results, and derived reports in memory by default.
+New immutable research and context records follow the standing protocol in
+`research-and-context.md`; persisting any review artifact still requires immediate
+explicit approval and may then occur only below the active project's ignored
+`private/` workspace. A research/context record is not permission to persist a
+packet, specialist result, critic result, synthesis, or saved review. Public traces
+contain role, status, execution ID, bounds,
+runtime type, and generic limitations only. They never contain prompts or raw
+model responses.
 
 ## LeadOrchestrator protocol
 
 1. Confirm the route is exactly `equity_review`, the request and evidence dates
-   match, and structured evidence is present. Do not start agents for contribution,
-   portfolio review, overlap review, or thesis review.
+   match, and structured evidence is present. Other routes use the generic bounded
+   multi-agent protocol rather than this equity packet contract.
 2. Call `prepare_multi_agent_equity_review` once. It invokes deterministic
    `review_equity` exactly once and returns four immutable schema `1.1` packets:
    `evidence`, `business_quality`, `valuation`, and `portfolio_risk`.
-3. Spawn one separate Codex subagent for each packet. Use a fresh isolated context
-   without inherited conversation history when the host supports that option. Send
+3. Spawn one separate Codex subagent for each packet. Require a fresh packet-only
+   context without inherited conversation history (`fork_turns=none` or an
+   equivalent host guarantee); otherwise use deterministic fallback. Send
    only the packet and its included instructions. Tell the agent not to use tools,
    browse, read files, recalculate values, or add facts. Require exactly one JSON
    object matching `schemas/specialist-result.schema.json#/$defs/agentOutput`.
@@ -72,7 +78,9 @@ contain prompts or raw model responses.
 
 No role may execute or record a transaction, change holdings, thesis, targets, or
 policy, write private output, publish, commit, push, or read any file. The role
-receives all permitted evidence in its packet.
+receives all permitted evidence in its packet. Packets and specialist/critic
+results remain memory-only unless the user gives immediate explicit approval to
+persist the review artifact.
 
 ## Failure behavior
 

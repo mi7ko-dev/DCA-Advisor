@@ -10,7 +10,15 @@ balances, account identifiers, goals, theses, or personal context.
 
 The implemented `StaticResearchProvider` reads structured synthetic snapshots for
 offline examples and deterministic tests. No live provider or network integration
-is implemented. Consequently there are no live integration tests in Phase 4.
+is implemented. Consequently there are no live provider integration tests.
+
+Phase 9 adds a separate Codex host-native research layer. When a requested
+conclusion materially depends on time-sensitive facts, the lead first inspects
+compatible immutable records below `private/research/` and performs at most one
+foreground web research pass when the cache is absent, stale, contradictory, or
+inadequate. This does not implement or impersonate the Python `ResearchProvider`.
+The lead prefers primary sources and converts only attributable dated facts into
+validated engine inputs. Specialists never browse independently.
 
 Every source record retains:
 
@@ -21,9 +29,12 @@ Every source record retains:
 - terms reference and explicit cache/redistribution permissions.
 
 The public example uses only project-authored synthetic data whose caching and
-redistribution are allowed. A future live adapter must review and encode the actual
-provider terms before caching or redistributing any response. Raw live responses
-must not become public fixtures.
+redistribution are allowed. Host-native research records the source terms and
+caches only what those terms permit. When content caching is not permitted, the
+private record retains only the minimum allowed citation and freshness metadata.
+A future live adapter must separately review and encode the actual provider terms
+before caching or redistributing any response. Raw live responses must not become
+public fixtures.
 
 The offline provider first selects records referenced by the request, then enforces
 the as-of boundary on those selected records. Unrelated future-dated records do not
@@ -137,11 +148,18 @@ thesis, holdings, transactions, or approved policy.
 ## Privacy and known limitations
 
 Real provider responses, query history, caches, analysis results, thesis reviews,
-and reports belong under ignored `private/`. Public examples are synthetic and may
-be regenerated with `tools/generate_synthetic_intelligence.py`.
+and reports belong under ignored `private/`. New host-research records are
+append-only and retain public instrument identity, currency, data kind, source and
+retrieval dates, methodology, coverage, limitations, freshness basis, assumptions,
+and cache permissions. A compatible record is reused only when it remains adequate
+for the current conclusion; material events and higher-consequence decisions can
+require an earlier refresh. Public examples are synthetic and may be regenerated
+with `tools/generate_synthetic_intelligence.py`.
 
-Phase 4 does not implement live providers, web research, tax or regulatory advice,
-look-through beyond supplied records, factor models, forecasts, optimization,
-corporate-action processing, or automatic policy changes. Tax and regulatory
-questions remain unresolved unless a later authorized operation uses current
+The deterministic package still does not implement live providers, real-time
+feeds, tax or regulatory advice, look-through beyond supplied records, factor
+models, forecasts, optimization, corporate-action processing, or automatic policy
+changes. Phase 9 host research is bounded foreground evidence gathering, not a
+background monitor or promise of real-time data. Tax and regulatory questions
+remain unresolved unless a later authorized operation uses current
 jurisdiction-specific primary sources.
