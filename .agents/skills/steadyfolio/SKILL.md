@@ -40,18 +40,25 @@ files are absent. Real user state belongs in the active project's ignored
    FX, targets, source dates, or coverage.
 3. Run the deterministic engine tools for the selected route. A routine monthly
    contribution does not trigger research, specialist lenses, or a critic.
-4. For consequential or evidence-dependent requests, use only the relevant
-   sequential review lenses. Lenses consume computed results and sourced facts;
-   they do not recalculate them.
-5. Use at most one research pass, one critic pass, one revision, and no live
-   external call in the current implementation. Stop with insufficient evidence
-   instead of manufacturing agreement.
-6. Format the answer using
+4. For `equity_review`, read
+   [references/multi-agent-equity-review.md](references/multi-agent-equity-review.md)
+   and use Codex host-native subagents when that capability is available. The
+   lead runs `review_equity` exactly once, sends immutable role-minimal packets to
+   four isolated specialists, runs one isolated critic, validates every structured
+   result, and performs one final synthesis. Do not call local Python functions
+   agents.
+5. Other consequential routes continue to use only their documented sequential
+   review lenses. A routine contribution never starts an agent or critic.
+6. Use at most one research pass, one execution per requested specialist, one
+   critic pass, one final synthesis, and no live market-data call. Stop with
+   insufficient evidence instead of manufacturing agreement.
+7. Format the answer using
    [references/response-contract.md](references/response-contract.md).
 
-When review lenses run sequentially in one host session, call them review lenses,
-not independent agents, independent verification, or consensus. Agreement between
-lenses is not evidence.
+Only separately spawned Codex subagent threads may be called agents. When the host
+cannot spawn them, use `run_deterministic_equity_fallback` and disclose
+`runtime_type=none` plus `fallback_status=deterministic_only`; never relabel a local
+function or same-thread lens as multi-agent. Agent agreement is not evidence.
 
 ## Approval gates
 
@@ -73,6 +80,7 @@ Run the public demonstrations with:
 ```powershell
 python tools/generate_synthetic_committee.py
 python tools/generate_synthetic_equity.py
+python tools/generate_synthetic_multi_agent.py
 ```
 
 The integration and skill-structure tests are source-checkout-only because the
@@ -80,7 +88,7 @@ installed plugin intentionally omits `tests/` and repository-safety tooling. Fro
 source checkout, run:
 
 ```powershell
-python -m unittest tests.test_committee tests.test_equity_review tests.test_skill
+python -m unittest tests.test_committee tests.test_equity_review tests.test_multi_agent tests.test_skill
 ```
 
 Installation, private-state maintenance, and the complete verification gate are

@@ -57,8 +57,8 @@ class SkillStructureTests(unittest.TestCase):
         }
         self.assertFalse(discovered & forbidden_names)
 
-    def test_all_skill_files_are_tracked(self) -> None:
-        result = subprocess.run(
+    def test_all_skill_files_are_tracked_or_public_candidates(self) -> None:
+        tracked_result = subprocess.run(
             ["git", "ls-files", "-z", "--", ".agents/skills/steadyfolio"],
             cwd=REPOSITORY_ROOT,
             check=True,
@@ -66,7 +66,26 @@ class SkillStructureTests(unittest.TestCase):
         )
         tracked = {
             item.decode("utf-8").replace("\\", "/")
-            for item in result.stdout.split(b"\0")
+            for item in tracked_result.stdout.split(b"\0")
+            if item
+        }
+        candidate_result = subprocess.run(
+            [
+                "git",
+                "ls-files",
+                "--others",
+                "--exclude-standard",
+                "-z",
+                "--",
+                ".agents/skills/steadyfolio",
+            ],
+            cwd=REPOSITORY_ROOT,
+            check=True,
+            capture_output=True,
+        )
+        candidates = {
+            item.decode("utf-8").replace("\\", "/")
+            for item in candidate_result.stdout.split(b"\0")
             if item
         }
         expected = {
@@ -74,7 +93,7 @@ class SkillStructureTests(unittest.TestCase):
             for path in SKILL_ROOT.rglob("*")
             if path.is_file()
         }
-        self.assertEqual(tracked, expected)
+        self.assertEqual(tracked | candidates, expected)
 
 
 if __name__ == "__main__":

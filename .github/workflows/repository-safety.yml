@@ -49,6 +49,7 @@ jobs:
           python tools/generate_synthetic_intelligence.py
           python tools/generate_synthetic_committee.py
           python tools/generate_synthetic_equity.py
+          python tools/generate_synthetic_multi_agent.py
           git diff --exit-code -- examples
 
       - name: Reproduce and smoke-test the installable plugin

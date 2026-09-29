@@ -1,6 +1,7 @@
 """SteadyFolio's deterministic, host-independent portfolio core."""
 
 from .calculations import analyze_portfolio, plan_contribution
+from .agent_models import *  # noqa: F403
 from .committee import (
     committee_request_from_message,
     route_request,
@@ -24,6 +25,18 @@ from .equity_reporting import (
     render_portfolio_policy_report,
 )
 from .intelligence import analyze_portfolio_intelligence
+from .multi_agent import (
+    build_critic_packet,
+    detect_single_lens_equity_defects,
+    evaluate_review_modes,
+    finalize_multi_agent_equity_review,
+    prepare_multi_agent_equity_review,
+    run_deterministic_equity_fallback,
+    run_multi_agent_equity_review,
+    specialist_result_from_dict,
+    validate_agent_input_packet,
+    validate_specialist_result,
+)
 from .models import *  # noqa: F403
 from .portfolio_policy import (
     FactorGroupAssessment,
@@ -59,6 +72,16 @@ __all__ = [
     "analyze_portfolio",
     "plan_contribution",
     "analyze_portfolio_intelligence",
+    "prepare_multi_agent_equity_review",
+    "build_critic_packet",
+    "detect_single_lens_equity_defects",
+    "finalize_multi_agent_equity_review",
+    "run_multi_agent_equity_review",
+    "run_deterministic_equity_fallback",
+    "specialist_result_from_dict",
+    "validate_agent_input_packet",
+    "validate_specialist_result",
+    "evaluate_review_modes",
     "review_investment_thesis",
     "review_equity",
     "validate_equity_review_result",

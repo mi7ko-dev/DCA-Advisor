@@ -2,9 +2,9 @@
 
 ## Active phase
 
-Plugin packaging is implemented in the working tree and is at its verification
-checkpoint. The package changes are not staged, committed, pushed, installed into
-the personal Codex profile, or published.
+Phase 8 bounded multi-agent equity review is implemented and verified in the
+working tree. It is at the user approval checkpoint. The changes are not staged,
+committed, pushed, installed into the personal Codex profile, or published.
 
 ## Completed technical work
 
@@ -79,8 +79,51 @@ the personal Codex profile, or published.
 - Added deterministic committee routing for individual-equity review, public JSON
   contracts, private non-overwriting persistence, synthetic examples and reports,
   documentation, skill routing, and CI regeneration.
+- Added immutable versioned input packets for evidence, business-quality,
+  valuation, portfolio-risk, and critic roles, plus strict versioned specialist
+  outputs with claim-level evidence references and non-sensitive execution metadata.
+- Added the Codex-native Phase 8 skill workflow: four isolated specialist threads,
+  one isolated critic thread, one lead synthesis, no retries, and deterministic
+  engine precedence. Contribution and other routes do not start these agents.
+- Added CommitteeResult `2.0` multi-agent envelopes while retaining deterministic
+  EquityReviewResult `1.0` and CommitteeResult `1.1` compatibility.
+- Added fail-closed handling for malformed output, unknown evidence references,
+  unsupported claims, timeouts, unavailable runtimes, contradictions, partial
+  failures, and explicit deterministic-only fallback.
+- Added network-free in-memory backend tests, a synthetic contract demonstration,
+  and a defect-code eval that compares detected defects rather than agent votes.
+- Documented hosted Codex processing, role-minimal data transfer, token and latency
+  costs, approval boundaries, trace redaction, and inherited-tool limitations.
 
-## Plugin packaging local verification record
+## Phase 8 local verification record
+
+Verification on 2026-09-29 completed with these results:
+
+- 174 unit, integration, privacy, invariant, eval, repository-safety,
+  skill-structure, plugin-package, equity-review, and portfolio-policy tests passed
+  with zero skips.
+- Python compilation passed for `src/`, `tests/`, and `tools/`. All five synthetic
+  generators reproduced 26 public example files byte for byte on a second run.
+- A fresh 86-file plugin marketplace was built outside the repository from the
+  explicit public allowlist, inspected for links, forbidden paths, credentials,
+  local paths, private markers, and approval text, then copied to the tracked
+  mirror and compared byte for byte.
+- The bundled plugin validator reported `Plugin validation passed`; both canonical
+  and bundled skill validators reported `Skill is valid!`; and the temporary
+  bundled runtime imported with repository `src/` excluded from `PYTHONPATH`.
+- Repository safety passed 13 ignored-path expectations and 12 public-path
+  expectations against 170 tracked files. Gitleaks 8.30.1 passed for available Git
+  history and 191 current public candidate files. `git diff --check` passed.
+- A real Codex-host synthetic smoke started four isolated specialist threads and a
+  later isolated critic thread. All four specialist content outputs satisfied the
+  content-only contract. The critic found the intended portfolio evidence gap but
+  returned an unsupported conclusion enum, so the lead rejected it without retry;
+  this demonstrated the documented `partial_agent_failure` behavior rather than a
+  false complete review. No raw response or private output was persisted.
+- No API key, paid model API call, external dependency, plugin reinstall, stage,
+  commit, push, publication, transaction, or policy mutation was performed.
+
+## Phase 6 plugin packaging local verification record (historical)
 
 Verification on 2026-09-28 completed with these results:
 
@@ -165,7 +208,7 @@ attest to deleted remote refs, unavailable objects, forks, or private systems.
 
 ## Next approval gate
 
-Plugin packaging is at its approval checkpoint. Any stage, commit, push, personal
+Phase 8 is at its approval checkpoint. Any stage, commit, push, personal
 installation, package publication, live-provider work, broker integration, tax
 adapter, transaction recording, policy mutation, or new product scope requires a
 separate explicit instruction. No approval is inferred from this file.

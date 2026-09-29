@@ -59,6 +59,11 @@ Mutation performed: no.
 - Execution mode: deterministic engine with sequential review lenses; no independent agents.
 - Review lenses are sequential interpretations, not independent agents or verification.
 
+## Agent workflow
+
+- Runtime: `none`.
+- Agent workflow: not applicable to this route.
+
 ---
 
 # Synthetic Committee Demo: demo-portfolio-review
@@ -164,6 +169,11 @@ Mutation performed: no.
 - Execution mode: deterministic engine with sequential review lenses; no independent agents.
 - Review lenses are sequential interpretations, not independent agents or verification.
 
+## Agent workflow
+
+- Runtime: `none`.
+- Agent workflow: not applicable to this route.
+
 ---
 
 # Synthetic Committee Demo: demo-etf-thesis
@@ -258,6 +268,11 @@ Mutation performed: no.
 - Revisions: 0.
 - Execution mode: deterministic engine with sequential review lenses; no independent agents.
 - Review lenses are sequential interpretations, not independent agents or verification.
+
+## Agent workflow
+
+- Runtime: `none`.
+- Agent workflow: not applicable to this route.
 
 ---
 
@@ -378,6 +393,11 @@ Mutation performed: no.
 - Execution mode: deterministic engine with sequential review lenses; no independent agents.
 - Review lenses are sequential interpretations, not independent agents or verification.
 
+## Agent workflow
+
+- Runtime: `none`.
+- Agent workflow: not applicable to this route.
+
 ---
 
 # Synthetic Committee Demo: demo-incomplete-drift
@@ -440,6 +460,11 @@ Mutation performed: no.
 - Revisions: 0.
 - Execution mode: deterministic engine with sequential review lenses; no independent agents.
 - Review lenses are sequential interpretations, not independent agents or verification.
+
+## Agent workflow
+
+- Runtime: `none`.
+- Agent workflow: not applicable to this route.
 
 ---
 
@@ -557,3 +582,8 @@ Mutation performed: no.
 - Revisions: 1.
 - Execution mode: deterministic engine with sequential review lenses; no independent agents.
 - Review lenses are sequential interpretations, not independent agents or verification.
+
+## Agent workflow
+
+- Runtime: `none`.
+- Agent workflow: not applicable to this route.

@@ -27,7 +27,7 @@
   ],
   "properties": {
     "id": {"type": "string", "minLength": 1},
-    "committee_version": {"type": "string", "const": "1.1"},
+    "committee_version": {"type": "string", "enum": ["1.1", "2.0"]},
     "request_id": {"type": "string", "minLength": 1},
     "request_text": {"type": "string", "minLength": 1},
     "route": {
@@ -54,8 +54,19 @@
     "requires_user_approval": {"type": "boolean"},
     "approval_reasons": {"$ref": "#/$defs/stringArray"},
     "mutation_performed": {"type": "boolean", "const": false},
-    "trace": {"$ref": "#/$defs/trace"}
+    "trace": {"$ref": "#/$defs/trace"},
+    "agent_review": {"$ref": "multi-agent-equity-review.schema.json"}
   },
+  "allOf": [
+    {
+      "if": {"properties": {"committee_version": {"const": "2.0"}}, "required": ["committee_version"]},
+      "then": {"required": ["agent_review"]}
+    },
+    {
+      "if": {"properties": {"committee_version": {"const": "1.1"}}, "required": ["committee_version"]},
+      "then": {"not": {"required": ["agent_review"]}}
+    }
+  ],
   "$defs": {
     "stringArray": {
       "type": "array",

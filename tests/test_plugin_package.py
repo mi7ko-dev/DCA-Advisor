@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -113,7 +114,8 @@ class PluginPackageTests(unittest.TestCase):
                     "sys.path.insert(0, str(Path.cwd() / 'src')); "
                     "import steadyfolio; "
                     "assert callable(steadyfolio.run_committee_workflow); "
-                    "assert callable(steadyfolio.review_equity)"
+                    "assert callable(steadyfolio.review_equity); "
+                    "assert callable(steadyfolio.prepare_multi_agent_equity_review)"
                 ),
             ],
             cwd=self.plugin_root,
@@ -162,6 +164,23 @@ class PluginPackageTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "cannot contain symlinks"):
                 build_plugin.build_plugin(output)
             self.assertEqual(tuple(outside.iterdir()), ())
+
+    def test_builder_rejects_existing_output_file_hardlink(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            base = Path(temporary)
+            output = base / "marketplace"
+            link = output / ".agents" / "plugins" / "marketplace.json"
+            outside = base / "outside.json"
+            link.parent.mkdir(parents=True)
+            outside.write_text("outside\n", encoding="utf-8")
+            try:
+                os.link(outside, link)
+            except OSError as error:
+                self.skipTest(f"File hardlinks are unavailable: {error}")
+
+            with self.assertRaisesRegex(RuntimeError, "cannot contain hardlinks"):
+                build_plugin.build_plugin(output)
+            self.assertEqual(outside.read_text(encoding="utf-8"), "outside\n")
 
 
 if __name__ == "__main__":

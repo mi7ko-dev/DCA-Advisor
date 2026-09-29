@@ -183,6 +183,7 @@ class SchemaAndValidationTests(unittest.TestCase):
         self.assertEqual(
             {schema.name for schema in schemas},
             {
+                "agent-input-packet.schema.json",
                 "analysis-result.schema.json",
                 "committee-result.schema.json",
                 "contribution-plan.schema.json",
@@ -190,10 +191,12 @@ class SchemaAndValidationTests(unittest.TestCase):
                 "equity-review.schema.json",
                 "intelligence-result.schema.json",
                 "market-input.schema.json",
+                "multi-agent-equity-review.schema.json",
                 "portfolio.schema.json",
                 "portfolio-policy-result.schema.json",
                 "portfolio-policy.schema.json",
                 "research-snapshot.schema.json",
+                "specialist-result.schema.json",
                 "thesis-review.schema.json",
             },
         )

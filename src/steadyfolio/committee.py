@@ -18,7 +18,6 @@ from .committee_models import (
     WorkflowTrace,
 )
 from .errors import ProviderUnavailableError, ValidationError
-from .equity import review_equity
 from .equity_models import EquityReviewInput, EquityReviewResult
 from .intelligence import analyze_portfolio_intelligence
 from .models import (
@@ -29,6 +28,7 @@ from .models import (
     TradingConstraint,
     decimal_to_string,
 )
+from .multi_agent import run_deterministic_equity_fallback
 from .providers import ResearchProvider
 from .research_models import (
     PortfolioIntelligenceResult,
@@ -747,109 +747,7 @@ def _run_equity_review(
 ) -> CommitteeResult:
     if equity_input is None:
         return _clarification_result(request, "equity_review")
-    if request.instrument_id != equity_input.identity.instrument_id:
-        raise ValidationError(
-            "Committee request and equity evidence reference different instruments."
-        )
-    if request.as_of != equity_input.as_of:
-        raise ValidationError(
-            "Committee request and equity evidence must use the same as-of date."
-        )
-    review = review_equity(state, equity_input)
-    score = (
-        f"{review.score_percent}%"
-        if review.score_percent is not None
-        else "unavailable"
-    )
-    facts = (
-        f"Instrument identity matched for {review.instrument_id}.",
-        f"Free-cash-flow hard screen: {review.hard_screen_status}.",
-        f"Quality score: {score} ({review.points_awarded} of "
-        f"{review.points_available} available points; "
-        f"{review.criteria_available} of {review.criteria_total} criteria).",
-        f"Quality classification: {review.quality_classification}.",
-        f"Valuation status: {review.valuation.status} using "
-        f"{review.valuation.selected_method or 'no supported anchor'}.",
-    )
-    quality_lens = SpecialistInterpretation(
-        role="equity-quality",
-        conclusion=review.quality_classification,
-        interpretation=(
-            "The quality conclusion uses the disclosed versioned criteria and excludes "
-            "unavailable criteria from the denominator."
-        ),
-        evidence_references=(review.id, *review.source_ids),
-        limitations=review.limitations,
-    )
-    valuation_lens = SpecialistInterpretation(
-        role="valuation-evidence",
-        conclusion=review.valuation.status,
-        interpretation=(
-            "Valuation remains separate from business quality; conflicting methods are "
-            "reported without averaging."
-        ),
-        evidence_references=(review.id, *review.valuation.source_ids),
-        limitations=review.valuation.limitations,
-    )
-    insufficient = review.conclusion in {
-        "insufficient_evidence",
-        "insufficient_valuation",
-    }
-    status = (
-        "insufficient_evidence"
-        if insufficient
-        else "limited"
-        if review.conclusion
-        in {
-            "limited_competence",
-            "limited_margin",
-            "quality_at_premium",
-            "watch",
-        }
-        else "complete"
-    )
-    return CommitteeResult(
-        id=f"committee:{request.id}:{request.as_of}",
-        committee_version=COMMITTEE_VERSION,
-        request_id=request.id,
-        request_text=request.message,
-        route="equity_review",
-        status=status,
-        as_of=request.as_of,
-        deterministic_facts=facts,
-        sources=_research_sources(review),
-        data_limitations=review.limitations,
-        assumptions=(
-            "The supplied evidence is structured and attributable.",
-            "Quality and valuation are separate conclusions.",
-        ),
-        specialist_interpretations=(quality_lens, valuation_lens),
-        disagreements=(
-            ("Supported valuation methods disagree and were not averaged.",)
-            if review.valuation.status == "conflicting"
-            else ()
-        ),
-        final_synthesis=(
-            f"The deterministic equity review concluded {review.conclusion}; it "
-            "does not authorize a transaction or policy change."
-        ),
-        proposed_next_actions=review.proposed_next_actions,
-        requires_user_approval=False,
-        approval_reasons=(
-            "Any later transaction or policy change requires separate explicit approval.",
-        ),
-        mutation_performed=False,
-        trace=WorkflowTrace(
-            route="equity_review",
-            deterministic_tools=("review_equity",),
-            review_lenses=("equity-quality", "valuation-evidence"),
-            provider_calls=0,
-            external_calls=0,
-            critic_passes=0,
-            revisions=0,
-            execution_mode=_EXECUTION_MODE,
-        ),
-    )
+    return run_deterministic_equity_fallback(request, state, equity_input)
 
 
 def _resolve_thesis_id(request: CommitteeRequest, state: PortfolioState) -> str | None:

@@ -57,6 +57,7 @@ python tools/generate_synthetic_example.py
 python tools/generate_synthetic_intelligence.py
 python tools/generate_synthetic_committee.py
 python tools/generate_synthetic_equity.py
+python tools/generate_synthetic_multi_agent.py
 ```
 
 The inputs are `examples/portfolio.example.json`,
@@ -77,9 +78,12 @@ The canonical repo-local skill is at
 reviews, ETF thesis checks, and overlap questions through the deterministic engine.
 It also routes individual-stock review when dated structured equity evidence is
 supplied.
-Routine contributions do not invoke research or a committee. Evidence-dependent
-reviews use only relevant sequential review lenses, at most one critic pass, and no
-live external calls.
+Routine contributions do not invoke research or agents. Portfolio, overlap, and
+thesis routes retain their disclosed sequential review lenses. Phase 8 equity
+review uses four separate Codex-native specialist threads and one critic thread
+when host subagents are available, with one execution per role and no retries or
+live market-data calls. If the host cannot spawn subagents, the result is labeled
+as a deterministic-only fallback rather than multi-agent.
 
 The six synthetic end-to-end demonstrations are in
 `examples/results/committee-workflows.example.json` and
@@ -87,6 +91,13 @@ The six synthetic end-to-end demonstrations are in
 sources and dates, limitations, assumptions, interpretations, disagreements, and
 next actions while identifying the tools and lenses actually used. Review lenses
 are not presented as independent agents or verification.
+
+The synthetic Phase 8 contract demonstration and defect-based eval are in
+`examples/results/multi-agent-equity-review.example.json`,
+`examples/results/multi-agent-eval.example.json`, and
+`examples/reports/multi-agent-equity-review.md`. Their runtime is explicitly
+`in_memory_test_backend`; they test contracts and bounds rather than claiming live
+model execution.
 
 ## Portfolio intelligence
 
@@ -117,6 +128,14 @@ Portfolio-policy thresholds and classifications are explicit data rather than
 global constants. Real policy instances belong under `private/`. The current
 policy denominator is invested positions and therefore excludes unmodelled cash.
 See `docs/EQUITY_REVIEW.md` for the contracts and limitations.
+
+Codex-native equity specialists receive role-minimal immutable packets. These
+packets are processed by the selected Codex model service, so a real run adds token
+use, latency, and hosted processing compared with the deterministic-only path. No
+request or account ID, source path, raw provider payload, or free-form portfolio
+note is included; portfolio risk receives typed aggregates only. Execution metadata
+comes from the host, not model self-report. No API key or third-party Python
+dependency is added to SteadyFolio.
 
 ## Private workspace boundary
 

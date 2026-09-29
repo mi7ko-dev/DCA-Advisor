@@ -51,6 +51,7 @@ python tools/generate_synthetic_example.py
 python tools/generate_synthetic_intelligence.py
 python tools/generate_synthetic_committee.py
 python tools/generate_synthetic_equity.py
+python tools/generate_synthetic_multi_agent.py
 git diff --exit-code -- examples
 python -m unittest discover -s tests -p "test_*.py"
 python tools/run_repository_checks.py --require-gitleaks

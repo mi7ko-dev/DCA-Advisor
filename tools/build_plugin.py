@@ -12,13 +12,14 @@ import subprocess
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 PLUGIN_NAME = "steadyfolio"
 MARKETPLACE_NAME = "steadyfolio-local"
-PLUGIN_VERSION = "0.1.0"
+PLUGIN_VERSION = "0.2.0"
 
 PUBLIC_SOURCE_FILES = (
     "LICENSE",
     "pyproject.toml",
     ".agents/skills/steadyfolio/SKILL.md",
     ".agents/skills/steadyfolio/agents/openai.yaml",
+    ".agents/skills/steadyfolio/references/multi-agent-equity-review.md",
     ".agents/skills/steadyfolio/references/response-contract.md",
     ".agents/skills/steadyfolio/references/workflows.md",
     "docs/CALCULATIONS.md",
@@ -35,6 +36,7 @@ PUBLIC_SOURCE_FILES = (
     "examples/equity-review.example.json",
     "examples/equity-review.example.md",
     "examples/market-input.example.json",
+    "examples/reports/multi-agent-equity-review.md",
     "examples/portfolio-policy-result.example.json",
     "examples/portfolio-policy-result.example.md",
     "examples/portfolio-policy.example.json",
@@ -48,22 +50,28 @@ PUBLIC_SOURCE_FILES = (
     "examples/results/committee-workflows.example.json",
     "examples/results/contribution-plan.example.json",
     "examples/results/intelligence.example.json",
+    "examples/results/multi-agent-equity-review.example.json",
+    "examples/results/multi-agent-eval.example.json",
     "examples/results/thesis-review.example.json",
     "examples/stress-windows.example.json",
     "examples/thesis-evidence.example.json",
     "schemas/analysis-result.schema.json",
+    "schemas/agent-input-packet.schema.json",
     "schemas/committee-result.schema.json",
     "schemas/contribution-plan.schema.json",
     "schemas/equity-evidence.schema.json",
     "schemas/equity-review.schema.json",
     "schemas/intelligence-result.schema.json",
     "schemas/market-input.schema.json",
+    "schemas/multi-agent-equity-review.schema.json",
     "schemas/portfolio-policy-result.schema.json",
     "schemas/portfolio-policy.schema.json",
     "schemas/portfolio.schema.json",
     "schemas/research-snapshot.schema.json",
+    "schemas/specialist-result.schema.json",
     "schemas/thesis-review.schema.json",
     "src/steadyfolio/__init__.py",
+    "src/steadyfolio/agent_models.py",
     "src/steadyfolio/calculations.py",
     "src/steadyfolio/committee.py",
     "src/steadyfolio/committee_models.py",
@@ -76,6 +84,7 @@ PUBLIC_SOURCE_FILES = (
     "src/steadyfolio/intelligence.py",
     "src/steadyfolio/intelligence_reporting.py",
     "src/steadyfolio/models.py",
+    "src/steadyfolio/multi_agent.py",
     "src/steadyfolio/portfolio_policy.py",
     "src/steadyfolio/providers.py",
     "src/steadyfolio/reporting.py",
@@ -88,14 +97,15 @@ PUBLIC_SOURCE_FILES = (
     "tools/generate_synthetic_equity.py",
     "tools/generate_synthetic_example.py",
     "tools/generate_synthetic_intelligence.py",
+    "tools/generate_synthetic_multi_agent.py",
 )
 
 PLUGIN_MANIFEST = {
     "name": PLUGIN_NAME,
     "version": PLUGIN_VERSION,
     "description": (
-        "Offline deterministic portfolio maintenance and evidence-limited "
-        "investment reviews for Codex."
+        "Deterministic portfolio maintenance plus bounded host-native Codex "
+        "subagents for evidence-limited equity review."
     ),
     "author": {
         "name": "mi7ko-dev",
@@ -110,14 +120,16 @@ PLUGIN_MANIFEST = {
         "dca",
         "etf",
         "equity-review",
+        "multi-agent",
     ],
     "skills": "./skills/",
     "interface": {
         "displayName": "SteadyFolio",
-        "shortDescription": "Deterministic portfolio maintenance reviews",
+        "shortDescription": "Deterministic reviews with bounded equity agents",
         "longDescription": (
-            "Run offline, source-attributed contribution, portfolio, ETF thesis, "
-            "overlap, and evidence-limited equity reviews without executing trades."
+            "Run source-attributed contribution, portfolio, ETF thesis, overlap, "
+            "and evidence-limited equity reviews. Equity review can use bounded "
+            "Codex-native subagents; no workflow executes trades."
         ),
         "developerName": "SteadyFolio contributors",
         "category": "Finance",
@@ -148,9 +160,18 @@ MARKETPLACE_MANIFEST = {
 PLUGIN_README = """# SteadyFolio Codex plugin
 
 This self-contained plugin bundles the public SteadyFolio skill, deterministic
-Python engine, schemas, documentation, and synthetic examples. It does not include
-private portfolio state, credentials, live-provider access, broker connectivity,
-trade execution, or tax/legal conclusions.
+Python engine, bounded host-native Codex subagent protocol for equity review,
+schemas, documentation, and synthetic examples. It does not include private
+portfolio state, credentials, live-provider access, broker connectivity, trade
+execution, or tax/legal conclusions.
+
+The contribution route never starts agents. A Phase 8 equity review may start four
+Codex specialist threads and one critic thread, which adds model-token use,
+latency, and hosted processing of each role-minimal evidence packet. If host-native
+subagents are unavailable, the plugin reports a deterministic-only fallback and
+does not call it multi-agent. Packets exclude request and account identifiers,
+source paths, raw provider payloads, and free-form portfolio notes; execution
+metadata is attached by the host rather than accepted from model output.
 
 ## Install from a repository checkout
 
@@ -158,7 +179,7 @@ From the repository root:
 
 ```powershell
 $pluginRoot = (Resolve-Path .\plugins\steadyfolio).Path
-py -3.11 -S -c "import sys; sys.path.insert(0, r'$pluginRoot\src'); import steadyfolio; assert callable(steadyfolio.run_committee_workflow)"
+py -3.11 -S -c "import sys; sys.path.insert(0, r'$pluginRoot\src'); import steadyfolio; assert callable(steadyfolio.run_committee_workflow); assert callable(steadyfolio.prepare_multi_agent_equity_review)"
 codex plugin marketplace add .
 codex plugin add steadyfolio@steadyfolio-local
 ```
@@ -211,6 +232,20 @@ def _tracked_files() -> set[str]:
     }
 
 
+def _public_candidate_files() -> set[str]:
+    result = subprocess.run(
+        ["git", "ls-files", "--others", "--exclude-standard", "-z"],
+        cwd=REPOSITORY_ROOT,
+        check=True,
+        capture_output=True,
+    )
+    return {
+        item.decode("utf-8").replace("\\", "/")
+        for item in result.stdout.split(b"\0")
+        if item
+    }
+
+
 def _write_json(path: Path, value: object) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8", newline="\n") as stream:
@@ -226,6 +261,8 @@ def _reject_output_symlinks(output_root: Path) -> None:
     for path in output_root.rglob("*"):
         if path.is_symlink():
             raise RuntimeError("Plugin output cannot contain symlinks.")
+        if path.is_file() and path.stat().st_nlink > 1:
+            raise RuntimeError("Plugin output cannot contain hardlinks.")
 
 
 def build_plugin(output_root: Path) -> tuple[str, ...]:
@@ -240,12 +277,14 @@ def build_plugin(output_root: Path) -> tuple[str, ...]:
             "Plugin output must be outside the repository in a temporary directory."
         )
 
-    tracked = _tracked_files()
-    missing_from_index = sorted(set(PUBLIC_SOURCE_FILES) - tracked)
-    if missing_from_index:
+    available_public_sources = _tracked_files() | _public_candidate_files()
+    missing_or_ignored = sorted(
+        set(PUBLIC_SOURCE_FILES) - available_public_sources
+    )
+    if missing_or_ignored:
         raise RuntimeError(
-            "Plugin allowlist contains untracked files: "
-            + ", ".join(missing_from_index)
+            "Plugin allowlist contains missing or ignored files: "
+            + ", ".join(missing_or_ignored)
         )
 
     expected = set(expected_inventory())

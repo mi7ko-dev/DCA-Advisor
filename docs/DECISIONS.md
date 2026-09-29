@@ -347,3 +347,45 @@ changes, transactions, or publication.
 The user's instruction to create an installable plugin accepted D-023 and local
 package generation. It did not authorize installation into a personal Codex
 profile, staging, committing, pushing, marketplace publication, or a release.
+
+## D-024: Use Codex-native subagents for bounded equity review
+
+- **Status:** Accepted
+- **Decision:** Phase 8 uses the Codex host's native subagent threads only for
+  `equity_review`. The main thread is the lead orchestrator. It calls deterministic
+  `review_equity` once, sends immutable role-minimal packets to evidence, business
+  quality, valuation, and portfolio-risk specialists, sends only validated results
+  to one critic, and performs one final synthesis. Python functions prepare,
+  validate, trace, and test contracts; they are never labeled agents.
+- **Why:** Current Codex releases can start separate subagent contexts from skill
+  instructions without adding an API key or application dependency. This meets the
+  isolation requirement while keeping the deterministic engine portable and the
+  plugin dependency-free.
+- **Consequence:** A real run is available only on a Codex host with subagents and
+  sends each minimal packet to the Codex model service, consuming additional
+  tokens and latency. No role retries. Contribution starts no agents. A missing or
+  failed runtime produces an explicit deterministic or partial fallback and is not
+  described as multi-agent. The Agents SDK and Agents API remain unimplemented.
+  Agent output contains analysis fields only; the lead attaches host-observed
+  runtime, attempt, isolation, and opaque execution/result identifiers.
+
+## D-025: Version agent contracts without redefining deterministic equity v1
+
+- **Status:** Accepted
+- **Decision:** Add agent-input, specialist-result, and multi-agent-review schema
+  version `1.0`, and CommitteeResult version `2.0` for the agent envelope. Preserve
+  deterministic `EquityReviewResult` version `1.0` and CommitteeResult version
+  `1.1` compatibility instead of silently changing their meanings.
+- **Why:** Agent interpretation is secondary metadata around the deterministic
+  result, not a new calculation model. Separate versions make migration and
+  fallback behavior explicit.
+- **Consequence:** Committee schema `1.1` rejects an agent envelope; version `2.0`
+  requires one. The in-memory backend is allowed only for synthetic tests and is
+  disclosed as not being a live subagent runtime.
+
+## Phase 8 approval effects
+
+The user's explicit architecture approval accepted the hosted Codex subagent data
+flow, additional model-token use, and Phase 8 implementation. It did not authorize
+staging, committing, pushing, plugin installation, publication, private-output
+persistence, transactions, holdings changes, thesis changes, or policy mutation.
