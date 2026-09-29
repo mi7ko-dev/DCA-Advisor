@@ -51,6 +51,21 @@ jobs:
           python tools/generate_synthetic_equity.py
           git diff --exit-code -- examples
 
+      - name: Reproduce and smoke-test the installable plugin
+        run: |
+          plugin_marketplace="$RUNNER_TEMP/steadyfolio-plugin-marketplace"
+          plugin_site="$RUNNER_TEMP/steadyfolio-plugin-site"
+          python tools/build_plugin.py --output "$plugin_marketplace"
+          diff --recursive --brief \
+            .agents/plugins "$plugin_marketplace/.agents/plugins"
+          diff --recursive --brief \
+            plugins/steadyfolio "$plugin_marketplace/plugins/steadyfolio"
+          python -m pip install --disable-pip-version-check --no-deps \
+            --target "$plugin_site" \
+            "$plugin_marketplace/plugins/steadyfolio"
+          PYTHONPATH="$plugin_site" python -S -c \
+            "import steadyfolio; assert callable(steadyfolio.run_committee_workflow); assert callable(steadyfolio.review_equity)"
+
       - name: Run tests and public-repository safety checks
         run: |
           python -m unittest discover -s tests -p "test_*.py"

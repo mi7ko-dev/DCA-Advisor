@@ -372,10 +372,13 @@ There is still no live market provider, broker connection, net-liquidation cash
 model, tax or regulatory adapter, forecast, transaction execution, or policy
 mutation. Exact methodology is in `docs/EQUITY_REVIEW.md`.
 
-The selected host is local Codex in this repository. The skill is discovered in the
-current repository session, and its structure and metadata pass the bundled skill
-validator. No clean-machine or global installation, generated plugin, ChatGPT host,
-MCP service, live provider, or true multi-agent runtime is implemented or claimed.
+The selected host remains local Codex. The canonical repo-local skill is also
+packaged in a self-contained Codex plugin with the deterministic Python core,
+schemas, synthetic examples, and operating documentation. The plugin is generated
+from an explicit tracked-file allowlist and exposed through the repo-local
+`steadyfolio-local` marketplace. Its manifest, skill structure, exact inventory,
+and isolated runtime import are tested. No general ChatGPT host, MCP service, live
+provider, or true multi-agent runtime is implemented or claimed.
 
 ## Verification strategy
 

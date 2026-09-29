@@ -1,0 +1,31 @@
+{
+  "name": "steadyfolio",
+  "version": "0.1.0",
+  "description": "Offline deterministic portfolio maintenance and evidence-limited investment reviews for Codex.",
+  "author": {
+    "name": "mi7ko-dev",
+    "url": "https://github.com/mi7ko-dev"
+  },
+  "homepage": "https://github.com/mi7ko-dev/DCA-Advisor",
+  "repository": "https://github.com/mi7ko-dev/DCA-Advisor",
+  "license": "MIT",
+  "keywords": [
+    "portfolio",
+    "investing",
+    "dca",
+    "etf",
+    "equity-review"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "SteadyFolio",
+    "shortDescription": "Deterministic portfolio maintenance reviews",
+    "longDescription": "Run offline, source-attributed contribution, portfolio, ETF thesis, overlap, and evidence-limited equity reviews without executing trades.",
+    "developerName": "SteadyFolio contributors",
+    "category": "Finance",
+    "capabilities": [
+      "Interactive"
+    ],
+    "defaultPrompt": "Review my portfolio with explicit evidence and limitations."
+  }
+}

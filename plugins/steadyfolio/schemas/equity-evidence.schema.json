@@ -1,0 +1,150 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://steadyfolio.example/schemas/equity-evidence.schema.json",
+  "title": "SteadyFolio Equity Evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "as_of", "identity", "circle_of_competence", "quality", "valuation_anchors", "sources"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "as_of": {"$ref": "#/$defs/date"},
+    "identity": {"$ref": "#/$defs/identity"},
+    "circle_of_competence": {"$ref": "#/$defs/circle"},
+    "quality": {"$ref": "#/$defs/quality"},
+    "valuation_anchors": {"type": "array", "items": {"$ref": "#/$defs/valuation_anchor"}},
+    "sources": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/source"}}
+  },
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"},
+    "date": {"type": "string", "format": "date"},
+    "date_time": {"type": "string", "format": "date-time"},
+    "decimal": {"type": "string", "pattern": "^-?(0|[1-9][0-9]*)(\\.[0-9]+)?$"},
+    "positive_decimal": {"type": "string", "pattern": "^([1-9][0-9]*)(\\.[0-9]+)?$|^0\\.[0-9]*[1-9][0-9]*$"},
+    "currency": {"type": "string", "pattern": "^[A-Z]{3}$"},
+    "decimal_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "as_of", "source_id"],
+      "properties": {
+        "value": {"$ref": "#/$defs/decimal"},
+        "as_of": {"$ref": "#/$defs/date"},
+        "source_id": {"$ref": "#/$defs/id"}
+      }
+    },
+    "boolean_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "rationale", "as_of", "source_id"],
+      "properties": {
+        "value": {"type": "boolean"},
+        "rationale": {"type": "string", "minLength": 1},
+        "as_of": {"$ref": "#/$defs/date"},
+        "source_id": {"$ref": "#/$defs/id"}
+      }
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["instrument_id", "reported_name", "isin", "source_id"],
+      "dependentRequired": {
+        "listing_id": ["mic", "ticker", "trading_currency"],
+        "mic": ["listing_id", "ticker", "trading_currency"],
+        "ticker": ["listing_id", "mic", "trading_currency"],
+        "trading_currency": ["listing_id", "mic", "ticker"]
+      },
+      "properties": {
+        "instrument_id": {"$ref": "#/$defs/id"},
+        "reported_name": {"type": "string", "minLength": 1},
+        "isin": {"type": "string", "pattern": "^[A-Z]{2}[A-Z0-9]{9}[0-9]$"},
+        "source_id": {"$ref": "#/$defs/id"},
+        "listing_id": {"$ref": "#/$defs/id"},
+        "mic": {"type": "string", "pattern": "^[A-Z0-9]{4}$"},
+        "ticker": {"type": "string", "minLength": 1},
+        "trading_currency": {"$ref": "#/$defs/currency"}
+      }
+    },
+    "circle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["business_model_understood", "business_model_summary", "revenue_drivers_understood", "revenue_driver_summary", "external_dependency", "observable_event"],
+      "properties": {
+        "business_model_understood": {"type": "boolean"},
+        "business_model_summary": {"type": "string", "minLength": 1},
+        "revenue_drivers_understood": {"type": "boolean"},
+        "revenue_driver_summary": {"type": "string", "minLength": 1},
+        "external_dependency": {"type": ["string", "null"], "minLength": 1},
+        "observable_event": {"type": ["string", "null"], "minLength": 1}
+      }
+    },
+    "free_cash_flow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["period_end", "value", "source_id"],
+      "properties": {
+        "period_end": {"$ref": "#/$defs/date"},
+        "value": {"$ref": "#/$defs/decimal"},
+        "source_id": {"$ref": "#/$defs/id"}
+      }
+    },
+    "owner_earnings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["currency"],
+      "properties": {
+        "currency": {"$ref": "#/$defs/currency"},
+        "reported_earnings": {"$ref": "#/$defs/decimal_evidence"},
+        "depreciation_and_amortization": {"$ref": "#/$defs/decimal_evidence"},
+        "maintenance_capex": {"$ref": "#/$defs/decimal_evidence"},
+        "growth_capex_funded_from_fcf": {"$ref": "#/$defs/boolean_evidence"}
+      }
+    },
+    "quality": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["free_cash_flow"],
+      "properties": {
+        "free_cash_flow": {"type": "array", "items": {"$ref": "#/$defs/free_cash_flow"}},
+        "debt_to_ebitda": {"$ref": "#/$defs/decimal_evidence"},
+        "revenue_growth": {"$ref": "#/$defs/decimal_evidence"},
+        "operating_margin": {"$ref": "#/$defs/decimal_evidence"},
+        "capex_to_revenue": {"$ref": "#/$defs/decimal_evidence"},
+        "institutional_ownership": {"$ref": "#/$defs/decimal_evidence"},
+        "benchmark_outperformance": {"$ref": "#/$defs/boolean_evidence"},
+        "moat_and_management": {"$ref": "#/$defs/boolean_evidence"},
+        "owner_earnings": {"$ref": "#/$defs/owner_earnings"}
+      }
+    },
+    "valuation_anchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["method", "current_price", "fair_value", "currency", "as_of", "source_ids", "rationale"],
+      "properties": {
+        "method": {"enum": ["dcf", "reverse_dcf", "forward_pe"]},
+        "current_price": {"$ref": "#/$defs/positive_decimal"},
+        "fair_value": {"$ref": "#/$defs/positive_decimal"},
+        "currency": {"$ref": "#/$defs/currency"},
+        "as_of": {"$ref": "#/$defs/date"},
+        "source_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/id"}},
+        "rationale": {"type": "string", "minLength": 1}
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "provider", "reference", "as_of", "retrieved_at", "methodology", "limitations", "freshness_days", "terms_reference", "cache_permitted", "redistribution_permitted"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "provider": {"type": "string", "minLength": 1},
+        "reference": {"type": "string", "minLength": 1},
+        "as_of": {"$ref": "#/$defs/date"},
+        "retrieved_at": {"$ref": "#/$defs/date_time"},
+        "methodology": {"type": "string", "minLength": 1},
+        "limitations": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "freshness_days": {"type": "integer", "minimum": 0},
+        "terms_reference": {"type": "string", "minLength": 1},
+        "cache_permitted": {"type": "boolean"},
+        "redistribution_permitted": {"type": "boolean"}
+      }
+    }
+  }
+}

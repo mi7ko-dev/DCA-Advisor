@@ -318,3 +318,28 @@ The user's instruction to implement the reviewed stock-analysis concepts accepte
 D-022 for this bounded public implementation. It did not authorize staging,
 committing, pushing, live providers, broker connections, tax adapters, target
 changes, transactions, or publication.
+
+## D-023: Ship a reproducible local Codex plugin marketplace
+
+- **Status:** Accepted
+- **Decision:** Package the canonical skill and deterministic runtime as the
+  `steadyfolio` plugin in the repo-local `steadyfolio-local` marketplace. Generate
+  the bundle from a literal tracked-file allowlist into a temporary directory,
+  validate its manifest and skill, test its isolated runtime, and keep an exact
+  tracked marketplace manifest under `.agents/plugins/marketplace.json` with the
+  corresponding plugin under `plugins/steadyfolio/`.
+- **Why:** A real installable plugin removes repository-local discovery as a usage
+  requirement while preserving the existing offline engine and privacy boundary.
+  A generated allowlist prevents ignored user state, credentials, caches, Git
+  history, or unrelated development files from entering the package.
+- **Consequence:** The plugin is self-contained for local Codex and requires Python
+  3.11 or newer. Canonical sources remain outside the generated mirror; CI rebuilds
+  and compares it. Plugin installation does not authorize live data, broker access,
+  transactions, policy mutation, publication, or compatibility claims for other
+  hosts.
+
+## Plugin packaging approval effects
+
+The user's instruction to create an installable plugin accepted D-023 and local
+package generation. It did not authorize installation into a personal Codex
+profile, staging, committing, pushing, marketplace publication, or a release.

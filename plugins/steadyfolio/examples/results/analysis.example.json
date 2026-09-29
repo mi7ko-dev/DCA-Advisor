@@ -1,0 +1,33 @@
+{
+  "base_currency": "EUR",
+  "calculation_version": "1.0",
+  "concentrated_instrument_ids": [
+    "instrument-global"
+  ],
+  "herfindahl_index": "0.68",
+  "id": "analysis:synthetic-investor:2026-01-31",
+  "maximum_direct_weight": "0.8",
+  "positions": [
+    {
+      "current_value": "800",
+      "current_weight": "0.8",
+      "drift": "0.3",
+      "instrument_id": "instrument-global",
+      "target_weight": "0.5"
+    },
+    {
+      "current_value": "200",
+      "current_weight": "0.2",
+      "drift": "-0.3",
+      "instrument_id": "instrument-bond",
+      "target_weight": "0.5"
+    }
+  ],
+  "source_ids": [
+    "synthetic-prices-2026-01-31"
+  ],
+  "total_value": "1000",
+  "valuation_date": "2026-01-31",
+  "warnings": [],
+  "weighted_annual_fee_rate": "0.0019"
+}

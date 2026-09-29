@@ -1,0 +1,20 @@
+{
+  "name": "steadyfolio-local",
+  "interface": {
+    "displayName": "SteadyFolio Local"
+  },
+  "plugins": [
+    {
+      "name": "steadyfolio",
+      "source": {
+        "source": "local",
+        "path": "./plugins/steadyfolio"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Finance"
+    }
+  ]
+}

@@ -1,0 +1,162 @@
+{
+  "as_of": "2026-01-31",
+  "calculation_version": "1.0",
+  "circle_of_competence": {
+    "findings": [
+      "Sells synthetic compute capacity to diversified customers.",
+      "Revenue changes with contracted capacity and utilization."
+    ],
+    "status": "inside"
+  },
+  "conclusion": "eligible_for_consideration",
+  "criteria": [
+    {
+      "criterion": "free_cash_flow",
+      "maximum_points": "2",
+      "observed_value": "100, 120, 140",
+      "points_awarded": "2",
+      "rationale": "The supplied positive free-cash-flow series is non-decreasing.",
+      "source_ids": [
+        "synthetic-equity-source"
+      ],
+      "status": "scored"
+    },
+    {
+      "criterion": "debt_to_ebitda",
+      "maximum_points": "2",
+      "observed_value": "1.5",
+      "points_awarded": "2",
+      "rationale": "Debt/EBITDA is below 2x.",
+      "source_ids": [
+        "synthetic-equity-source"
+      ],
+      "status": "scored"
+    },
+    {
+      "criterion": "revenue_growth",
+      "maximum_points": "1.5",
+      "observed_value": "0.12",
+      "points_awarded": "1.5",
+      "rationale": "Revenue growth is at least 10%.",
+      "source_ids": [
+        "synthetic-equity-source"
+      ],
+      "status": "scored"
+    },
+    {
+      "criterion": "operating_margin",
+      "maximum_points": "1.5",
+      "observed_value": "0.2",
+      "points_awarded": "1.5",
+      "rationale": "Operating margin is at least 10%.",
+      "source_ids": [
+        "synthetic-equity-source"
+      ],
+      "status": "scored"
+    },
+    {
+      "criterion": "capex_to_revenue",
+      "maximum_points": "1",
+      "observed_value": "0.1",
+      "points_awarded": "1",
+      "rationale": "CapEx/revenue is below 15%.",
+      "source_ids": [
+        "synthetic-equity-source"
+      ],
+      "status": "scored"
+    },
+    {
+      "criterion": "institutional_ownership",
+      "maximum_points": "1",
+      "observed_value": "0.6",
+      "points_awarded": "1",
+      "rationale": "Institutional ownership is at least 50%.",
+      "source_ids": [
+        "synthetic-equity-source"
+      ],
+      "status": "scored"
+    },
+    {
+      "criterion": "benchmark_outperformance",
+      "maximum_points": "1",
+      "observed_value": "true",
+      "points_awarded": "1",
+      "rationale": "Synthetic five-year total return exceeded the benchmark.",
+      "source_ids": [
+        "synthetic-equity-source"
+      ],
+      "status": "scored"
+    },
+    {
+      "criterion": "moat_and_management",
+      "maximum_points": "1",
+      "observed_value": "true",
+      "points_awarded": "1",
+      "rationale": "Synthetic pricing-power and governance evidence is positive.",
+      "source_ids": [
+        "synthetic-equity-source"
+      ],
+      "status": "scored"
+    }
+  ],
+  "criteria_available": 8,
+  "criteria_total": 8,
+  "evidence_schema_version": "1.0",
+  "hard_screen_status": "passed",
+  "id": "equity-review:synthetic-compute-company:2026-01-31",
+  "identity_status": "matched",
+  "instrument_id": "synthetic-compute-company",
+  "limitations": [
+    "Synthetic evidence for deterministic examples only."
+  ],
+  "mutation_performed": false,
+  "owner_earnings": {
+    "interpretation": "CapEx/revenue is below the adjustment threshold.",
+    "source_ids": [
+      "synthetic-equity-source"
+    ],
+    "status": "not_required"
+  },
+  "points_available": "11",
+  "points_awarded": "11",
+  "proposed_next_actions": [
+    "The evidence supports further consideration, not trade execution."
+  ],
+  "quality_classification": "quality",
+  "quality_model": "equity_quality_v1",
+  "score_percent": "100",
+  "score_status": "complete",
+  "source_assessments": [
+    {
+      "age_days": 0,
+      "as_of": "2026-01-31",
+      "cache_permitted": true,
+      "freshness": "fresh",
+      "limitations": [
+        "Synthetic evidence for deterministic examples only."
+      ],
+      "methodology": "Synthetic fundamentals and valuation values.",
+      "provider": "SteadyFolio Synthetic Equity Provider",
+      "redistribution_permitted": true,
+      "reference": "examples/equity-evidence.example.json",
+      "retrieved_at": "2026-01-31T18:00:00+00:00",
+      "source_id": "synthetic-equity-source",
+      "terms_reference": "synthetic://terms"
+    }
+  ],
+  "source_ids": [
+    "synthetic-equity-source"
+  ],
+  "valuation": {
+    "currency": "EUR",
+    "current_price": "100",
+    "fair_value": "125",
+    "limitations": [],
+    "margin_of_safety": "0.2",
+    "selected_method": "dcf",
+    "source_ids": [
+      "synthetic-equity-source"
+    ],
+    "status": "acceptable"
+  }
+}
