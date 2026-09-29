@@ -432,7 +432,11 @@ archive or marketplace.
   content against source terms. Queries contain only public instrument/source
   identifiers and dates, one pass is capped at four searches and eight documents,
   and unknown cache terms default to citation metadata only or no persistence.
-  Missing or conflicting current evidence still ends in `insufficient_evidence`.
+  Research records are created, saved, and listed only through typed public APIs
+  with schema, ignored-target, symlink, and exclusive-create validation. Evidence
+  that permits current use and citation but prohibits retention may remain in
+  memory for the current review; missing, unusable, unverifiable, or conflicting
+  current evidence still ends in `insufficient_evidence`.
 
 ## D-028: Capture durable context as append-only classified private records
 
@@ -448,6 +452,8 @@ archive or marketplace.
 - **Consequence:** This standing authorization covers creation of new context and
   research records only. It does not authorize saving a review, changing holdings,
   transactions, theses, targets, or policy, or overwriting any private output.
+  Typed public create/save/list APIs choose collision-resistant filenames, reject
+  unsafe or non-ignored targets, and verify that a superseded context record exists.
 
 ## D-029: Generalize bounded host-native perspectives for consequential reviews
 
@@ -456,8 +462,9 @@ archive or marketplace.
   least two independent Codex subagent roles plus one later critic for supported
   analyses that are consequential, uncertain, evidence-conflicted, or materially
   bias-sensitive. Equity review retains its strict four-specialist schema. Other
-  routes use role-minimal packets and disclose their host execution in the answer
-  without claiming equity-schema validation. Routine deterministic contributions
+  routes use a separate strict generic packet/result schema with claim-level
+  evidence references, host-owned execution metadata, and validated critic input.
+  Routine deterministic contributions
   remain single-threaded unless a material conflict is explicitly escalated.
 - **Why:** Independent contexts can expose different evidence, risk, and
   portfolio-fit failures, while using agents indiscriminately adds cost and does
@@ -468,7 +475,9 @@ archive or marketplace.
   conversation history; if packet validation or packet-only isolation is
   unavailable, the workflow falls back before spawning. Each role runs once,
   followed by one critic and one synthesis, with no retry or debate loop. Agent
-  artifacts remain memory-only without immediate persistence approval. Equity
+  artifacts remain memory-only without immediate persistence approval. Malformed
+  generic results never enter critic or synthesis input, and fewer than two valid
+  generic specialists forces the sequential fallback. Equity
   fallback is `deterministic_only`; non-equity same-thread fallback is
   `single_thread_sequential`. Agreement is never evidence.
 

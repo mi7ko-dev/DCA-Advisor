@@ -56,7 +56,9 @@ The equity route permits one execution for each of four specialists, one critic
 execution, one final synthesis, and no retries. Other qualifying consequential
 routes use the smallest useful set of two or three specialists plus one critic.
 The lead may perform one host-native research pass after inspecting the private
-cache; specialists never browse. Contribution starts no agents or research unless
-a material conflict or uncertainty is explicitly escalated. Do not retry a missing
+cache; specialists never browse. A routine contribution with a missing or stale
+price, FX rate, approved target, or executable constraint stops without browsing.
+Contribution starts no agents or research unless a material conflict or
+uncertainty beyond the routine calculation is explicitly escalated. Do not retry a missing
 provider, repeat a failed search, or broaden research silently. Report the missing
 evidence and the smallest useful next step.

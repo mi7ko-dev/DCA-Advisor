@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://steadyfolio.example/schemas/durable-context-record.schema.json",
+  "title": "SteadyFolio Append-Only Durable Context Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "record_id", "category", "statement", "recorded_at", "source_kind", "status", "limitations"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "record_id": {"type": "string", "pattern": "^context:[0-9a-f]{32}$"},
+    "category": {"enum": ["confirmed_fact", "user_decision", "temporary_assumption", "proposal", "external_evidence"]},
+    "statement": {"type": "string", "minLength": 1},
+    "recorded_at": {"type": "string", "format": "date-time"},
+    "effective_as_of": {"type": "string", "format": "date"},
+    "source_kind": {"type": "string", "minLength": 1},
+    "source_reference": {"type": "string", "minLength": 1},
+    "status": {"type": "string", "minLength": 1},
+    "limitations": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "review_after": {"type": "string", "format": "date"},
+    "supersedes_record_id": {"type": "string", "pattern": "^context:[0-9a-f]{32}$"}
+  }
+}

@@ -50,10 +50,13 @@ establish adequate evidence within the limit fails closed.
 
 New research-cache and durable-context records may be created automatically below
 the selected ignored `private/` root. They are append-only, minimal, and
-source-labelled. Source terms govern whether content, a derived summary, or only
-citation metadata may be retained. Unknown terms default to citation metadata only
-or no persistence. Both record types use the storage layer's path, symlink,
-ignored/untracked-target, and exclusive-create checks. A proposal or temporary
+source-labelled. The public typed create/save/list APIs are the only supported
+record access path; they validate the record and apply the storage layer's path,
+symlink, ignored/untracked-target, and exclusive-create checks. Source terms govern
+whether a derived summary or only citation metadata may be retained; the generic
+API never stores raw pages. Unknown terms default to citation metadata only or no
+persistence. Evidence that permits current access, analysis, and citation may
+remain in memory for the current review even when retention is prohibited. A proposal or temporary
 assumption remains labelled as such and cannot authorize policy mutation. Existing
 private records are never overwritten without immediate explicit approval.
 
@@ -70,6 +73,13 @@ to browse, use tools, or read files. Generic route packets use explicit field
 allowlists, opaque user-owned identifiers, and a packet-only context with no
 inherited conversation history. If the host cannot guarantee that context or the
 lead cannot validate and redact a packet, no subagent starts.
+
+Generic non-equity packets and results use separate versioned JSON contracts.
+Packet IDs bind packet content; exact-field parsers attach host-owned execution
+metadata and reject unknown fields, unsupported evidence references, uncited
+claims, role drift, or non-isolated execution. The critic packet builder accepts
+only validated specialist results. Fewer than two valid generic specialist results
+forces the sequential fallback instead of a multi-agent claim.
 
 Agent packets and validated results containing real data remain in memory by
 default. With immediate explicit approval, a review artifact may be persisted only

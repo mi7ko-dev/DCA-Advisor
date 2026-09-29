@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
@@ -10,14 +11,22 @@ import subprocess
 import tempfile
 from typing import Any
 
-from .errors import StorageSafetyError, ValidationError
 from .committee_models import CommitteeResult
 from .equity import validate_equity_review_result
 from .equity_models import EquityReviewResult
+from .errors import StorageSafetyError, ValidationError
 from .models import AnalysisResult, ContributionPlan, PortfolioState, to_json_value
 from .portfolio_policy import (
     PortfolioPolicyResult,
     validate_portfolio_policy_result,
+)
+from .private_records import (
+    DurableContextRecord,
+    ResearchCacheRecord,
+    durable_context_record_from_dict,
+    research_cache_record_from_dict,
+    validate_durable_context_record,
+    validate_research_cache_record,
 )
 from .research_models import PortfolioIntelligenceResult, ThesisReviewResult
 from .validation import state_from_dict, state_to_dict
@@ -181,6 +190,47 @@ def _json_text(value: Any) -> str:
     return json.dumps(value, indent=2, ensure_ascii=True, sort_keys=True) + "\n"
 
 
+def _append_only_record_filename(prefix: str, timestamp: str, record_id: str) -> str:
+    parsed = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+    utc = parsed.astimezone(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
+    suffix = record_id.split(":", maxsplit=1)[1]
+    return f"{prefix}-{utc}-{suffix}.json"
+
+
+def _private_record_paths(
+    workspace_root: str | Path,
+    *,
+    category: str,
+    prefix: str,
+) -> tuple[Path, ...]:
+    root = _workspace_root(workspace_root)
+    try:
+        private = _private_root(root, create=False)
+    except FileNotFoundError:
+        return ()
+    directory = private / category
+    if directory.is_symlink():
+        raise StorageSafetyError("A private record directory cannot be a symlink.")
+    if not directory.exists():
+        return ()
+    resolved_directory = directory.resolve(strict=True)
+    if not resolved_directory.is_relative_to(private):
+        raise StorageSafetyError("A private record directory escaped the workspace.")
+    paths: list[Path] = []
+    for candidate in sorted(resolved_directory.glob(f"{prefix}-*.json")):
+        if candidate.is_symlink() or not candidate.is_file():
+            raise StorageSafetyError("A private record file must be a regular file.")
+        paths.append(
+            _safe_target(
+                root,
+                category,
+                candidate.name,
+                create_directories=False,
+            )
+        )
+    return tuple(paths)
+
+
 def _validate_persisted_allocation_versions(
     existing: PortfolioState, replacement: PortfolioState
 ) -> None:
@@ -315,6 +365,96 @@ def save_intelligence_result(
     return _atomic_write_text(
         target, _json_text(to_json_value(result)), overwrite=overwrite
     )
+
+
+def save_research_cache_record(
+    workspace_root: str | Path,
+    record: ResearchCacheRecord,
+) -> Path:
+    """Persist one validated research record without permitting overwrite."""
+
+    if not isinstance(record, ResearchCacheRecord):
+        raise ValidationError("record must be a ResearchCacheRecord.")
+    validate_research_cache_record(record)
+    filename = _append_only_record_filename(
+        "research", record.retrieved_at, record.record_id
+    )
+    target = _safe_target(workspace_root, "research", filename)
+    return _atomic_write_text(
+        target,
+        _json_text(to_json_value(record)),
+        overwrite=False,
+    )
+
+
+def list_research_cache_records(
+    workspace_root: str | Path,
+) -> tuple[ResearchCacheRecord, ...]:
+    """Load validated append-only research records without creating directories."""
+
+    records: list[ResearchCacheRecord] = []
+    for path in _private_record_paths(
+        workspace_root,
+        category="research",
+        prefix="research",
+    ):
+        try:
+            raw = json.loads(path.read_text(encoding="utf-8"))
+            records.append(research_cache_record_from_dict(raw))
+        except (OSError, json.JSONDecodeError, ValidationError) as error:
+            raise ValidationError(
+                "A private research cache record is invalid and cannot be reused."
+            ) from error
+    return tuple(records)
+
+
+def save_durable_context_record(
+    workspace_root: str | Path,
+    record: DurableContextRecord,
+) -> Path:
+    """Persist one classified context record without rewriting prior context."""
+
+    if not isinstance(record, DurableContextRecord):
+        raise ValidationError("record must be a DurableContextRecord.")
+    validate_durable_context_record(record)
+    if record.supersedes_record_id is not None:
+        existing_ids = {
+            item.record_id for item in list_durable_context_records(workspace_root)
+        }
+        if record.supersedes_record_id not in existing_ids:
+            raise ValidationError(
+                "A superseding context record must reference an existing record."
+            )
+    filename = _append_only_record_filename(
+        "context", record.recorded_at, record.record_id
+    )
+    target = _safe_target(workspace_root, "context", filename)
+    return _atomic_write_text(
+        target,
+        _json_text(to_json_value(record)),
+        overwrite=False,
+    )
+
+
+def list_durable_context_records(
+    workspace_root: str | Path,
+) -> tuple[DurableContextRecord, ...]:
+    """Load validated append-only durable context without creating directories."""
+
+    records: list[DurableContextRecord] = []
+    for path in _private_record_paths(
+        workspace_root,
+        category="context",
+        prefix="context",
+    ):
+        try:
+            raw = json.loads(path.read_text(encoding="utf-8"))
+            records.append(durable_context_record_from_dict(raw))
+        except (OSError, json.JSONDecodeError, ValidationError) as error:
+            raise ValidationError(
+                "A private durable context record is invalid and cannot be reused."
+            ) from error
+    return tuple(records)
 
 
 def save_thesis_review(

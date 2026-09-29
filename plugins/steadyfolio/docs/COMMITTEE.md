@@ -70,6 +70,15 @@ notes, source paths, and raw payloads. Every subagent starts with no inherited
 conversation history. If packet validation or packet-only context isolation is not
 available, no agent starts.
 
+The generic path uses `generic-agent-input-packet.schema.json` and
+`generic-specialist-result.schema.json`, both version `1.0`. The lead creates and
+validates content-bound packets, parses each model response with exact fields,
+attaches execution metadata observed by the host, and rejects unsupported roles,
+conclusions, claims, findings, or evidence references. Only validated specialist
+results may enter `build_generic_critic_packet` or final synthesis. If fewer than
+two specialist results survive validation, the route reports
+`single_thread_sequential` instead of claiming a multi-agent review.
+
 If a request contains more than one supported intent, routing stops for
 clarification instead of silently selecting the first keyword match. On sequential
 fallback routes, a critic pass is used only for a material disagreement, not merely

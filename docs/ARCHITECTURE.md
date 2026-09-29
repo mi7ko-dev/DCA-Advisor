@@ -115,9 +115,12 @@ src/
   steadyfolio/
     models.py
     agent_models.py
+    generic_agent_models.py
+    generic_agents.py
     validation.py
     calculations.py
     storage.py
+    private_records.py
     reporting.py
     providers.py
     research_models.py
@@ -295,8 +298,9 @@ deterministic analysis / contribution plan
 ```
 
 The host orchestrator owns the final answer. A routine monthly contribution does
-not trigger research or a critic automatically unless a material conflict or
-uncertainty is escalated. Phase 9 consequential non-equity reviews use the
+not trigger research or a critic automatically; missing or stale price, FX,
+approved-target, or constraint input produces the route stop condition unless a
+material conflict beyond the calculation is explicitly escalated. Phase 9 consequential non-equity reviews use the
 smallest useful set of two or three isolated roles plus one critic. Equity review
 retains its strict four-role packet contract. The lead may perform at most one
 host-native web research pass after inspecting the private cache; specialists do
@@ -433,17 +437,22 @@ trace stores only opaque digests for execution/result correlation.
 
 Phase 9 changes the Codex skill workflow, not the deterministic calculation
 engine or offline `ResearchProvider`. For time-sensitive conclusions, the lead
-first evaluates compatible immutable records below `private/research/`, then uses
+first evaluates compatible immutable records through the public typed list API,
+then uses
 one bounded host-native web research pass when the cache is not fit for purpose.
 Primary sources are preferred, delayed data is labelled, conflicting evidence is
 preserved, and source terms govern what may be cached. The lead records source and
 retrieval dates, methodology, coverage, limitations, freshness basis, and cache
 permission. Queries contain only public identifiers and dates; one pass is bounded
 to four targeted searches and eight source documents. Unknown retention terms
-default to citation metadata only or no persistence. The lead never converts
+default to citation metadata only or no persistence. Evidence may still be used
+only in memory when its terms permit current access, analysis, and citation but
+prohibit retention. The lead never converts
 missing data into a model estimate.
 
-The skill also creates minimal append-only records below `private/context/` for
+Research and context records are created and saved only through typed public APIs
+that validate schemas, choose collision-resistant names, reuse ignored-target and
+symlink checks, and expose no overwrite option. The skill creates minimal append-only records below `private/context/` for
 durable confirmed facts, user decisions, temporary assumptions, proposals, and
 external evidence. Categories remain semantically distinct: a proposal or
 temporary assumption cannot become approved policy through reuse. Corrections add
@@ -455,12 +464,14 @@ the host starts the smallest useful set of at least two isolated specialists and
 one later critic. The lead alone browses and runs deterministic tools; specialists
 receive role-minimal prepared evidence and may not use tools, read files,
 recalculate, or add facts. Equity review keeps the Phase 8 schema and four roles.
-Generic packets use route-specific allowlists, opaque user-owned identifiers, and
-packet-only contexts with no inherited history. Packet-validation or isolation
-failure triggers fallback before spawn, and all agent artifacts stay memory-only
-without immediate persistence approval. Other routes disclose actual host
-executions in the final response but do not claim that the equity envelope
-validated them. If subagents are unavailable, equity reports
+Generic packets and outputs use separate version `1.0` schemas, route-specific
+role and aggregate allowlists, content-bound packet IDs, opaque user-owned
+identifiers, and packet-only contexts with no inherited history. Exact-field
+parsers attach host-owned execution metadata and validate every evidence reference
+before critic or synthesis use. The generic critic builder accepts only validated
+specialist results. Packet, result, or isolation failure triggers fallback, and all
+agent artifacts stay memory-only without immediate persistence approval. Fewer
+than two valid generic specialists cannot be reported as multi-agent. If subagents are unavailable, equity reports
 `deterministic_only`; non-equity routes report `single_thread_sequential`. Neither
 fallback is called multi-agent.
 

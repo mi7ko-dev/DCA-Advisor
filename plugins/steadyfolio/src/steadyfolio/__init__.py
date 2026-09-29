@@ -25,6 +25,20 @@ from .equity_reporting import (
     render_portfolio_policy_report,
 )
 from .intelligence import analyze_portfolio_intelligence
+from .generic_agent_models import (
+    GenericAgentAggregate,
+    GenericAgentInputPacket,
+    GenericAgentResult,
+    GenericAgentSourceReference,
+)
+from .generic_agents import (
+    build_generic_critic_packet,
+    create_generic_agent_packet,
+    generic_agent_packet_from_dict,
+    generic_agent_result_from_dict,
+    validate_generic_agent_packet,
+    validate_generic_agent_result,
+)
 from .multi_agent import (
     build_critic_packet,
     detect_single_lens_equity_defects,
@@ -47,6 +61,16 @@ from .portfolio_policy import (
     portfolio_policy_from_dict,
     validate_portfolio_policy_result,
 )
+from .private_records import (
+    DurableContextRecord,
+    ResearchCacheRecord,
+    create_durable_context_record,
+    create_research_cache_record,
+    durable_context_record_from_dict,
+    research_cache_record_from_dict,
+    validate_durable_context_record,
+    validate_research_cache_record,
+)
 from .providers import ResearchProvider, StaticResearchProvider
 from .research_models import *  # noqa: F403
 from .research_validation import (
@@ -57,6 +81,8 @@ from .research_validation import (
 )
 from .storage import (
     initialize_workspace,
+    list_durable_context_records,
+    list_research_cache_records,
     load_state,
     save_intelligence_result,
     save_committee_review,
@@ -64,6 +90,8 @@ from .storage import (
     save_state,
     save_thesis_review,
     save_portfolio_policy_result,
+    save_durable_context_record,
+    save_research_cache_record,
 )
 from .thesis import review_investment_thesis
 from .validation import state_from_dict, state_to_dict, validate_state
@@ -72,6 +100,12 @@ __all__ = [
     "analyze_portfolio",
     "plan_contribution",
     "analyze_portfolio_intelligence",
+    "create_generic_agent_packet",
+    "generic_agent_packet_from_dict",
+    "generic_agent_result_from_dict",
+    "validate_generic_agent_packet",
+    "validate_generic_agent_result",
+    "build_generic_critic_packet",
     "prepare_multi_agent_equity_review",
     "build_critic_packet",
     "detect_single_lens_equity_defects",
@@ -95,12 +129,22 @@ __all__ = [
     "route_request",
     "run_committee_workflow",
     "initialize_workspace",
+    "create_research_cache_record",
+    "create_durable_context_record",
+    "research_cache_record_from_dict",
+    "durable_context_record_from_dict",
+    "validate_research_cache_record",
+    "validate_durable_context_record",
+    "list_research_cache_records",
+    "list_durable_context_records",
     "load_state",
     "save_state",
     "save_intelligence_result",
     "save_committee_review",
     "save_equity_review",
     "save_portfolio_policy_result",
+    "save_research_cache_record",
+    "save_durable_context_record",
     "save_thesis_review",
     "state_from_dict",
     "state_to_dict",
@@ -122,4 +166,10 @@ __all__ = [
     "PortfolioPolicy",
     "FactorGroupAssessment",
     "PortfolioPolicyResult",
+    "GenericAgentAggregate",
+    "GenericAgentInputPacket",
+    "GenericAgentResult",
+    "GenericAgentSourceReference",
+    "ResearchCacheRecord",
+    "DurableContextRecord",
 ]

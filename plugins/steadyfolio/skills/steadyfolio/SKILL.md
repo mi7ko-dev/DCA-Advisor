@@ -37,8 +37,10 @@ files are absent. Real user state belongs in the active project's ignored
    [references/workflows.md](references/workflows.md) for route-specific tools and
    stop conditions.
 2. Validate state and inputs before analysis. Never infer missing holdings, prices,
-   FX, targets, source dates, or coverage. When a conclusion depends on
-   time-sensitive external facts, read
+   FX, targets, source dates, or coverage. A routine contribution stops on a
+   missing or stale price, FX rate, approved target, or executable constraint; it
+   does not browse unless a material conflict or uncertainty is explicitly
+   escalated. For other conclusions that depend on time-sensitive external facts, read
    [references/research-and-context.md](references/research-and-context.md), inspect
    the private cache first, and perform one bounded host-native web research pass
    automatically when the cache is absent, stale, contradictory, or materially
@@ -61,10 +63,12 @@ files are absent. Real user state belongs in the active project's ignored
    critic pass, one final synthesis, and no retry or debate loop. The lead owns
    browsing; specialists receive only prepared evidence and do not browse, read
    files, call tools, recalculate values, or add facts.
-7. Create new append-only research-cache and durable-context records below the
-   selected ignored `private/` workspace as described in the reference. This
-   standing behavior does not authorize overwriting an existing private result or
-   mutating portfolio state.
+7. Create and inspect append-only research-cache and durable-context records only
+   through the public `create_*`, `save_*`, and `list_*` APIs named in the
+   reference. They enforce validation, ignored-target and symlink checks, and
+   exclusive creation below the selected `private/` workspace. This standing
+   behavior does not authorize overwriting an existing private result or mutating
+   portfolio state.
 8. Format the answer using
    [references/response-contract.md](references/response-contract.md).
 

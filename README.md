@@ -4,8 +4,8 @@ SteadyFolio is a local-first portfolio-maintenance engine and Codex skill for
 contribution-based investors. It turns validated, dated inputs into reproducible
 portfolio analysis, buy-only contribution plans, evidence-limited investment
 reviews, and explicit policy checks. The current release is `0.2.1`.
-The current development version is `0.3.0`; the latest locally verified release
-archive remains `0.2.1` until a separate release instruction.
+The current development version is `0.3.1`; its locally verified candidate archive
+is not published or declared released.
 
 SteadyFolio is designed to make the process inspectable: calculations are
 deterministic, missing data stays missing, sources and dates remain attached to
@@ -44,13 +44,17 @@ For a time-sensitive review, the lead checks the private cache and performs at m
 one foreground host-native research pass when the available evidence is not fit
 for purpose. Primary sources, source dates, retrieval dates, limitations, freshness
 basis, and cache terms remain explicit. Delayed data is never described as
-real-time.
+real-time. A routine contribution stops on missing or stale price, FX,
+approved-target, or constraint data instead of browsing unless a material conflict
+beyond the calculation is explicitly escalated.
 
 For an equity review, the lead runs the deterministic review once. On a supported
 Codex host it then sends immutable, role-minimal packets to four isolated
 specialists and one later critic before producing one synthesis. Other qualifying
 reviews use the smallest useful set of two or three specialists plus one critic.
-Agent agreement is not evidence. If native subagents are unavailable, SteadyFolio
+Generic packets and outputs have strict versioned schemas, content-bound packet
+IDs, exact-field parsers, and claim-level evidence validation before critic or
+synthesis use. Agent agreement is not evidence. If native subagents are unavailable, SteadyFolio
 reports a deterministic or sequential fallback.
 
 Subagents receive validated role-specific allowlisted packets in a context without
@@ -166,11 +170,14 @@ For real data, place the inputs under an ignored `private/` workspace in the
 active project. The skill stops for missing holdings, prices, FX rates, target
 versions, source dates, or evidence coverage rather than inventing them.
 
-When current evidence is material, the skill checks `private/research/` before
-browsing and creates a new immutable cache record only when refresh is needed. It
-also records durable conversation context under `private/context/` without a
-separate save request. Neither behavior permits overwriting an existing record or
-changing approved portfolio state.
+When current evidence is material, the skill checks typed records under
+`private/research/` before browsing and creates a new immutable cache record only
+when refresh is needed. It also records durable conversation context under
+`private/context/` without a separate save request. Public create/save/list APIs
+validate both record types and enforce ignored-target, symlink, and exclusive-create
+checks. Evidence may remain in memory for the current review when source terms
+permit use but prohibit retention. Neither behavior permits overwriting an existing
+record or changing approved portfolio state.
 
 ## Privacy and security
 
@@ -226,7 +233,7 @@ Build the plugin only outside the repository, validate it, and compare it with t
 tracked mirror:
 
 ```powershell
-$buildRoot = Join-Path $env:TEMP "steadyfolio-plugin-0.3.0"
+$buildRoot = Join-Path $env:TEMP "steadyfolio-plugin-0.3.1"
 python tools/build_plugin.py --output $buildRoot
 python path\to\plugin-creator\scripts\validate_plugin.py "$buildRoot\plugins\steadyfolio"
 ```
@@ -234,7 +241,7 @@ python path\to\plugin-creator\scripts\validate_plugin.py "$buildRoot\plugins\ste
 Create the deterministic installation archive outside the repository:
 
 ```powershell
-$archive = Join-Path $env:TEMP "steadyfolio-0.3.0.zip"
+$archive = Join-Path $env:TEMP "steadyfolio-0.3.1.zip"
 python tools/build_release.py --output $archive
 Get-FileHash -Algorithm SHA256 -LiteralPath $archive
 ```
