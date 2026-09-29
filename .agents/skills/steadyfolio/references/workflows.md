@@ -5,9 +5,9 @@ Use only the narrow route needed for the request.
 | Request | Deterministic tools | Review lenses | Critic | Stop condition |
 | --- | --- | --- | --- | --- |
 | Monthly contribution | `analyze_portfolio`, `plan_contribution` | None by default | No | Missing amount/currency, price, FX, approved target, or executable constraints |
-| Portfolio review | `analyze_portfolio`, optional `ResearchProvider.fetch`, `analyze_portfolio_intelligence` | Allocation/diversification and risk/cost/evidence | Once when conclusions materially differ or evidence is incomplete | Missing or stale evidence prevents the requested conclusion |
-| ETF thesis review | `ResearchProvider.fetch`, `review_investment_thesis` | Thesis-fit and evidence-quality | Once when conclusions materially differ | No active thesis, no dated evidence, or stale evidence prevents a conclusion |
-| Fund overlap | `analyze_portfolio`, `ResearchProvider.fetch`, `analyze_portfolio_intelligence` | Allocation/diversification and evidence-quality | Once for incomplete coverage | No dated holdings or incompatible coverage |
+| Portfolio review | `analyze_portfolio`, optional cached or host-researched evidence, `ResearchProvider.fetch` when structured input exists, `analyze_portfolio_intelligence` | Two or three isolated roles for consequential/uncertain reviews; otherwise allocation/diversification and risk/cost/evidence lenses | One isolated critic after agents; otherwise once when conclusions materially differ or evidence is incomplete | Missing or stale evidence prevents the requested conclusion |
+| ETF thesis review | Cached or host-researched evidence, optional `ResearchProvider.fetch`, `review_investment_thesis` | Two or three isolated roles for consequential/uncertain reviews; otherwise thesis-fit and evidence-quality lenses | One isolated critic after agents; otherwise once when conclusions materially differ | No active thesis, no dated evidence, or stale evidence prevents a conclusion |
+| Fund overlap | `analyze_portfolio`, cached or host-researched evidence, optional `ResearchProvider.fetch`, `analyze_portfolio_intelligence` | Two isolated roles for consequential/uncertain reviews; otherwise allocation/diversification and evidence-quality lenses | One isolated critic after agents; otherwise once for incomplete coverage | No dated holdings or incompatible coverage |
 | Individual equity review | `review_equity` exactly once over supplied `EquityReviewInput` | Four host-native Codex specialists: evidence, business quality, valuation, and portfolio risk | One separate critic execution | Identity mismatch, stale or missing required evidence, invalid agent output, runtime failure, failed FCF hard screen, or unavailable/conflicting valuation |
 | Explicit portfolio-policy check | `analyze_portfolio`, `evaluate_portfolio_policy` | None by default | No | Unknown instruments, invalid thresholds, or a denominator other than `invested_positions` |
 
@@ -19,14 +19,18 @@ constraints, and an approved target. Portfolio intelligence requires a structure
 snapshot with provider, source, value date, retrieval date, methodology, freshness,
 terms, and limitations. Thesis review requires an active thesis and dated evidence.
 
-The Phase 5 provider is offline. A provider call reads a supplied structured
-snapshot and is not a live integration. Do not claim current market knowledge from
-it.
+The Python `ResearchProvider` remains offline. A provider call reads a supplied
+structured snapshot and is not a live integration. The Codex lead may separately
+use host-native web research under `research-and-context.md`, then convert only
+attributable facts into validated dated inputs. Do not claim current market
+knowledge from the offline provider or from stale cache.
 
-The equity route is also offline. Require a dated, attributable
-`EquityReviewInput`; never convert unsourced prose or remembered market values into
-structured evidence. A portfolio policy instance contains user-specific thresholds
-and instrument classifications and therefore belongs under ignored `private/`.
+The deterministic equity engine is offline. The Codex lead may use the bounded
+host-research protocol to prepare current public evidence, but must convert it into
+a dated, attributable `EquityReviewInput`; never convert unsourced prose or
+remembered market values into structured evidence. A portfolio policy instance
+contains user-specific thresholds and instrument classifications and therefore
+belongs under ignored `private/`.
 
 ## Interpretation boundaries
 
@@ -48,9 +52,11 @@ and instrument classifications and therefore belongs under ignored `private/`.
 
 ## Bounded execution
 
-The Phase 8 equity route permits one execution for each of four specialists, one
-critic execution, one final synthesis, no retries, and zero live market-data
-calls. Contribution starts no agents. The remaining routes keep the Phase 5 bounds
-of one research pass, one critic pass, one revision, and zero live external calls.
-Do not retry a missing provider or broaden research silently. Report the missing
+The equity route permits one execution for each of four specialists, one critic
+execution, one final synthesis, and no retries. Other qualifying consequential
+routes use the smallest useful set of two or three specialists plus one critic.
+The lead may perform one host-native research pass after inspecting the private
+cache; specialists never browse. Contribution starts no agents or research unless
+a material conflict or uncertainty is explicitly escalated. Do not retry a missing
+provider, repeat a failed search, or broaden research silently. Report the missing
 evidence and the smallest useful next step.

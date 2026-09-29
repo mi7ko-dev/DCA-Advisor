@@ -1,21 +1,23 @@
 # SteadyFolio Codex plugin
 
 This self-contained plugin bundles the public SteadyFolio skill, deterministic
-Python engine, bounded host-native Codex subagent protocol for equity review,
-schemas, documentation, and synthetic examples. It does not include private
-portfolio state, credentials, live-provider access, broker connectivity, trade
-execution, or tax/legal conclusions.
+Python engine, bounded host-native research and subagent protocols, schemas,
+documentation, and synthetic examples. It does not include private portfolio
+state, credentials, a Python live-provider adapter, broker connectivity, trade
+execution, background monitoring, or tax/legal conclusions.
 
-Plugin version: `0.2.1`.
+Plugin version: `0.3.0`.
 
-The contribution route never starts agents. A Phase 8 equity review may start four
-Codex specialist threads and one critic thread, which adds model-token use,
-latency, and hosted processing of each role-minimal evidence packet. If host-native
-subagents are unavailable, the plugin reports a deterministic-only fallback and
-does not call it multi-agent. Packets exclude request and account identifiers,
-source paths, raw provider payloads, and free-form portfolio notes. Source IDs are
-replaced with packet-local opaque aliases; execution metadata is attached by the
-host rather than accepted from model output.
+The contribution route never starts agents by default. A consequential review may
+start two to four Codex specialist threads and one critic thread, which adds
+model-token use, latency, and hosted processing of each role-minimal evidence
+packet. The lead may first perform one foreground web research pass when current
+facts are material, reusing adequate immutable records under `private/research/`.
+If host-native subagents are unavailable, the plugin reports a deterministic or
+sequential fallback and does not call it multi-agent. Packets exclude request and
+account identifiers, source paths, raw provider payloads, and free-form portfolio
+notes. Equity source IDs are replaced with packet-local opaque aliases; execution
+metadata is attached by the host rather than accepted from model output.
 
 ## Install from a repository checkout
 
@@ -31,12 +33,12 @@ codex plugin list
 
 ## Install from the release archive
 
-The archive is named `steadyfolio-0.2.1.zip` and contains the
+The archive is named `steadyfolio-0.3.0.zip` and contains the
 marketplace root directly. From the directory containing the archive:
 
 ```powershell
-$archive = (Resolve-Path .\steadyfolio-0.2.1.zip).Path
-$installRoot = Join-Path (Get-Location) "steadyfolio-0.2.1"
+$archive = (Resolve-Path .\steadyfolio-0.3.0.zip).Path
+$installRoot = Join-Path (Get-Location) "steadyfolio-0.3.0"
 New-Item -ItemType Directory -Path $installRoot | Out-Null
 Expand-Archive -LiteralPath $archive -DestinationPath $installRoot
 Set-Location $installRoot

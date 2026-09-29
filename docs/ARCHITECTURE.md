@@ -275,13 +275,13 @@ deterministic analysis / contribution plan
         |
         +--> non-equity consequential request
                  |
-                 +--> allocation/diversification/ETF lens
-                 +--> risk/cost/constraints lens
-                 +--> current-source research (only when needed)
-                 +--> critic review (only when needed)
+                 +--> private cache inspection
+                 +--> one lead-owned current-source research pass (when needed)
+                 +--> two or three isolated specialist threads (when triggered)
+                 +--> one isolated critic thread
                  |
                  v
-              optional bounded revision and final synthesis
+              one lead synthesis; no vote or retry
 
         +--> equity_review
                  |
@@ -295,12 +295,13 @@ deterministic analysis / contribution plan
 ```
 
 The host orchestrator owns the final answer. A routine monthly contribution does
-not trigger research or a critic automatically. On legacy non-equity routes, a
-critic runs only for a material disagreement; Phase 8 equity review always runs its
-single bounded critic after the four specialists. The implementation permits at
-most one research pass, one critic pass, one revision, and zero live external calls. A broader
-workflow requires a later approved implementation rather than an implicit retry or
-scope expansion.
+not trigger research or a critic automatically unless a material conflict or
+uncertainty is escalated. Phase 9 consequential non-equity reviews use the
+smallest useful set of two or three isolated roles plus one critic. Equity review
+retains its strict four-role packet contract. The lead may perform at most one
+host-native web research pass after inspecting the private cache; specialists do
+not browse. Every agent runs once, with one critic and one synthesis, and there is
+no retry or debate loop.
 
 Phase 8 selects Codex host-native subagents for `equity_review`. The main Codex
 thread is `LeadOrchestrator`; four specialist threads and one critic thread receive
@@ -339,8 +340,9 @@ residual cash to the available amount.
 
 - Live brokers, order placement, credentials, account synchronization, and personal
   finance aggregation.
-- Live market/news research, autonomous browsing, background monitoring, and
-  unbounded multi-agent execution.
+- A Python live market-data provider, real-time feeds, background monitoring, and
+  unbounded multi-agent execution. Phase 9 permits bounded foreground host-native
+  web research only.
 - Tax computation, regulated suitability determinations, and jurisdiction-specific
   recommendations.
 - Efficient-frontier or other estimated optimization, tax-loss harvesting, lot
@@ -358,11 +360,13 @@ compatible-series historical metrics, benchmark comparison, stress windows, sour
 freshness and terms metadata, and non-mutating thesis review. Detailed formulas and
 limitations are in `docs/RESEARCH.md`.
 
-Only the offline synthetic provider is implemented. Live providers, autonomous web
-research, raw-response caching, tax/regulatory conclusions, forecasting, and policy
-mutation remain deferred. A future adapter must review provider terms before using
-or persisting data and must store real user-related responses and outputs below
-`private/`.
+Only the offline synthetic Python provider is implemented. Phase 9 allows the
+Codex lead to perform one bounded foreground web research pass and save permitted
+derived evidence under `private/research/`; this does not turn the provider port
+into a live adapter. Raw-response caching, background monitoring,
+tax/regulatory conclusions, forecasting, and policy mutation remain deferred. A
+future adapter must review provider terms before using or persisting data and must
+store real user-related responses and outputs below `private/`.
 
 ## Phase 5 conversational workflow boundary
 
@@ -424,6 +428,41 @@ latency. The implementation adds no API key, Agents SDK, Agents API client, MCP
 server, or third-party Python dependency. Runtime, attempt, isolation, and raw host
 execution identity are owned by the lead; model output cannot set them, and the
 trace stores only opaque digests for execution/result correlation.
+
+## Phase 9 current-source, context, and broader review boundary
+
+Phase 9 changes the Codex skill workflow, not the deterministic calculation
+engine or offline `ResearchProvider`. For time-sensitive conclusions, the lead
+first evaluates compatible immutable records below `private/research/`, then uses
+one bounded host-native web research pass when the cache is not fit for purpose.
+Primary sources are preferred, delayed data is labelled, conflicting evidence is
+preserved, and source terms govern what may be cached. The lead records source and
+retrieval dates, methodology, coverage, limitations, freshness basis, and cache
+permission. Queries contain only public identifiers and dates; one pass is bounded
+to four targeted searches and eight source documents. Unknown retention terms
+default to citation metadata only or no persistence. The lead never converts
+missing data into a model estimate.
+
+The skill also creates minimal append-only records below `private/context/` for
+durable confirmed facts, user decisions, temporary assumptions, proposals, and
+external evidence. Categories remain semantically distinct: a proposal or
+temporary assumption cannot become approved policy through reuse. Corrections add
+a superseding record instead of rewriting history. This standing persistence
+authority does not cover saved reviews or any portfolio-state mutation.
+
+For consequential, uncertain, conflicting, or bias-sensitive supported reviews,
+the host starts the smallest useful set of at least two isolated specialists and
+one later critic. The lead alone browses and runs deterministic tools; specialists
+receive role-minimal prepared evidence and may not use tools, read files,
+recalculate, or add facts. Equity review keeps the Phase 8 schema and four roles.
+Generic packets use route-specific allowlists, opaque user-owned identifiers, and
+packet-only contexts with no inherited history. Packet-validation or isolation
+failure triggers fallback before spawn, and all agent artifacts stay memory-only
+without immediate persistence approval. Other routes disclose actual host
+executions in the final response but do not claim that the equity envelope
+validated them. If subagents are unavailable, equity reports
+`deterministic_only`; non-equity routes report `single_thread_sequential`. Neither
+fallback is called multi-agent.
 
 ## Verification strategy
 

@@ -2,9 +2,11 @@
 
 ## Active phase
 
-Phase 8 bounded multi-agent equity review and release `0.2.1` are implemented and
-verified in the working tree. The release plugin is installed locally, while the
-source changes and archive are not staged, committed, pushed, or published.
+Phase 9 current-source research, append-only private cache/context, and bounded
+multi-agent review expansion are implemented and verified in the working tree as
+development version `0.3.0`. The latest separately verified installed release and
+archive remain `0.2.1`. The Phase 9 source and plugin mirror are not staged,
+committed, pushed, installed, published, or released.
 
 ## Completed technical work
 
@@ -94,6 +96,36 @@ source changes and archive are not staged, committed, pushed, or published.
   and a defect-code eval that compares detected defects rather than agent votes.
 - Documented hosted Codex processing, role-minimal data transfer, token and latency
   costs, approval boundaries, trace redaction, and inherited-tool limitations.
+- Added automatic one-pass host-native research for material time-sensitive facts,
+  with primary-source preference, explicit dates and limitations, and no real-time
+  claim.
+- Added append-only private research caching and classified durable context under
+  `private/`, with source-term checks, cache freshness decisions, and no overwrite
+  or policy-mutation authority.
+- Added automatic bounded Codex-native specialist perspectives for consequential,
+  uncertain, conflicting, or bias-sensitive non-equity reviews while retaining the
+  strict Phase 8 equity contract and routine-contribution exclusion.
+
+## Phase 9 local verification record
+
+Verification on 2026-09-29 completed with these results:
+
+- Python compilation passed for `src/`, `tests/`, and `tools/`; all 183 unit,
+  integration, privacy, invariant, release, plugin, skill, equity, multi-agent,
+  and repository-safety tests passed.
+- All five synthetic generators reproduced the tracked example tree without a
+  diff.
+- The canonical and bundled skills reported `Skill is valid!`; the tracked plugin
+  reported `Plugin validation passed`; and its bundled runtime imported with an
+  explicit Python 3.11 `src` path and no ambient package assumption.
+- An 88-file allowlisted marketplace was built outside the repository, validated,
+  copied to the tracked mirror, and reproduced exactly by the plugin-package tests.
+- Repository safety passed 13 ignored-path expectations and 12 public-path
+  expectations against 193 tracked files. Gitleaks 8.30.1 passed for available Git
+  history and 197 current public candidate files.
+- No personal plugin reinstall, release archive, stage, commit, push, publication,
+  transaction, holdings change, thesis change, policy mutation, private overwrite,
+  or real user-data operation was performed.
 
 ## Release 0.2.1 local verification record
 
@@ -230,14 +262,21 @@ attest to deleted remote refs, unavailable objects, forks, or private systems.
 - No upstream test suite was executed during the static audit; the review distinguishes inspected test coverage from locally reproduced results.
 - Hook templates are not enabled automatically because an existing local hook workflow must not be replaced without review.
 - The MVP supports ETF and stock positions only, direct or inverse FX pairs only, and does not model an existing portfolio cash balance.
-- Live market-data retrieval, broker connectivity, true independent research agents, tax optimization, rebalancing sales, and a user interface remain outside the implemented boundary.
-- No live research provider is implemented; provider-specific authentication, terms validation, rate limits, caching, and optional live integration tests remain deferred.
+- A Python live market-data provider, guaranteed real-time feed, broker
+  connectivity, tax optimization, rebalancing sales, background monitoring, and a
+  user interface remain outside the implemented boundary.
+- Host-native web research depends on the selected Codex host. No provider-specific
+  authentication, rate-limit integration, raw-response cache, or optional live
+  provider integration test is implemented.
+- Non-equity subagent executions are disclosed in the answer but are not serialized
+  through the equity-specific agent envelope.
 - Look-through data is deliberately partial, historical samples are illustrative, and all metrics are descriptive rather than predictive.
 - Tax and regulatory questions remain unresolved without current jurisdiction-specific primary sources.
 
 ## Next approval gate
 
-Phase 8 is at its approval checkpoint. Any stage, commit, push, personal
-installation, package publication, live-provider work, broker integration, tax
-adapter, transaction recording, policy mutation, or new product scope requires a
-separate explicit instruction. No approval is inferred from this file.
+Phase 9 is at its approval checkpoint. Any stage, commit, push, personal
+installation, release archive, package publication, Python live-provider work,
+broker integration, tax adapter, transaction recording, holdings/thesis/target or
+policy mutation, private overwrite, background monitoring, or new product scope
+requires a separate explicit instruction. No approval is inferred from this file.

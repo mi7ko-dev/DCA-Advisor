@@ -74,8 +74,8 @@ jobs:
 
       - name: Reproduce the deterministic release archive
         run: |
-          first_archive="$RUNNER_TEMP/release-one/steadyfolio-0.2.1.zip"
-          second_archive="$RUNNER_TEMP/release-two/steadyfolio-0.2.1.zip"
+          first_archive="$RUNNER_TEMP/release-one/steadyfolio-0.3.0.zip"
+          second_archive="$RUNNER_TEMP/release-two/steadyfolio-0.3.0.zip"
           python tools/build_release.py --output "$first_archive"
           python tools/build_release.py --output "$second_archive"
           cmp "$first_archive" "$second_archive"

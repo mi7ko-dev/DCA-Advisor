@@ -12,14 +12,16 @@ import subprocess
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 PLUGIN_NAME = "steadyfolio"
 MARKETPLACE_NAME = "steadyfolio-local"
-PLUGIN_VERSION = "0.2.1"
+PLUGIN_VERSION = "0.3.0"
 
 PUBLIC_SOURCE_FILES = (
     "LICENSE",
     "pyproject.toml",
     ".agents/skills/steadyfolio/SKILL.md",
     ".agents/skills/steadyfolio/agents/openai.yaml",
+    ".agents/skills/steadyfolio/references/multi-agent-review.md",
     ".agents/skills/steadyfolio/references/multi-agent-equity-review.md",
+    ".agents/skills/steadyfolio/references/research-and-context.md",
     ".agents/skills/steadyfolio/references/response-contract.md",
     ".agents/skills/steadyfolio/references/workflows.md",
     "docs/CALCULATIONS.md",
@@ -104,8 +106,8 @@ PLUGIN_MANIFEST = {
     "name": PLUGIN_NAME,
     "version": PLUGIN_VERSION,
     "description": (
-        "Deterministic portfolio maintenance plus bounded host-native Codex "
-        "subagents for evidence-limited equity review."
+        "Deterministic portfolio maintenance with current-source research, "
+        "private cache, and bounded host-native Codex perspectives."
     ),
     "author": {
         "name": "mi7ko-dev",
@@ -125,16 +127,20 @@ PLUGIN_MANIFEST = {
     "skills": "./skills/",
     "interface": {
         "displayName": "SteadyFolio",
-        "shortDescription": "Deterministic reviews with bounded equity agents",
+        "shortDescription": "Current-source reviews with bounded agents",
         "longDescription": (
             "Run source-attributed contribution, portfolio, ETF thesis, overlap, "
-            "and evidence-limited equity reviews. Equity review can use bounded "
-            "Codex-native subagents; no workflow executes trades."
+            "and evidence-limited equity reviews. Consequential reviews can use "
+            "current web evidence, private cache, and bounded Codex-native "
+            "subagents; no workflow executes trades."
         ),
         "developerName": "SteadyFolio contributors",
         "category": "Finance",
         "capabilities": ["Interactive"],
-        "defaultPrompt": "Review my portfolio with explicit evidence and limitations.",
+        "defaultPrompt": (
+            "Review my portfolio with current evidence, private cache, explicit "
+            "limitations, and independent perspectives when useful."
+        ),
     },
 }
 
@@ -160,21 +166,23 @@ MARKETPLACE_MANIFEST = {
 PLUGIN_README = f"""# SteadyFolio Codex plugin
 
 This self-contained plugin bundles the public SteadyFolio skill, deterministic
-Python engine, bounded host-native Codex subagent protocol for equity review,
-schemas, documentation, and synthetic examples. It does not include private
-portfolio state, credentials, live-provider access, broker connectivity, trade
-execution, or tax/legal conclusions.
+Python engine, bounded host-native research and subagent protocols, schemas,
+documentation, and synthetic examples. It does not include private portfolio
+state, credentials, a Python live-provider adapter, broker connectivity, trade
+execution, background monitoring, or tax/legal conclusions.
 
 Plugin version: `{PLUGIN_VERSION}`.
 
-The contribution route never starts agents. A Phase 8 equity review may start four
-Codex specialist threads and one critic thread, which adds model-token use,
-latency, and hosted processing of each role-minimal evidence packet. If host-native
-subagents are unavailable, the plugin reports a deterministic-only fallback and
-does not call it multi-agent. Packets exclude request and account identifiers,
-source paths, raw provider payloads, and free-form portfolio notes. Source IDs are
-replaced with packet-local opaque aliases; execution metadata is attached by the
-host rather than accepted from model output.
+The contribution route never starts agents by default. A consequential review may
+start two to four Codex specialist threads and one critic thread, which adds
+model-token use, latency, and hosted processing of each role-minimal evidence
+packet. The lead may first perform one foreground web research pass when current
+facts are material, reusing adequate immutable records under `private/research/`.
+If host-native subagents are unavailable, the plugin reports a deterministic or
+sequential fallback and does not call it multi-agent. Packets exclude request and
+account identifiers, source paths, raw provider payloads, and free-form portfolio
+notes. Equity source IDs are replaced with packet-local opaque aliases; execution
+metadata is attached by the host rather than accepted from model output.
 
 ## Install from a repository checkout
 

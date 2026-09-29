@@ -6,6 +6,12 @@ Phase 7 adds an offline, deterministic individual-equity review and an explicit
 portfolio-policy evaluator. Neither component retrieves live data, connects to a
 broker, computes tax, changes approved targets, or places or records transactions.
 
+Phase 9 may use one bounded Codex lead-owned web research pass to prepare current
+public evidence before calling the offline engine. The resulting
+`EquityReviewInput` must remain dated, attributable, and validated. This does not
+add a live Python provider, guaranteed real-time feed, broker action, or permission
+to fill missing evidence from memory.
+
 Real evidence, policy thresholds, exemptions, classifications, and generated
 reviews belong below the selected workspace's ignored `private/` directory. The
 tracked examples are fully synthetic.

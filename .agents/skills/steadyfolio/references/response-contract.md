@@ -12,6 +12,8 @@ Present these sections distinctly when their content exists:
    statuses, runtime type, provider calls, live market-data calls, critic passes,
    fallback status, and revisions actually used. Render every critic finding with
    its code, severity, description, affected roles, and evidence references.
+8. Private persistence: cache/context records created or reused, their freshness
+   basis, and confirmation that no existing private record was overwritten.
 
 Use exact values from structured engine results. Do not introduce opaque scores,
 confidence percentages, forecasts, unsourced facts, or arithmetic performed by a
@@ -29,7 +31,11 @@ equivalent:
 > Review lenses are sequential interpretations, not independent agents or
 > verification.
 
-For Phase 8 equity review, call the workflow multi-agent only when the runtime is
-`codex_native_subagents` and the trace records separate completed executions. The
-`in_memory_test_backend` is a synthetic contract test. Runtime `none` is a
-deterministic-only fallback.
+Call a workflow multi-agent only when the runtime records separate subagent
+executions. For the strict equity contract this means
+`runtime_type=codex_native_subagents`; `in_memory_test_backend` is a synthetic
+contract test and runtime `none` is `deterministic_only`. For other routes,
+disclose the selected roles and actual host execution status in the answer;
+same-thread model lenses use `single_thread_sequential`, not
+`deterministic_only`. Do not imply that the equity schema validated a generic
+review.

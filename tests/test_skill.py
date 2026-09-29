@@ -41,6 +41,55 @@ class SkillStructureTests(unittest.TestCase):
         self.assertIn('default_prompt: "Use $steadyfolio', content)
         self.assertIn("allow_implicit_invocation: true", content)
 
+    def test_current_source_cache_and_context_contract_is_explicit(self) -> None:
+        skill = SKILL_PATH.read_text(encoding="utf-8")
+        protocol = (
+            SKILL_ROOT / "references" / "research-and-context.md"
+        ).read_text(encoding="utf-8")
+        normalized = " ".join(protocol.split())
+
+        self.assertIn("references/research-and-context.md", skill)
+        self.assertIn("Do not ask for permission to research", skill)
+        self.assertIn("`private/research/`", normalized)
+        self.assertIn("`private/context/`", normalized)
+        self.assertIn("append-only", normalized)
+        self.assertIn("cache and redistribution permission", normalized)
+        self.assertIn("single lead-owned evidence-gathering phase", normalized)
+        self.assertIn("only direct user confirmation", normalized)
+        self.assertIn("at most four targeted search queries", normalized)
+        self.assertIn("eight source documents", normalized)
+        self.assertIn("public instrument identity", normalized)
+        self.assertIn("Unknown or ambiguous cache terms fail closed", normalized)
+        self.assertIn("symlink", normalized)
+        self.assertIn("exclusive-create", normalized)
+        for category in (
+            "confirmed_fact",
+            "user_decision",
+            "temporary_assumption",
+            "proposal",
+            "external_evidence",
+        ):
+            self.assertIn(f"`{category}`", normalized)
+
+    def test_multi_agent_trigger_is_bounded_and_has_a_true_fallback(self) -> None:
+        skill = SKILL_PATH.read_text(encoding="utf-8")
+        protocol = (
+            SKILL_ROOT / "references" / "multi-agent-review.md"
+        ).read_text(encoding="utf-8")
+        normalized = " ".join(protocol.split())
+
+        self.assertIn("references/multi-agent-review.md", skill)
+        self.assertIn("at least two independent Codex subagent roles", normalized)
+        self.assertIn("one critic", normalized)
+        self.assertIn("no retries or debate loop", normalized)
+        self.assertIn("Do not start agents for a routine contribution", normalized)
+        self.assertIn("no true multi-agent run", normalized)
+        self.assertIn("`fork_turns=none`", normalized)
+        self.assertIn("reject every unknown field", normalized)
+        self.assertIn("remain memory-only by default", normalized)
+        self.assertIn("`single_thread_sequential`", normalized)
+        self.assertIn("Broker access and order placement are prohibited", skill)
+
     def test_skill_contains_no_runtime_state_directories(self) -> None:
         forbidden_names = {
             "private",
