@@ -87,6 +87,29 @@ def render_committee_report(
             f"- Fallback: `{result.agent_review.fallback_status}`.",
             f"- Critic findings: {len(result.agent_review.critic_findings)}.",
         ]
+        if result.agent_review.critic_findings:
+            agent_rows.extend(("", "### Critic findings", ""))
+            for index, finding in enumerate(result.agent_review.critic_findings):
+                if index:
+                    agent_rows.append("")
+                affected = (
+                    ", ".join(f"`{item}`" for item in finding.related_roles)
+                    or "None"
+                )
+                references = (
+                    ", ".join(f"`{item}`" for item in finding.evidence_references)
+                    or "None"
+                )
+                agent_rows.extend(
+                    (
+                        f"#### `{finding.code}`",
+                        "",
+                        f"- Severity: `{finding.severity}`.",
+                        f"- Description: {_cell(finding.description)}",
+                        f"- Affected roles: {affected}.",
+                        f"- Evidence references: {references}.",
+                    )
+                )
         execution_disclosure = (
             "- Independent agents were used only when runtime is `codex_native_subagents`; "
             "`in_memory_test_backend` is a contract test, and `none` is a deterministic fallback."

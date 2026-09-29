@@ -2,9 +2,9 @@
 
 ## Supported installation
 
-SteadyFolio supports Python 3.11 or newer and the repo-local Codex skill in this
-repository. It also provides a self-contained local Codex plugin. Neither mode has
-a runtime dependency outside the Python standard library.
+SteadyFolio release `0.2.1` supports Python 3.11 or newer and the repo-local Codex
+skill in this repository. It also provides a self-contained local Codex plugin.
+Neither mode has a runtime dependency outside the Python standard library.
 
 Phase 8 equity review additionally requires a Codex host release with native
 subagents enabled. It does not require an OpenAI API key or Agents SDK dependency.
@@ -34,9 +34,10 @@ bundled `src`-layout package.
 
 ```powershell
 $pluginRoot = (Resolve-Path .\plugins\steadyfolio).Path
-py -3.11 -S -c "import sys; sys.path.insert(0, r'$pluginRoot\src'); import steadyfolio; assert callable(steadyfolio.run_committee_workflow); assert callable(steadyfolio.prepare_multi_agent_equity_review)"
+py -3.11 -B -S -c "import sys; sys.path.insert(0, r'$pluginRoot\src'); import steadyfolio; assert callable(steadyfolio.run_committee_workflow); assert callable(steadyfolio.prepare_multi_agent_equity_review)"
 codex plugin marketplace add .
 codex plugin add steadyfolio@steadyfolio-local
+codex plugin list
 ```
 
 Start a new Codex thread after installation. The plugin manifest and skill pass the
@@ -44,6 +45,29 @@ bundled validators. The installed skill resolves its plugin runtime root and app
 the same explicit `src` bootstrap before direct imports, so it does not depend on a
 separate SteadyFolio installation or ambient `PYTHONPATH`. A general ChatGPT host,
 MCP service, and clean-machine cross-platform installation are not claimed.
+
+To install the `steadyfolio-0.2.1.zip` release, extract it into a new empty
+directory. The archive root already contains `.agents/plugins/marketplace.json`
+and `plugins/steadyfolio/`:
+
+```powershell
+$archive = (Resolve-Path .\steadyfolio-0.2.1.zip).Path
+$installRoot = Join-Path (Get-Location) "steadyfolio-0.2.1"
+New-Item -ItemType Directory -Path $installRoot | Out-Null
+Expand-Archive -LiteralPath $archive -DestinationPath $installRoot
+Set-Location $installRoot
+$pluginRoot = (Resolve-Path .\plugins\steadyfolio).Path
+py -3.11 -B -S -c "import sys; sys.path.insert(0, r'$pluginRoot\src'); import steadyfolio; assert callable(steadyfolio.run_committee_workflow); assert callable(steadyfolio.prepare_multi_agent_equity_review)"
+codex plugin marketplace add .
+codex plugin add steadyfolio@steadyfolio-local
+codex plugin list
+```
+
+For an update, pull the new repository release or extract the new archive into a
+new directory, register that marketplace root, and rerun `codex plugin add`. Start
+a new Codex thread after every install or update. During same-version local
+development, use the Codex `plugin-creator` cache-buster helper before reinstalling,
+then restore the canonical manifest; never commit a `+codex.*` suffix.
 
 No environment variable or credential is required for the implemented offline
 core. Do not add broker or provider keys for this version. If a future adapter is

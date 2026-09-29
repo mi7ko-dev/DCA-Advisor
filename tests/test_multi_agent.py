@@ -15,12 +15,15 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPOSITORY_ROOT / "src"))
 
 from steadyfolio.agent_models import (  # noqa: E402
+    AGENT_INPUT_PACKET_VERSION,
     IN_MEMORY_TEST_RUNTIME,
+    SPECIALIST_RESULT_VERSION,
     AgentExecutionRecord,
     PortfolioRiskContext,
 )
 from steadyfolio.committee import run_committee_workflow  # noqa: E402
 from steadyfolio.committee_models import CommitteeRequest  # noqa: E402
+from steadyfolio.committee_reporting import render_committee_report  # noqa: E402
 from steadyfolio.equity_validation import equity_review_input_from_dict  # noqa: E402
 from steadyfolio.multi_agent import (  # noqa: E402
     AgentBackendResponse,
@@ -34,6 +37,7 @@ from steadyfolio.multi_agent import (  # noqa: E402
     run_deterministic_equity_fallback,
     run_multi_agent_equity_review,
     specialist_result_from_dict,
+    validate_specialist_result,
 )
 from steadyfolio.errors import ValidationError  # noqa: E402
 from steadyfolio.models import to_json_value  # noqa: E402
@@ -100,7 +104,7 @@ def _result_payload(
             }
         ]
     return {
-        "schema_version": "1.0",
+        "schema_version": SPECIALIST_RESULT_VERSION,
         "packet_id": packet.packet_id,
         "role": packet.role,
         "conclusion": conclusion,
@@ -178,6 +182,15 @@ class MultiAgentEquityReviewTests(unittest.TestCase):
 
         self.assertEqual(set(packet_schema["required"]), set(to_json_value(packet)))
         self.assertEqual(
+            packet_schema["properties"]["schema_version"]["const"],
+            AGENT_INPUT_PACKET_VERSION,
+        )
+        self.assertEqual(
+            specialist_schema["$defs"]["agentOutput"]["properties"]
+            ["schema_version"]["const"],
+            SPECIALIST_RESULT_VERSION,
+        )
+        self.assertEqual(
             set(specialist_schema["$defs"]["agentOutput"]["required"]),
             set(payload),
         )
@@ -252,18 +265,76 @@ class MultiAgentEquityReviewTests(unittest.TestCase):
 
         self.assertEqual(
             {item.source_id for item in packets["business_quality"].sources},
-            {"synthetic-equity-source"},
+            {"source-ref:001"},
         )
         self.assertEqual(
             {item.source_id for item in packets["valuation"].sources},
-            {"synthetic-valuation-source"},
+            {"source-ref:001"},
         )
         self.assertEqual(
             {item.source_id for item in packets["evidence"].sources},
-            {"synthetic-equity-source", "synthetic-valuation-source"},
+            {"source-ref:001", "source-ref:002"},
         )
         self.assertFalse(
             hasattr(packets["evidence"].sources[0], "reference")
+        )
+
+    def test_source_ids_are_pseudonymized_before_packet_transfer(self) -> None:
+        state, _, request = _inputs()
+        raw = json.loads(
+            json.dumps(_read(EXAMPLES / "equity-evidence.example.json")).replace(
+                "synthetic-equity-source", "broker-account-12345"
+            )
+        )
+        private_input = equity_review_input_from_dict(raw)
+
+        prepared = prepare_multi_agent_equity_review(request, state, private_input)
+        serialized = json.dumps(
+            [to_json_value(packet) for packet in prepared.specialist_packets],
+            sort_keys=True,
+        )
+
+        self.assertNotIn("broker-account-12345", serialized)
+        self.assertIn("source-ref:001", serialized)
+        for packet in prepared.specialist_packets:
+            source_aliases = {item.source_id for item in packet.sources}
+            for fact in packet.facts:
+                self.assertFalse(
+                    "broker-account-12345" in fact.evidence_references
+                )
+            self.assertTrue(
+                source_aliases <= set(packet.allowed_evidence_references)
+            )
+
+    def test_packet_id_is_bound_to_canonical_packet_contents(self) -> None:
+        state, equity_input, request = _inputs()
+        low_weight = replace(_portfolio_context(), direct_weight=Decimal("0.05"))
+        high_weight = replace(_portfolio_context(), direct_weight=Decimal("0.95"))
+
+        first = prepare_multi_agent_equity_review(
+            request, state, equity_input, portfolio_context=low_weight
+        )
+        repeated = prepare_multi_agent_equity_review(
+            request, state, equity_input, portfolio_context=low_weight
+        )
+        changed = prepare_multi_agent_equity_review(
+            request, state, equity_input, portfolio_context=high_weight
+        )
+        first_packets = {item.role: item for item in first.specialist_packets}
+        repeated_packets = {item.role: item for item in repeated.specialist_packets}
+        changed_packets = {item.role: item for item in changed.specialist_packets}
+
+        self.assertEqual(
+            first_packets["portfolio_risk"].packet_id,
+            repeated_packets["portfolio_risk"].packet_id,
+        )
+        self.assertNotEqual(
+            first_packets["portfolio_risk"].packet_id,
+            changed_packets["portfolio_risk"].packet_id,
+        )
+        self.assertEqual(
+            first_packets["evidence"].packet_id,
+            changed_packets["evidence"].packet_id,
         )
 
     def test_agreement_cannot_override_insufficient_deterministic_evidence(self) -> None:
@@ -382,6 +453,55 @@ class MultiAgentEquityReviewTests(unittest.TestCase):
         )
         self.assertEqual(evidence_record.status, "rejected")
         self.assertEqual(result.agent_review.fallback_status, "partial_agent_failure")
+
+    def test_supporting_specialist_requires_at_least_one_claim(self) -> None:
+        state, equity_input, request = _inputs()
+        packet = prepare_multi_agent_equity_review(
+            request, state, equity_input
+        ).specialist_packets[0]
+        payload = _result_payload(packet)
+        payload["claims"] = []
+
+        parsed = _parse_result(packet, payload)
+        with self.assertRaisesRegex(ValidationError, "requires a claim"):
+            validate_specialist_result(
+                packet, parsed, runtime_type=IN_MEMORY_TEST_RUNTIME
+            )
+
+        def empty_support(candidate):
+            candidate_payload = _result_payload(candidate)
+            if candidate.role != "critic":
+                candidate_payload["claims"] = []
+            return candidate_payload
+
+        result = run_multi_agent_equity_review(
+            request,
+            state,
+            equity_input,
+            FakeAgentBackend(
+                {
+                    role: empty_support
+                    for role in (
+                        "evidence",
+                        "business_quality",
+                        "valuation",
+                        "portfolio_risk",
+                        "critic",
+                    )
+                }
+            ),
+        )
+        self.assertNotEqual(result.agent_review.status, "complete")
+        self.assertEqual(
+            result.agent_review.fallback_status, "partial_agent_failure"
+        )
+        self.assertTrue(
+            all(
+                record.status == "rejected"
+                for record in result.agent_review.executions
+                if record.role != "critic"
+            )
+        )
 
     def test_malformed_output_fails_closed(self) -> None:
         state, equity_input, request = _inputs()
@@ -536,6 +656,15 @@ class MultiAgentEquityReviewTests(unittest.TestCase):
             result.agent_review.critic_findings[0].code,
             "unsupported-overstatement",
         )
+        report = render_committee_report(result)
+        self.assertIn("### Critic findings", report)
+        self.assertIn("`unsupported-overstatement`", report)
+        self.assertIn("- Severity: `blocking`.", report)
+        self.assertIn(
+            "A specialist conclusion is stronger than its cited fact.", report
+        )
+        self.assertIn("- Affected roles: `business_quality`.", report)
+        self.assertIn("- Evidence references:", report)
 
     def test_agent_interpretation_cannot_override_engine(self) -> None:
         state, equity_input, request = _inputs()
@@ -735,7 +864,16 @@ class MultiAgentEquityReviewTests(unittest.TestCase):
                         "evidence_references": [
                             packet.allowed_evidence_references[0]
                         ],
-                    }
+                    },
+                    {
+                        "code": "invented-defect",
+                        "severity": "warning",
+                        "description": "Synthetic unexpected critic finding.",
+                        "related_roles": ["critic"],
+                        "evidence_references": [
+                            packet.allowed_evidence_references[0]
+                        ],
+                    },
                 ],
             )
 
@@ -760,6 +898,7 @@ class MultiAgentEquityReviewTests(unittest.TestCase):
             evaluation.newly_detected_defects,
             ("missing-portfolio-coverage",),
         )
+        self.assertEqual(evaluation.unexpected_defects, ("invented-defect",))
         self.assertEqual(evaluation.missed_defects, ())
         self.assertIn("not evidence", evaluation.comparison_basis)
 

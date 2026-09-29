@@ -304,7 +304,9 @@ scope expansion.
 
 Phase 8 selects Codex host-native subagents for `equity_review`. The main Codex
 thread is `LeadOrchestrator`; four specialist threads and one critic thread receive
-immutable schema `1.0` packets and return strict schema `1.0` results. Local Python
+immutable schema `1.1` packets and return strict schema `1.1` results. Packet IDs
+bind a canonical digest of the complete packet content, and caller-provided source
+IDs are replaced with packet-local opaque aliases. Local Python
 prepares and validates contracts but never impersonates an agent. A host without
 subagent controls returns `runtime_type=none` and
 `fallback_status=deterministic_only`. Deterministic tests and source provenance

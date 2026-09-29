@@ -117,3 +117,12 @@ Mutation performed: no.
 - Agent status: `limited`.
 - Fallback: `not_used`.
 - Critic findings: 1.
+
+### Critic findings
+
+#### `quality-valuation-disagreement`
+
+- Severity: `warning`.
+- Description: Business quality and valuation support different bounded actions.
+- Affected roles: `business_quality`, `valuation`.
+- Evidence references: `equity-review:synthetic-compute-company:2026-01-31`.

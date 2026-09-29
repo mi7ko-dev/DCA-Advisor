@@ -8,8 +8,9 @@
     "newly_detected_defects": [
       "quality-valuation-disagreement"
     ],
-    "schema_version": "1.0",
-    "single_lens_detected_defects": []
+    "schema_version": "1.1",
+    "single_lens_detected_defects": [],
+    "unexpected_defects": []
   },
   "synthetic": true
 }

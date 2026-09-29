@@ -6,8 +6,8 @@ from dataclasses import dataclass
 from decimal import Decimal
 
 
-AGENT_INPUT_PACKET_VERSION = "1.0"
-SPECIALIST_RESULT_VERSION = "1.0"
+AGENT_INPUT_PACKET_VERSION = "1.1"
+SPECIALIST_RESULT_VERSION = "1.1"
 MULTI_AGENT_REVIEW_VERSION = "1.0"
 
 SPECIALIST_AGENT_ROLES = (
@@ -150,5 +150,6 @@ class ReviewModeEvaluation:
     single_lens_detected_defects: tuple[str, ...]
     multi_agent_detected_defects: tuple[str, ...]
     newly_detected_defects: tuple[str, ...]
+    unexpected_defects: tuple[str, ...]
     missed_defects: tuple[str, ...]
     comparison_basis: str

@@ -107,6 +107,7 @@ class PluginPackageTests(unittest.TestCase):
         result = subprocess.run(
             [
                 sys.executable,
+                "-B",
                 "-S",
                 "-c",
                 (
@@ -124,6 +125,7 @@ class PluginPackageTests(unittest.TestCase):
             text=True,
         )
         self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(tuple(self.plugin_root.rglob("__pycache__")), ())
 
     def test_builder_rejects_repository_local_output(self) -> None:
         output = REPOSITORY_ROOT / ".plugin-output-must-not-be-created"

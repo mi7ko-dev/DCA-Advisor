@@ -49,9 +49,10 @@ separate Codex model contexts. This is hosted processing and consumes additional
 tokens and latency. It is not a live market-data integration and requires no API
 key in SteadyFolio. The approved packet boundary excludes credentials, request or
 account identifiers, transaction history, free-form private notes, raw provider
-payloads, source paths, and unrelated portfolio fields. Source metadata is reduced
-to identifiers, dates, and freshness. Portfolio context is a typed contract of
-aggregate weights, policy limits, and counts only.
+payloads, source paths, and unrelated portfolio fields. Caller-provided source IDs
+are replaced with packet-local opaque aliases; source metadata is reduced to those
+aliases, dates, and freshness. Portfolio context is a typed contract of aggregate
+weights, policy limits, and counts only.
 
 Agent packets and validated results containing real data remain in memory or under
 the selected ignored `private/` root. Public execution traces contain only role,

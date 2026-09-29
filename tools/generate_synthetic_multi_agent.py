@@ -14,6 +14,7 @@ sys.path.insert(0, str(REPOSITORY_ROOT / "src"))
 
 from steadyfolio.agent_models import (  # noqa: E402
     IN_MEMORY_TEST_RUNTIME,
+    SPECIALIST_RESULT_VERSION,
     PortfolioRiskContext,
 )
 from steadyfolio.committee_models import CommitteeRequest  # noqa: E402
@@ -82,7 +83,7 @@ def _payload(packet) -> dict[str, object]:
                 }
             )
     return {
-        "schema_version": "1.0",
+        "schema_version": SPECIALIST_RESULT_VERSION,
         "packet_id": packet.packet_id,
         "role": packet.role,
         "conclusion": conclusion,

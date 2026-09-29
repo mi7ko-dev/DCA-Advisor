@@ -90,6 +90,19 @@ the tracked mirror. `private/`, `.git/`, credentials, caches, local outputs, tes
 and repository history are not package inputs. A local build or installation is
 not permission to publish it.
 
+Create a reproducible release archive only at an outside-repository path whose
+filename matches the current release:
+
+```powershell
+python tools/build_release.py --output <outside-directory>\steadyfolio-0.2.1.zip
+```
+
+The archive builder first creates the allowlisted marketplace in a temporary
+directory, then writes sorted entries with fixed timestamps and file modes. Build
+it twice and compare both bytes and SHA-256 digests before distribution. Validate
+and smoke-test a clean extracted copy. The archive remains an untracked local
+artifact unless publication is separately authorized.
+
 The project license is MIT. The current implementation has no runtime third-party
 dependency and contains no copied upstream code, so no third-party notice file is
 required. Any future copied or adapted code needs a file-level provenance and

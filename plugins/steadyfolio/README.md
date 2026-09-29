@@ -6,13 +6,16 @@ schemas, documentation, and synthetic examples. It does not include private
 portfolio state, credentials, live-provider access, broker connectivity, trade
 execution, or tax/legal conclusions.
 
+Plugin version: `0.2.1`.
+
 The contribution route never starts agents. A Phase 8 equity review may start four
 Codex specialist threads and one critic thread, which adds model-token use,
 latency, and hosted processing of each role-minimal evidence packet. If host-native
 subagents are unavailable, the plugin reports a deterministic-only fallback and
 does not call it multi-agent. Packets exclude request and account identifiers,
-source paths, raw provider payloads, and free-form portfolio notes; execution
-metadata is attached by the host rather than accepted from model output.
+source paths, raw provider payloads, and free-form portfolio notes. Source IDs are
+replaced with packet-local opaque aliases; execution metadata is attached by the
+host rather than accepted from model output.
 
 ## Install from a repository checkout
 
@@ -20,10 +23,33 @@ From the repository root:
 
 ```powershell
 $pluginRoot = (Resolve-Path .\plugins\steadyfolio).Path
-py -3.11 -S -c "import sys; sys.path.insert(0, r'$pluginRoot\src'); import steadyfolio; assert callable(steadyfolio.run_committee_workflow); assert callable(steadyfolio.prepare_multi_agent_equity_review)"
+py -3.11 -B -S -c "import sys; sys.path.insert(0, r'$pluginRoot\src'); import steadyfolio; assert callable(steadyfolio.run_committee_workflow); assert callable(steadyfolio.prepare_multi_agent_equity_review)"
 codex plugin marketplace add .
 codex plugin add steadyfolio@steadyfolio-local
+codex plugin list
 ```
+
+## Install from the release archive
+
+The archive is named `steadyfolio-0.2.1.zip` and contains the
+marketplace root directly. From the directory containing the archive:
+
+```powershell
+$archive = (Resolve-Path .\steadyfolio-0.2.1.zip).Path
+$installRoot = Join-Path (Get-Location) "steadyfolio-0.2.1"
+New-Item -ItemType Directory -Path $installRoot | Out-Null
+Expand-Archive -LiteralPath $archive -DestinationPath $installRoot
+Set-Location $installRoot
+$pluginRoot = (Resolve-Path .\plugins\steadyfolio).Path
+py -3.11 -B -S -c "import sys; sys.path.insert(0, r'$pluginRoot\src'); import steadyfolio; assert callable(steadyfolio.run_committee_workflow); assert callable(steadyfolio.prepare_multi_agent_equity_review)"
+codex plugin marketplace add .
+codex plugin add steadyfolio@steadyfolio-local
+codex plugin list
+```
+
+For an update, replace the checkout or extract the new archive into a new
+directory, register that marketplace root, and rerun `codex plugin add`. Start a
+new Codex thread after every install or update.
 
 The Codex plugin command installs plugin files; it does not `pip install` the
 bundled `src`-layout package. The installed skill resolves its runtime root and

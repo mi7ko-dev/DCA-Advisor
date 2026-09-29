@@ -63,14 +63,22 @@ jobs:
             plugins/steadyfolio "$plugin_marketplace/plugins/steadyfolio"
           (
             cd "$plugin_marketplace/plugins/steadyfolio"
-            python -S -c \
+            python -B -S -c \
               "import sys; from pathlib import Path; sys.path.insert(0, str(Path.cwd() / 'src')); import steadyfolio; assert callable(steadyfolio.run_committee_workflow); assert callable(steadyfolio.review_equity)"
           )
           python -m pip install --disable-pip-version-check --no-deps \
             --target "$plugin_site" \
             "$plugin_marketplace/plugins/steadyfolio"
-          PYTHONPATH="$plugin_site" python -S -c \
+          PYTHONPATH="$plugin_site" python -B -S -c \
             "import steadyfolio; assert callable(steadyfolio.run_committee_workflow); assert callable(steadyfolio.review_equity)"
+
+      - name: Reproduce the deterministic release archive
+        run: |
+          first_archive="$RUNNER_TEMP/release-one/steadyfolio-0.2.1.zip"
+          second_archive="$RUNNER_TEMP/release-two/steadyfolio-0.2.1.zip"
+          python tools/build_release.py --output "$first_archive"
+          python tools/build_release.py --output "$second_archive"
+          cmp "$first_archive" "$second_archive"
 
       - name: Run tests and public-repository safety checks
         run: |

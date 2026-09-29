@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
 import hashlib
+import json
 import re
 from typing import Any, Mapping, Protocol, Sequence
 
@@ -52,7 +53,7 @@ from .models import PortfolioState, decimal_to_string
 
 
 MULTI_AGENT_COMMITTEE_VERSION = "2.0"
-REVIEW_MODE_EVAL_VERSION = "1.0"
+REVIEW_MODE_EVAL_VERSION = "1.1"
 _IDENTIFIER = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$")
 _CONCLUSIONS = {"supports", "limits", "insufficient_evidence", "rejects"}
 _SEVERITIES = {"warning", "blocking"}
@@ -377,6 +378,12 @@ def validate_specialist_result(
     for reference in result.evidence_references:
         _require_identifier(reference, "evidence_references[]")
     claim_ids = tuple(item.claim_id for item in result.claims)
+    if (
+        result.role != CRITIC_AGENT_ROLE
+        and result.conclusion == "supports"
+        and not result.claims
+    ):
+        raise ValidationError("A supporting specialist result requires a claim.")
     if len(set(claim_ids)) != len(claim_ids):
         raise ValidationError("Specialist claim ids must be unique.")
     for claim in result.claims:
@@ -452,13 +459,14 @@ def _role_instructions(role: str) -> tuple[str, ...]:
         "Do not return result_id or execution metadata; the Lead attaches trusted host metadata.",
         "Use only supports, limits, insufficient_evidence, or rejects as conclusion.",
         "Every claim must contain exactly claim_id, statement, and evidence_references.",
+        "A non-critic supports conclusion must include at least one cited claim.",
         "Every finding must contain exactly code, severity, description, related_roles, and evidence_references.",
         "Finding severity must be warning or blocking.",
         "Cite every claim with allowed evidence references; never authorize a mutation.",
     )
     role_specific = {
         "evidence": (
-            "Check identity, ISIN, listing, source ids, dates, freshness, and coverage.",
+            "Check identity, ISIN, listing, packet-local source aliases, dates, freshness, and coverage.",
             "Return insufficient_evidence when required evidence is absent or stale.",
         ),
         "business_quality": (
@@ -481,10 +489,89 @@ def _role_instructions(role: str) -> tuple[str, ...]:
     return (*common, *role_specific[role])
 
 
-def _packet_id(deterministic_result_id: str, role: str) -> str:
-    digest = hashlib.sha256(
-        f"{deterministic_result_id}:{role}".encode("utf-8")
-    ).hexdigest()[:20]
+def _pseudonymize_packet_sources(
+    facts: Sequence[AgentEvidenceFact],
+    sources: Sequence[AgentSourceReference],
+) -> tuple[tuple[AgentEvidenceFact, ...], tuple[AgentSourceReference, ...]]:
+    """Replace caller-provided source ids before a packet crosses the host boundary."""
+
+    reserved = {item.fact_id for item in facts}
+    aliases: dict[str, str] = {}
+    for index, source in enumerate(sources, start=1):
+        alias = f"source-ref:{index:03d}"
+        if alias in reserved:
+            raise ValidationError("Packet source alias conflicts with a fact identifier.")
+        aliases[source.source_id] = alias
+    rewritten_facts = tuple(
+        AgentEvidenceFact(
+            fact_id=item.fact_id,
+            category=item.category,
+            statement=item.statement,
+            evidence_references=tuple(
+                aliases.get(reference, reference)
+                for reference in item.evidence_references
+            ),
+        )
+        for item in facts
+    )
+    rewritten_sources = tuple(
+        AgentSourceReference(
+            source_id=aliases[item.source_id],
+            as_of=item.as_of,
+            retrieved_at=item.retrieved_at,
+            freshness=item.freshness,
+        )
+        for item in sources
+    )
+    return rewritten_facts, rewritten_sources
+
+
+def _packet_id(
+    *,
+    role: str,
+    instrument_id: str,
+    as_of: str,
+    deterministic_result_id: str,
+    facts: Sequence[AgentEvidenceFact],
+    sources: Sequence[AgentSourceReference],
+    allowed_evidence_references: Sequence[str],
+    instructions: Sequence[str],
+) -> str:
+    canonical = json.dumps(
+        {
+            "schema_version": AGENT_INPUT_PACKET_VERSION,
+            "role": role,
+            "instrument_id": instrument_id,
+            "as_of": as_of,
+            "deterministic_result_id": deterministic_result_id,
+            "facts": [
+                {
+                    "fact_id": item.fact_id,
+                    "category": item.category,
+                    "statement": item.statement,
+                    "evidence_references": list(item.evidence_references),
+                }
+                for item in facts
+            ],
+            "sources": [
+                {
+                    "source_id": item.source_id,
+                    "as_of": item.as_of,
+                    "retrieved_at": item.retrieved_at,
+                    "freshness": item.freshness,
+                }
+                for item in sources
+            ],
+            "allowed_evidence_references": list(allowed_evidence_references),
+            "instructions": list(instructions),
+            "mutation_allowed": False,
+            "external_research_allowed": False,
+        },
+        ensure_ascii=True,
+        separators=(",", ":"),
+        sort_keys=True,
+    )
+    digest = hashlib.sha256(canonical.encode("utf-8")).hexdigest()[:20]
     return f"agent-packet:{role}:{digest}"
 
 
@@ -494,12 +581,23 @@ def _packet(
     facts: Sequence[AgentEvidenceFact],
     sources: Sequence[AgentSourceReference],
 ) -> AgentInputPacket:
+    facts, sources = _pseudonymize_packet_sources(facts, sources)
     source_ids = tuple(item.source_id for item in sources)
     fact_ids = tuple(item.fact_id for item in facts)
     allowed = _unique((review.id, *fact_ids, *source_ids))
+    instructions = _role_instructions(role)
     packet = AgentInputPacket(
         schema_version=AGENT_INPUT_PACKET_VERSION,
-        packet_id=_packet_id(review.id, role),
+        packet_id=_packet_id(
+            role=role,
+            instrument_id=review.instrument_id,
+            as_of=review.as_of,
+            deterministic_result_id=review.id,
+            facts=facts,
+            sources=sources,
+            allowed_evidence_references=allowed,
+            instructions=instructions,
+        ),
         role=role,
         instrument_id=review.instrument_id,
         as_of=review.as_of,
@@ -507,7 +605,7 @@ def _packet(
         facts=tuple(facts),
         sources=tuple(sources),
         allowed_evidence_references=allowed,
-        instructions=_role_instructions(role),
+        instructions=instructions,
     )
     validate_agent_input_packet(packet)
     return packet
@@ -862,19 +960,28 @@ def build_critic_packet(
                 )
             )
     fact_ids = tuple(item.fact_id for item in facts)
+    allowed = _unique((review.id, *fact_ids, *extra_allowed))
+    instructions = _role_instructions(CRITIC_AGENT_ROLE)
     expanded = AgentInputPacket(
         schema_version=AGENT_INPUT_PACKET_VERSION,
-        packet_id=_packet_id(review.id, CRITIC_AGENT_ROLE),
+        packet_id=_packet_id(
+            role=CRITIC_AGENT_ROLE,
+            instrument_id=review.instrument_id,
+            as_of=review.as_of,
+            deterministic_result_id=review.id,
+            facts=facts,
+            sources=(),
+            allowed_evidence_references=allowed,
+            instructions=instructions,
+        ),
         role=CRITIC_AGENT_ROLE,
         instrument_id=review.instrument_id,
         as_of=review.as_of,
         deterministic_result_id=review.id,
         facts=tuple(facts),
         sources=(),
-        allowed_evidence_references=_unique(
-            (review.id, *fact_ids, *extra_allowed)
-        ),
-        instructions=_role_instructions(CRITIC_AGENT_ROLE),
+        allowed_evidence_references=allowed,
+        instructions=instructions,
     )
     validate_agent_input_packet(expanded)
     return expanded
@@ -1352,13 +1459,18 @@ def evaluate_review_modes(
     multi = _unique(item.code for item in multi_agent_result.critic_findings)
     expected_ordered = _unique(expected_defects)
     expected = set(expected_ordered)
+    single_set = set(single)
+    multi_set = set(multi)
     return ReviewModeEvaluation(
         schema_version=REVIEW_MODE_EVAL_VERSION,
         single_lens_detected_defects=single,
         multi_agent_detected_defects=multi,
-        newly_detected_defects=tuple(item for item in multi if item not in set(single)),
+        newly_detected_defects=tuple(
+            item for item in multi if item in expected and item not in single_set
+        ),
+        unexpected_defects=tuple(item for item in multi if item not in expected),
         missed_defects=tuple(
-            item for item in expected_ordered if item not in set(multi)
+            item for item in expected_ordered if item not in multi_set
         ),
         comparison_basis="Concrete synthetic defect codes; agent agreement is not evidence.",
     )
