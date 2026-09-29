@@ -6,7 +6,7 @@
   "additionalProperties": false,
   "required": ["schema_version", "result_id", "packet_id", "role", "conclusion", "claims", "evidence_references", "limitations", "confidence_basis", "unsupported_claim", "findings", "execution"],
   "properties": {
-    "schema_version": {"const": "1.0"},
+    "schema_version": {"const": "1.1"},
     "result_id": {"$ref": "#/$defs/id"},
     "packet_id": {"$ref": "#/$defs/id"},
     "role": {"enum": ["evidence", "business_quality", "valuation", "portfolio_risk", "critic"]},
@@ -19,13 +19,25 @@
     "findings": {"type": "array", "items": {"$ref": "#/$defs/finding"}},
     "execution": {"$ref": "#/$defs/execution"}
   },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "role": {"enum": ["evidence", "business_quality", "valuation", "portfolio_risk"]},
+          "conclusion": {"const": "supports"}
+        },
+        "required": ["role", "conclusion"]
+      },
+      "then": {"properties": {"claims": {"minItems": 1}}}
+    }
+  ],
   "$defs": {
     "agentOutput": {
       "type": "object",
       "additionalProperties": false,
       "required": ["schema_version", "packet_id", "role", "conclusion", "claims", "evidence_references", "limitations", "confidence_basis", "unsupported_claim", "findings"],
       "properties": {
-        "schema_version": {"const": "1.0"},
+        "schema_version": {"const": "1.1"},
         "packet_id": {"$ref": "#/$defs/id"},
         "role": {"enum": ["evidence", "business_quality", "valuation", "portfolio_risk", "critic"]},
         "conclusion": {"enum": ["supports", "limits", "insufficient_evidence", "rejects"]},
@@ -35,7 +47,19 @@
         "confidence_basis": {"type": "string", "minLength": 1},
         "unsupported_claim": {"type": "boolean"},
         "findings": {"type": "array", "items": {"$ref": "#/$defs/finding"}}
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "role": {"enum": ["evidence", "business_quality", "valuation", "portfolio_risk"]},
+              "conclusion": {"const": "supports"}
+            },
+            "required": ["role", "conclusion"]
+          },
+          "then": {"properties": {"claims": {"minItems": 1}}}
+        }
+      ]
     },
     "id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"},
     "idArray": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/id"}},

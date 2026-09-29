@@ -10,7 +10,8 @@ Present these sections distinctly when their content exists:
 6. Final synthesis and proposed next action.
 7. Execution trace: deterministic tools, review lenses, real agent roles and
    statuses, runtime type, provider calls, live market-data calls, critic passes,
-   fallback status, and revisions actually used.
+   fallback status, and revisions actually used. Render every critic finding with
+   its code, severity, description, affected roles, and evidence references.
 
 Use exact values from structured engine results. Do not introduce opaque scores,
 confidence percentages, forecasts, unsourced facts, or arithmetic performed by a

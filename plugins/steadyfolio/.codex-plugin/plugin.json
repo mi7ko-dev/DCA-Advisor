@@ -1,6 +1,6 @@
 {
   "name": "steadyfolio",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Deterministic portfolio maintenance plus bounded host-native Codex subagents for evidence-limited equity review.",
   "author": {
     "name": "mi7ko-dev",

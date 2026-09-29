@@ -2,9 +2,9 @@
 
 ## Active phase
 
-Phase 8 bounded multi-agent equity review is implemented and verified in the
-working tree. It is at the user approval checkpoint. The changes are not staged,
-committed, pushed, installed into the personal Codex profile, or published.
+Phase 8 bounded multi-agent equity review and release `0.2.1` are implemented and
+verified in the working tree. The release plugin is installed locally, while the
+source changes and archive are not staged, committed, pushed, or published.
 
 ## Completed technical work
 
@@ -95,6 +95,35 @@ committed, pushed, installed into the personal Codex profile, or published.
 - Documented hosted Codex processing, role-minimal data transfer, token and latency
   costs, approval boundaries, trace redaction, and inherited-tool limitations.
 
+## Release 0.2.1 local verification record
+
+Verification on 2026-09-29 completed with these results:
+
+- The Python package, plugin manifest, generated plugin README, operations docs,
+  and tracked plugin mirror use canonical version `0.2.1` without a cache-buster.
+- 181 unit, integration, privacy, invariant, release-archive, plugin-package,
+  skill-structure, equity-review, and repository-safety tests passed with zero
+  failures. Python compilation passed for `src/`, `tests/`, and `tools/`.
+- All five synthetic generators ran twice and reproduced the complete example tree
+  byte for byte with SHA-256 tree digest
+  `281bc6b8a55f08927ac76d57f549376df1167c3ac90f8e7e19ab122a1f5e2474`.
+- An 86-file plugin marketplace was built outside the repository from the public
+  allowlist, validated, inspected for links and sensitive markers, imported in
+  isolation, and matched to the tracked mirror byte for byte.
+- Two independently built `steadyfolio-0.2.1.zip` archives were identical and had
+  SHA-256 `f8dbf8a17a0e2037cc0fcafd3555aed497f7e977353154bddf09a6c052973dd7`.
+  A clean extracted copy passed plugin, skill, manifest, and isolated-runtime
+  validation. The archive remains outside the repository and is not published.
+- Codex reported the release plugin as installed and enabled after the official
+  cache-buster reinstall flow. The tracked manifest was restored to canonical
+  `0.2.1`, and the installed runtime imported without creating bytecode.
+- Repository safety passed 13 ignored-path expectations and 12 public-path
+  expectations against 191 tracked files. Gitleaks 8.30.1 passed for available Git
+  history and 193 current public candidate files.
+- The local host exposes Python 3.9.7 only. The supported Python 3.11 CI job is
+  configured but cannot run until the changes are committed and pushed; no local
+  Python installation was modified for this release.
+
 ## Phase 8 local verification record
 
 Verification on 2026-09-29 completed with these results:
@@ -183,11 +212,11 @@ Verification on 2026-09-27 completed with these results:
   authored-language and machine/user-identifier
   searches returned no finding, and the patch whitespace check passed.
 
-The local interpreter is Python 3.9.7 32-bit; Python 3.11, Ruff, and Pyright are not
-installed locally. Therefore the supported-version plugin smoke installation and
-those optional static tools are deferred to CI. The local plugin manifest and skill
-validators pass, and the bundled runtime imports in isolation from repository
-source. No release archive is built or published.
+The earlier local verification used Python 3.9.7 32-bit; Python 3.11, Ruff, and
+Pyright were not installed at that checkpoint. The supported-version CI smoke and
+optional static tools remained deferred. Release `0.2.1` supersedes the earlier
+statement that no local release archive would be built; its archive is generated
+outside the repository and is not published without separate authorization.
 
 History coverage includes only objects and refs available in this clone. It cannot
 attest to deleted remote refs, unavailable objects, forks, or private systems.

@@ -12,8 +12,9 @@ minimal portfolio facts therefore leave the local machine through the selected
 Codex host, and four specialists plus one critic consume more tokens and add
 latency compared with the deterministic-only path. Never send credentials,
 account identifiers, transaction history, free-form private notes, raw provider
-payloads, source paths, request IDs, or fields a role does not need. Portfolio risk
-receives only typed aggregate weights, limits, and counts.
+payloads, source paths, request IDs, or fields a role does not need. Source IDs are
+replaced with packet-local opaque aliases, and portfolio risk receives only typed
+aggregate weights, limits, and counts.
 
 Keep real packets, validated results, and derived reports in memory or below the
 active project's ignored `private/` workspace. Do not persist anything unless the
@@ -27,7 +28,7 @@ contain prompts or raw model responses.
    match, and structured evidence is present. Do not start agents for contribution,
    portfolio review, overlap review, or thesis review.
 2. Call `prepare_multi_agent_equity_review` once. It invokes deterministic
-   `review_equity` exactly once and returns four immutable schema `1.0` packets:
+   `review_equity` exactly once and returns four immutable schema `1.1` packets:
    `evidence`, `business_quality`, `valuation`, and `portfolio_risk`.
 3. Spawn one separate Codex subagent for each packet. Use a fresh isolated context
    without inherited conversation history when the host supports that option. Send
@@ -58,7 +59,8 @@ contain prompts or raw model responses.
 
 ## Role boundaries
 
-- `evidence`: identity, ISIN, listing, source IDs, dates, freshness, and coverage.
+- `evidence`: identity, ISIN, listing, packet-local source aliases, dates,
+  freshness, and coverage.
 - `business_quality`: FCF hard screen, criteria, debt, margins, moat, and owner
   earnings already calculated by the engine.
 - `valuation`: supported valuation anchor, method conflict, and margin of safety;

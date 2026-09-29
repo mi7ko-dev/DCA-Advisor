@@ -108,8 +108,9 @@ actions, or become executable instructions.
 Codex-native specialists process role-minimal packets through the selected Codex
 model service. A real run therefore sends those packet fields off-device and adds
 model-token use and latency. Packets exclude credentials, request or account
-identifiers, raw provider payloads, source paths, and unrelated portfolio fields;
-portfolio risk receives only typed aggregates. Public traces never retain prompts,
+identifiers, raw provider payloads, source paths, and unrelated portfolio fields.
+Source IDs are replaced with packet-local opaque aliases, and portfolio risk
+receives only typed aggregates. Public traces never retain prompts,
 raw responses, or exception text. Runtime, attempt, isolation, and opaque execution
 IDs come from the host orchestrator rather than agent self-report. The implementation uses no SteadyFolio
 API key, Agents SDK, Agents API client, or new Python dependency.
@@ -143,9 +144,11 @@ The generated trace shows the actual deterministic tools and sequential review
 lenses used by each scenario.
 
 The Phase 8 generator writes a synthetic in-memory contract demonstration, report,
-and defect-code eval. Its disclosed runtime is `in_memory_test_backend`; it proves
-packet validation, call bounds, critic handling, fallback, and reproducibility, not
-live Codex execution.
+and defect-code eval. Newly detected defects are limited to the expected synthetic
+set; unexpected critic codes are reported separately rather than counted as an
+improvement. Its disclosed runtime is `in_memory_test_backend`; it proves packet
+validation, call bounds, critic handling, fallback, and reproducibility, not live
+Codex execution.
 
 ## Host and runtime status
 

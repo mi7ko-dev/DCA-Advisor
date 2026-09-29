@@ -389,3 +389,25 @@ The user's explicit architecture approval accepted the hosted Codex subagent dat
 flow, additional model-token use, and Phase 8 implementation. It did not authorize
 staging, committing, pushing, plugin installation, publication, private-output
 persistence, transactions, holdings changes, thesis changes, or policy mutation.
+
+## D-026: Produce deterministic local release archives
+
+- **Status:** Accepted
+- **Decision:** Release `0.2.1` adds an outside-repository ZIP containing the exact
+  allowlisted marketplace root. The archive uses sorted paths, fixed timestamps,
+  fixed regular-file modes, deterministic compression settings, and the canonical
+  semantic version without a Codex cache-buster suffix.
+- **Why:** A ready marketplace archive makes offline installation reproducible
+  without weakening the public/private package boundary or treating installation
+  as publication.
+- **Consequence:** `tools/build_release.py` rejects repository-local output and
+  noncanonical filenames. Every archive must be built twice, compared byte for
+  byte, inspected, extracted, validated, runtime-smoke-tested, and reported with a
+  SHA-256 checksum. The archive remains outside Git unless separately approved.
+
+## Release 0.2.1 approval effects
+
+The user's release instruction authorizes the semantic-version update, local
+allowlisted build, local Codex reinstall, and outside-repository installation
+archive. It does not authorize staging, committing, pushing, or publishing the
+archive or marketplace.

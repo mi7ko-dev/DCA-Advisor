@@ -6,7 +6,7 @@
   "additionalProperties": false,
   "required": ["schema_version", "packet_id", "role", "instrument_id", "as_of", "deterministic_result_id", "facts", "sources", "allowed_evidence_references", "instructions", "mutation_allowed", "external_research_allowed"],
   "properties": {
-    "schema_version": {"const": "1.0"},
+    "schema_version": {"const": "1.1"},
     "packet_id": {"$ref": "#/$defs/id"},
     "role": {"enum": ["evidence", "business_quality", "valuation", "portfolio_risk", "critic"]},
     "instrument_id": {"$ref": "#/$defs/id"},

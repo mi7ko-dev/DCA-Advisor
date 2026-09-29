@@ -25,10 +25,12 @@ immutable role-minimal packets for:
 - supplied typed aggregate portfolio weights, limits, counts, and overlap facts.
 
 The Codex host starts one isolated thread per specialist and one later critic
-thread. Each returns schema `1.0` agent-output JSON with claims and evidence
-references. The lead attaches runtime, attempt, isolation, and opaque execution and
-result IDs from the actual host spawn; models cannot self-attest them. Unknown
-references, extra fields, malformed output, role drift, non-isolated metadata, or
+thread. Packets and agent-output JSON use schema `1.1`; caller-provided source IDs
+are replaced with packet-local aliases, and every packet ID binds a canonical
+digest of its complete content. The lead attaches runtime, attempt, isolation, and
+opaque execution and result IDs from the actual host spawn; models cannot
+self-attest them. Unknown references, extra fields, malformed output, role drift,
+non-isolated metadata, supporting specialist results without a cited claim, or
 additional attempts are rejected. The critic receives only deterministic facts,
 validated claims, and generic execution status, never raw responses.
 
