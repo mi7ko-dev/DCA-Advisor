@@ -8,6 +8,7 @@ from decimal import Decimal
 import json
 import os
 from pathlib import Path
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -182,6 +183,7 @@ class SchemaAndValidationTests(unittest.TestCase):
         self.assertEqual(
             {schema.name for schema in schemas},
             {
+                "agent-input-packet.schema.json",
                 "analysis-result.schema.json",
                 "committee-result.schema.json",
                 "contribution-plan.schema.json",
@@ -189,10 +191,12 @@ class SchemaAndValidationTests(unittest.TestCase):
                 "equity-review.schema.json",
                 "intelligence-result.schema.json",
                 "market-input.schema.json",
+                "multi-agent-equity-review.schema.json",
                 "portfolio.schema.json",
                 "portfolio-policy-result.schema.json",
                 "portfolio-policy.schema.json",
                 "research-snapshot.schema.json",
+                "specialist-result.schema.json",
                 "thesis-review.schema.json",
             },
         )
@@ -804,6 +808,64 @@ class ContributionPlanningTests(unittest.TestCase):
 
 
 class StorageAndReportingTests(unittest.TestCase):
+    def test_git_workspace_requires_private_target_to_be_ignored(self) -> None:
+        state, _, _, _ = _example_inputs()
+        with tempfile.TemporaryDirectory(prefix="steadyfolio-git-workspace-") as temporary:
+            workspace = Path(temporary)
+            subprocess.run(
+                ["git", "init", "--quiet"],
+                cwd=workspace,
+                check=True,
+                capture_output=True,
+            )
+
+            with self.assertRaisesRegex(StorageSafetyError, "must be ignored"):
+                initialize_workspace(workspace, state)
+            self.assertFalse((workspace / "private").exists())
+
+    def test_git_workspace_accepts_an_ignored_private_target(self) -> None:
+        state, _, _, _ = _example_inputs()
+        with tempfile.TemporaryDirectory(prefix="steadyfolio-git-workspace-") as temporary:
+            workspace = Path(temporary)
+            subprocess.run(
+                ["git", "init", "--quiet"],
+                cwd=workspace,
+                check=True,
+                capture_output=True,
+            )
+            (workspace / ".gitignore").write_text("/private/\n", encoding="utf-8")
+
+            state_path = initialize_workspace(workspace, state)
+
+            self.assertEqual(
+                state_path, workspace / "private" / "state" / "portfolio.json"
+            )
+
+    def test_git_workspace_rejects_a_tracked_private_target(self) -> None:
+        state, _, _, _ = _example_inputs()
+        with tempfile.TemporaryDirectory(prefix="steadyfolio-git-workspace-") as temporary:
+            workspace = Path(temporary)
+            subprocess.run(
+                ["git", "init", "--quiet"],
+                cwd=workspace,
+                check=True,
+                capture_output=True,
+            )
+            (workspace / ".gitignore").write_text("/private/\n", encoding="utf-8")
+            target = workspace / "private" / "state" / "portfolio.json"
+            target.parent.mkdir(parents=True)
+            target.write_text("{}\n", encoding="utf-8")
+            subprocess.run(
+                ["git", "add", "--force", "--", "private/state/portfolio.json"],
+                cwd=workspace,
+                check=True,
+                capture_output=True,
+            )
+
+            with self.assertRaisesRegex(StorageSafetyError, "already tracked"):
+                initialize_workspace(workspace, state)
+            self.assertEqual(target.read_text(encoding="utf-8"), "{}\n")
+
     def test_workspace_root_symlink_is_rejected(self) -> None:
         state, _, _, _ = _example_inputs()
         with tempfile.TemporaryDirectory(prefix="steadyfolio-symlink-test-") as temporary:

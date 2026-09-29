@@ -40,11 +40,15 @@ def _read(path: Path) -> object:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def _write_json(path: Path, value: object) -> None:
+def _write_text(path: Path, value: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(value, indent=2, ensure_ascii=True, sort_keys=True) + "\n",
-        encoding="utf-8",
+    with path.open("w", encoding="utf-8", newline="\n") as stream:
+        stream.write(value)
+
+
+def _write_json(path: Path, value: object) -> None:
+    _write_text(
+        path, json.dumps(value, indent=2, ensure_ascii=True, sort_keys=True) + "\n"
     )
 
 
@@ -95,11 +99,13 @@ def main() -> None:
         EXAMPLES / "results" / "thesis-review.example.json",
         to_json_value(thesis_review),
     )
-    (EXAMPLES / "reports" / "portfolio-intelligence.md").write_text(
-        render_intelligence_report(state, intelligence), encoding="utf-8"
+    _write_text(
+        EXAMPLES / "reports" / "portfolio-intelligence.md",
+        render_intelligence_report(state, intelligence),
     )
-    (EXAMPLES / "reports" / "thesis-review.md").write_text(
-        render_thesis_review_report(state, thesis_review), encoding="utf-8"
+    _write_text(
+        EXAMPLES / "reports" / "thesis-review.md",
+        render_thesis_review_report(state, thesis_review),
     )
 
 

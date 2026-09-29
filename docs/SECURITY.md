@@ -6,7 +6,11 @@ This repository is public. Source code, deterministic tools, schemas, synthetic 
 
 The boundary includes holdings, balances, transactions, goals, account identifiers, broker statements, personal notes, prompts containing private context, runtime memory, provider responses, query histories, reports, screenshots, and credentials. Public examples and tests must be created from scratch with synthetic data; they must never be anonymized copies of a real portfolio.
 
-Ignore rules are a safety net, not a storage design. Application-owned private state belongs under `private/`, even when another ignored directory exists.
+Ignore rules are a safety net, not a storage design. Application-owned private
+state belongs under `private/`, even when another ignored directory exists. Before
+accessing a private target inside a Git worktree, the storage layer verifies that
+the exact target is ignored and not already tracked; it fails before creating
+`private/` when that guarantee is absent.
 
 ## Local and external processing
 
@@ -39,6 +43,30 @@ external actions, or expand the bounded workflow. Phase 5 permits no live extern
 calls. Any future host or provider connection requires a documented data-flow and
 authorization review before use.
 
+Phase 8 uses the already selected Codex host as a true subagent runtime for equity
+review. Four role-minimal specialist packets and one critic packet are processed by
+separate Codex model contexts. This is hosted processing and consumes additional
+tokens and latency. It is not a live market-data integration and requires no API
+key in SteadyFolio. The approved packet boundary excludes credentials, request or
+account identifiers, transaction history, free-form private notes, raw provider
+payloads, source paths, and unrelated portfolio fields. Source metadata is reduced
+to identifiers, dates, and freshness. Portfolio context is a typed contract of
+aggregate weights, policy limits, and counts only.
+
+Agent packets and validated results containing real data remain in memory or under
+the selected ignored `private/` root. Public execution traces contain only role,
+status, attempt count, host-observed isolation, opaque execution/result identifiers,
+runtime type, and generic redacted limitations. Models cannot self-attest this
+execution metadata. Prompts, raw responses, raw
+exceptions, and personal data are not public trace fields. A specialist is told
+not to use tools, browse, or read files; because host-native subagents inherit host
+capabilities, this instruction boundary is not an operating-system sandbox proof.
+
+Malformed output, unknown evidence references, unsupported claims, timeout, or
+runtime unavailability fails closed or returns an explicitly limited deterministic
+fallback. No agent can authorize persistence, a transaction, holdings change,
+thesis change, policy change, commit, push, installation, or publication.
+
 Expected provider failures are converted to a generic limitation. Raw exception
 messages are not copied into public traces or committee results. The execution trace
 still records that the single permitted provider attempt occurred, so a degraded
@@ -46,7 +74,9 @@ result cannot appear to have skipped the boundary.
 
 ## Required checks
 
-Run the complete local check from the repository root:
+These commands are source-checkout-only; the installed plugin intentionally omits
+repository tests, hooks, and safety tooling. Run the complete local check from the
+repository root:
 
 ```powershell
 python tools/run_repository_checks.py --require-gitleaks

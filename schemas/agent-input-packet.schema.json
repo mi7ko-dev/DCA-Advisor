@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://steadyfolio.example/schemas/agent-input-packet.schema.json",
+  "title": "SteadyFolio Immutable Agent Input Packet",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "packet_id", "role", "instrument_id", "as_of", "deterministic_result_id", "facts", "sources", "allowed_evidence_references", "instructions", "mutation_allowed", "external_research_allowed"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "packet_id": {"$ref": "#/$defs/id"},
+    "role": {"enum": ["evidence", "business_quality", "valuation", "portfolio_risk", "critic"]},
+    "instrument_id": {"$ref": "#/$defs/id"},
+    "as_of": {"type": "string", "format": "date"},
+    "deterministic_result_id": {"$ref": "#/$defs/id"},
+    "facts": {"type": "array", "items": {"$ref": "#/$defs/fact"}},
+    "sources": {"type": "array", "items": {"$ref": "#/$defs/source"}},
+    "allowed_evidence_references": {"$ref": "#/$defs/idArray"},
+    "instructions": {"$ref": "#/$defs/stringArray"},
+    "mutation_allowed": {"const": false},
+    "external_research_allowed": {"const": false}
+  },
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"},
+    "idArray": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/id"}},
+    "stringArray": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "fact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fact_id", "category", "statement", "evidence_references"],
+      "properties": {
+        "fact_id": {"$ref": "#/$defs/id"},
+        "category": {"type": "string", "minLength": 1},
+        "statement": {"type": "string", "minLength": 1},
+        "evidence_references": {"$ref": "#/$defs/idArray"}
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_id", "as_of", "retrieved_at", "freshness"],
+      "properties": {
+        "source_id": {"$ref": "#/$defs/id"},
+        "as_of": {"type": "string", "format": "date"},
+        "retrieved_at": {"type": "string", "format": "date-time"},
+        "freshness": {"enum": ["fresh", "stale"]}
+      }
+    }
+  }
+}

@@ -104,26 +104,83 @@ class PluginPackageTests(unittest.TestCase):
                 )
 
     def test_bundled_runtime_imports_without_repository_source_path(self) -> None:
-        environment = os.environ.copy()
-        environment["PYTHONPATH"] = str(self.plugin_root / "src")
         result = subprocess.run(
             [
                 sys.executable,
                 "-S",
                 "-c",
                 (
+                    "import sys; from pathlib import Path; "
+                    "sys.path.insert(0, str(Path.cwd() / 'src')); "
                     "import steadyfolio; "
                     "assert callable(steadyfolio.run_committee_workflow); "
-                    "assert callable(steadyfolio.review_equity)"
+                    "assert callable(steadyfolio.review_equity); "
+                    "assert callable(steadyfolio.prepare_multi_agent_equity_review)"
                 ),
             ],
             cwd=self.plugin_root,
-            env=environment,
             check=False,
             capture_output=True,
             text=True,
         )
         self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_builder_rejects_repository_local_output(self) -> None:
+        output = REPOSITORY_ROOT / ".plugin-output-must-not-be-created"
+        with self.assertRaisesRegex(ValueError, "outside the repository"):
+            build_plugin.build_plugin(output)
+        self.assertFalse(output.exists())
+
+    def test_builder_rejects_existing_output_file_symlink(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            base = Path(temporary)
+            output = base / "marketplace"
+            link = output / ".agents" / "plugins" / "marketplace.json"
+            outside = base / "outside.json"
+            link.parent.mkdir(parents=True)
+            outside.write_text("outside\n", encoding="utf-8")
+            try:
+                link.symlink_to(outside)
+            except OSError as error:
+                self.skipTest(f"File symlinks are unavailable: {error}")
+
+            with self.assertRaisesRegex(RuntimeError, "cannot contain symlinks"):
+                build_plugin.build_plugin(output)
+            self.assertEqual(outside.read_text(encoding="utf-8"), "outside\n")
+
+    def test_builder_rejects_existing_output_directory_symlink(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            base = Path(temporary)
+            output = base / "marketplace"
+            outside = base / "outside"
+            output.mkdir()
+            outside.mkdir()
+            link = output / "plugins"
+            try:
+                link.symlink_to(outside, target_is_directory=True)
+            except OSError as error:
+                self.skipTest(f"Directory symlinks are unavailable: {error}")
+
+            with self.assertRaisesRegex(RuntimeError, "cannot contain symlinks"):
+                build_plugin.build_plugin(output)
+            self.assertEqual(tuple(outside.iterdir()), ())
+
+    def test_builder_rejects_existing_output_file_hardlink(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            base = Path(temporary)
+            output = base / "marketplace"
+            link = output / ".agents" / "plugins" / "marketplace.json"
+            outside = base / "outside.json"
+            link.parent.mkdir(parents=True)
+            outside.write_text("outside\n", encoding="utf-8")
+            try:
+                os.link(outside, link)
+            except OSError as error:
+                self.skipTest(f"File hardlinks are unavailable: {error}")
+
+            with self.assertRaisesRegex(RuntimeError, "cannot contain hardlinks"):
+                build_plugin.build_plugin(output)
+            self.assertEqual(outside.read_text(encoding="utf-8"), "outside\n")
 
 
 if __name__ == "__main__":

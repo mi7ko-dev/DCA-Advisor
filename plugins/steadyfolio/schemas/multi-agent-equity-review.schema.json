@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://steadyfolio.example/schemas/multi-agent-equity-review.schema.json",
+  "title": "SteadyFolio Multi-Agent Equity Review Trace",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "runtime_type", "status", "deterministic_result_id", "requested_agent_roles", "executed_agent_roles", "executions", "specialist_results", "disagreements", "critic_findings", "fallback_status", "final_synthesis", "mutation_performed"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "runtime_type": {"enum": ["codex_native_subagents", "in_memory_test_backend", "none"]},
+    "status": {"enum": ["complete", "limited", "insufficient_evidence"]},
+    "deterministic_result_id": {"$ref": "#/$defs/id"},
+    "requested_agent_roles": {
+      "type": "array",
+      "prefixItems": [
+        {"const": "evidence"},
+        {"const": "business_quality"},
+        {"const": "valuation"},
+        {"const": "portfolio_risk"},
+        {"const": "critic"}
+      ],
+      "items": false,
+      "minItems": 5,
+      "maxItems": 5
+    },
+    "executed_agent_roles": {"$ref": "#/$defs/roles"},
+    "executions": {
+      "type": "array",
+      "prefixItems": [
+        {"allOf": [{"$ref": "#/$defs/executionRecord"}, {"properties": {"role": {"const": "evidence"}}}]},
+        {"allOf": [{"$ref": "#/$defs/executionRecord"}, {"properties": {"role": {"const": "business_quality"}}}]},
+        {"allOf": [{"$ref": "#/$defs/executionRecord"}, {"properties": {"role": {"const": "valuation"}}}]},
+        {"allOf": [{"$ref": "#/$defs/executionRecord"}, {"properties": {"role": {"const": "portfolio_risk"}}}]},
+        {"allOf": [{"$ref": "#/$defs/executionRecord"}, {"properties": {"role": {"const": "critic"}}}]}
+      ],
+      "items": false,
+      "minItems": 5,
+      "maxItems": 5
+    },
+    "specialist_results": {
+      "type": "array",
+      "maxItems": 4,
+      "items": {
+        "allOf": [
+          {"$ref": "specialist-result.schema.json"},
+          {"properties": {"role": {"enum": ["evidence", "business_quality", "valuation", "portfolio_risk"]}}}
+        ]
+      },
+      "allOf": [
+        {"contains": {"properties": {"role": {"const": "evidence"}}}, "minContains": 0, "maxContains": 1},
+        {"contains": {"properties": {"role": {"const": "business_quality"}}}, "minContains": 0, "maxContains": 1},
+        {"contains": {"properties": {"role": {"const": "valuation"}}}, "minContains": 0, "maxContains": 1},
+        {"contains": {"properties": {"role": {"const": "portfolio_risk"}}}, "minContains": 0, "maxContains": 1}
+      ]
+    },
+    "disagreements": {"$ref": "#/$defs/stringArray"},
+    "critic_findings": {"type": "array", "items": {"$ref": "specialist-result.schema.json#/$defs/finding"}},
+    "fallback_status": {"enum": ["not_used", "partial_agent_failure", "deterministic_only"]},
+    "final_synthesis": {"type": "string", "minLength": 1},
+    "mutation_performed": {"const": false}
+  },
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"},
+    "stringArray": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "roles": {"type": "array", "uniqueItems": true, "items": {"enum": ["evidence", "business_quality", "valuation", "portfolio_risk", "critic"]}},
+    "executionRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "status", "attempt", "isolated_context"],
+      "properties": {
+        "role": {"enum": ["evidence", "business_quality", "valuation", "portfolio_risk", "critic"]},
+        "status": {"enum": ["completed", "malformed", "rejected", "timeout", "unavailable", "not_started"]},
+        "attempt": {"type": "integer", "minimum": 0, "maximum": 1},
+        "isolated_context": {"type": "boolean"},
+        "execution_id": {"$ref": "#/$defs/id"},
+        "result_id": {"$ref": "#/$defs/id"},
+        "limitation": {
+          "enum": [
+            "The agent returned malformed structured output.",
+            "The agent output failed contract or evidence validation.",
+            "The bounded agent execution timed out.",
+            "The agent runtime was unavailable.",
+            "The host-native subagent runtime was not used."
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"status": {"const": "completed"}}, "required": ["status"]},
+          "then": {
+            "required": ["execution_id", "result_id"],
+            "properties": {"attempt": {"const": 1}, "isolated_context": {"const": true}},
+            "not": {"required": ["limitation"]}
+          }
+        },
+        {
+          "if": {"properties": {"status": {"const": "not_started"}}, "required": ["status"]},
+          "then": {
+            "required": ["limitation"],
+            "properties": {"attempt": {"const": 0}, "isolated_context": {"const": false}},
+            "not": {"anyOf": [{"required": ["execution_id"]}, {"required": ["result_id"]}]}
+          }
+        },
+        {
+          "if": {"properties": {"status": {"enum": ["malformed", "rejected", "timeout"]}}, "required": ["status"]},
+          "then": {
+            "required": ["limitation"],
+            "properties": {"attempt": {"const": 1}, "isolated_context": {"const": true}},
+            "not": {"anyOf": [{"required": ["execution_id"]}, {"required": ["result_id"]}]}
+          }
+        },
+        {
+          "if": {"properties": {"status": {"const": "unavailable"}}, "required": ["status"]},
+          "then": {
+            "required": ["limitation"],
+            "properties": {"attempt": {"const": 1}, "isolated_context": {"const": false}},
+            "not": {"anyOf": [{"required": ["execution_id"]}, {"required": ["result_id"]}]}
+          }
+        }
+      ]
+    }
+  }
+}

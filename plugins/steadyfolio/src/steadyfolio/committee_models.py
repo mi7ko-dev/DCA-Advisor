@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from decimal import Decimal
 
+from .agent_models import MultiAgentReviewResult
+
 
 COMMITTEE_VERSION = "1.1"
 
@@ -78,3 +80,4 @@ class CommitteeResult:
     approval_reasons: tuple[str, ...]
     mutation_performed: bool
     trace: WorkflowTrace
+    agent_review: MultiAgentReviewResult | None = None

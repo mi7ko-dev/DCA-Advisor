@@ -6,13 +6,19 @@ SteadyFolio supports Python 3.11 or newer and the repo-local Codex skill in this
 repository. It also provides a self-contained local Codex plugin. Neither mode has
 a runtime dependency outside the Python standard library.
 
+Phase 8 equity review additionally requires a Codex host release with native
+subagents enabled. It does not require an OpenAI API key or Agents SDK dependency.
+Each real run starts up to four specialist model contexts and one critic context,
+so it consumes more host tokens and latency than deterministic fallback. The
+contribution route never starts agents.
+
 From the repository root on Windows:
 
 ```powershell
 py -3.11 -m venv .venv
 .venv\Scripts\python -m pip install --upgrade pip
 .venv\Scripts\python -m pip install --no-deps .
-.venv\Scripts\python -c "import steadyfolio; assert callable(steadyfolio.run_committee_workflow)"
+.venv\Scripts\python -c "import steadyfolio; assert callable(steadyfolio.run_committee_workflow); assert callable(steadyfolio.prepare_multi_agent_equity_review)"
 ```
 
 Opening the repository in Codex makes the skill at
@@ -21,18 +27,23 @@ it explicitly with `$steadyfolio` when deterministic portfolio routing is wanted
 The current repository session has discovered the skill, and its files pass the
 bundled skill validator.
 
-To install the plugin from a checkout, register the repository marketplace and add
-the plugin:
+To install the plugin from a checkout, first verify the bundled runtime through its
+explicit source path, then register the repository marketplace and add the plugin.
+The Codex plugin command installs plugin files; it does not `pip install` the
+bundled `src`-layout package.
 
 ```powershell
+$pluginRoot = (Resolve-Path .\plugins\steadyfolio).Path
+py -3.11 -S -c "import sys; sys.path.insert(0, r'$pluginRoot\src'); import steadyfolio; assert callable(steadyfolio.run_committee_workflow); assert callable(steadyfolio.prepare_multi_agent_equity_review)"
 codex plugin marketplace add .
 codex plugin add steadyfolio@steadyfolio-local
 ```
 
 Start a new Codex thread after installation. The plugin manifest and skill pass the
-bundled validators, and its bundled Python runtime imports independently of the
-repository source path. A general ChatGPT host, MCP service, and clean-machine
-cross-platform installation are not claimed.
+bundled validators. The installed skill resolves its plugin runtime root and applies
+the same explicit `src` bootstrap before direct imports, so it does not depend on a
+separate SteadyFolio installation or ambient `PYTHONPATH`. A general ChatGPT host,
+MCP service, and clean-machine cross-platform installation are not claimed.
 
 No environment variable or credential is required for the implemented offline
 core. Do not add broker or provider keys for this version. If a future adapter is
@@ -63,6 +74,7 @@ python tools/generate_synthetic_example.py
 python tools/generate_synthetic_intelligence.py
 python tools/generate_synthetic_committee.py
 python tools/generate_synthetic_equity.py
+python tools/generate_synthetic_multi_agent.py
 git diff --exit-code -- examples
 ```
 
@@ -73,6 +85,10 @@ residual drift, and missing or stale evidence. Inspect the paired JSON in
 
 The fourth generator produces the Phase 7 equity review and portfolio-policy JSON
 and Markdown examples directly under `examples/`.
+
+The fifth generator produces a synthetic Phase 8 in-memory agent-contract result,
+Markdown report, and defect-code eval. It does not make model or network calls and
+must not be reported as a live multi-agent execution.
 
 To request the same routes conversationally, use `$steadyfolio` with a narrow
 request such as:
@@ -87,11 +103,19 @@ The skill must use the engine output. It must not calculate portfolio values in
 prose, invent a missing price or FX rate, or turn an analysis request into approval
 to save or execute anything.
 
+For equity review, the skill first creates immutable packets in memory, then asks
+Codex to start one subagent for each specialist and one later critic. If the host
+cannot start subagents, it uses `run_deterministic_equity_fallback` and reports
+`runtime_type=none`. Do not describe `in_memory_test_backend` or the fallback as a
+real multi-agent run.
+
 ## Private-state initialization
 
 Choose the workspace root explicitly. The storage layer creates and writes only
 below its `private/` child, validates the complete state, rejects unsafe filenames
-and symlinks, writes atomically, and refuses overwrite by default.
+and symlinks, writes atomically, and refuses overwrite by default. If the workspace
+is inside a Git worktree, the exact private target must be ignored and untracked
+before any directory is created or any value is read or written.
 
 ```python
 import json
@@ -137,6 +161,20 @@ private validated state + explicit dated inputs
             v                   v
     answer in local host   approved private save
 
+role-minimal equity packet
+            |
+            v
+ Codex hosted specialist context x4
+            |
+            v
+ Codex hosted critic context x1
+            |
+            v
+ host-attached execution metadata
+            |
+            v
+ validated lead synthesis in memory
+
 public instrument/listing IDs + explicit evidence-source IDs + as-of date
                     |
                     v
@@ -154,7 +192,9 @@ not expose the raw exception text in the result.
 
 ## Checks and troubleshooting
 
-Run the full local gate from the repository root:
+The following checks are source-checkout-only; the installed plugin intentionally
+omits tests, build scripts, hooks, and repository-safety tooling. Run the full local
+gate from the repository root:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File tools/install_gitleaks.ps1

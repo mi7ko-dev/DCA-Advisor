@@ -66,6 +66,31 @@ def render_committee_report(
 
     tools = ", ".join(f"`{item}`" for item in result.trace.deterministic_tools) or "None"
     roles = ", ".join(f"`{item}`" for item in result.trace.review_lenses) or "None"
+    agent_rows: list[str]
+    if result.agent_review is None:
+        agent_rows = [
+            "- Runtime: `none`.",
+            "- Agent workflow: not applicable to this route.",
+        ]
+        execution_disclosure = (
+            "- Review lenses are sequential interpretations, not independent agents or verification."
+        )
+    else:
+        executed = (
+            ", ".join(f"`{item}`" for item in result.agent_review.executed_agent_roles)
+            or "None"
+        )
+        agent_rows = [
+            f"- Runtime: `{result.agent_review.runtime_type}`.",
+            f"- Executed agent roles: {executed}.",
+            f"- Agent status: `{result.agent_review.status}`.",
+            f"- Fallback: `{result.agent_review.fallback_status}`.",
+            f"- Critic findings: {len(result.agent_review.critic_findings)}.",
+        ]
+        execution_disclosure = (
+            "- Independent agents were used only when runtime is `codex_native_subagents`; "
+            "`in_memory_test_backend` is a contract test, and `none` is a deterministic fallback."
+        )
     return "\n".join(
         [
             f"# {title}",
@@ -115,6 +140,10 @@ def render_committee_report(
             f"- Critic passes: {result.trace.critic_passes}.",
             f"- Revisions: {result.trace.revisions}.",
             f"- Execution mode: {result.trace.execution_mode}.",
-            "- Review lenses are sequential interpretations, not independent agents or verification.",
+            execution_disclosure,
+            "",
+            "## Agent workflow",
+            "",
+            *agent_rows,
         ]
     )

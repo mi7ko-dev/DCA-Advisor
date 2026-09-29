@@ -9,11 +9,12 @@ tracked files.
 
 ## Decision summary
 
-SteadyFolio will use a clean, repository-owned implementation rather than adapting
-an upstream application. The first runtime will be a local Codex repository
-workspace. A small Python 3.11+ deterministic engine will own validation,
-calculations, persistence rules, and report data. The host skill will own workflow,
-explanations, and optional review lenses.
+SteadyFolio uses a clean, repository-owned implementation rather than adapting an
+upstream application. The first runtime is a local Codex repository workspace. A
+small Python 3.11+ deterministic engine owns validation, calculations, persistence
+rules, and report data. The host skill owns workflow, explanations, sequential
+review lenses for legacy routes, and bounded Codex-native subagent orchestration
+for Phase 8 equity review.
 
 The canonical public skill will live at `.agents/skills/steadyfolio/`. Real user
 state and every output derived from it will live below an explicitly selected
@@ -35,6 +36,7 @@ Codex / future compatible host
   SteadyFolio skill workflow
   - intent and approval gates
   - optional bounded review lenses
+  - bounded equity specialist/critic subagents
   - human-readable synthesis
             |
             v
@@ -112,6 +114,7 @@ README.md
 src/
   steadyfolio/
     models.py
+    agent_models.py
     validation.py
     calculations.py
     storage.py
@@ -121,6 +124,7 @@ src/
     research_validation.py
     intelligence.py
     intelligence_reporting.py
+    multi_agent.py
     thesis.py
 schemas/
 tests/
@@ -131,9 +135,8 @@ private/                 # ignored; real state and derived output
 ```
 
 Phase 5 adds the canonical skill under `.agents/skills/steadyfolio/` and its
-minimal `agents/openai.yaml` UI metadata. An MCP server, UI, generated plugin
-bundle, and additional host adapters remain deferred until an approved phase or an
-actual host requirement calls for them.
+minimal `agents/openai.yaml` UI metadata. Phase 8 adds host-native Codex subagent
+instructions and Python contracts, not an MCP server or model API client.
 
 ## Runtime and host compatibility
 
@@ -150,6 +153,7 @@ repo-local skills:
 - [Skills in the OpenAI Agents SDK](https://developers.openai.com/blog/skills-agents-sdk)
 - [Skills concepts](https://developers.openai.com/plugins/concepts/skills)
 - [Building skills](https://developers.openai.com/plugins/build/skills)
+- [Codex subagents](https://learn.chatgpt.com/docs/agent-configuration/subagents)
 
 The official material also describes progressive disclosure: hosts discover skill
 metadata, load `SKILL.md` when selected, and load supporting references or scripts
@@ -188,7 +192,9 @@ tracked and distributable                ignored and never packaged
 The workspace root must be supplied explicitly by the caller or a documented CLI
 argument. It must not be inferred from a home directory, recent file, or hidden host
 state. The storage layer resolves `private/` from that root, rejects traversal and
-symlink escapes, and never writes to the skill installation directory.
+symlink escapes, and never writes to the skill installation directory. When that
+root is inside a Git worktree, the storage layer fails before creating or accessing
+a target unless the exact path is ignored and untracked.
 
 Public examples and test fixtures must be obviously synthetic. Logs, debug dumps,
 provider responses, reports, and intermediate calculations derived from a real user
@@ -267,7 +273,7 @@ deterministic analysis / contribution plan
         |
         +--> routine, low-consequence request --> direct synthesis
         |
-        +--> consequential or evidence-dependent request
+        +--> non-equity consequential request
                  |
                  +--> allocation/diversification/ETF lens
                  +--> risk/cost/constraints lens
@@ -276,20 +282,33 @@ deterministic analysis / contribution plan
                  |
                  v
               optional bounded revision and final synthesis
+
+        +--> equity_review
+                 |
+                 +--> review_equity exactly once
+                 +--> immutable role-minimal packets
+                 +--> four isolated Codex specialist threads
+                 +--> one isolated critic thread
+                 |
+                 v
+              one lead synthesis; no vote or retry
 ```
 
 The host orchestrator owns the final answer. A routine monthly contribution does
-not trigger research or a critic automatically. A critic runs only for a material
-disagreement. The current implementation independently permits at most one research
-pass, one critic pass, one revision, and zero live external calls. A broader
+not trigger research or a critic automatically. On legacy non-equity routes, a
+critic runs only for a material disagreement; Phase 8 equity review always runs its
+single bounded critic after the four specialists. The implementation permits at
+most one research pass, one critic pass, one revision, and zero live external calls. A broader
 workflow requires a later approved implementation rather than an implicit retry or
 scope expansion.
 
-When a host supports true subagents and their use is justified, each role receives
-a narrow task and structured inputs. When roles are simulated by sequential calls
-to the same model, outputs must be described as review lenses, not independent
-verification or consensus. Deterministic tests and source provenance remain the
-evidence; model agreement is not evidence.
+Phase 8 selects Codex host-native subagents for `equity_review`. The main Codex
+thread is `LeadOrchestrator`; four specialist threads and one critic thread receive
+immutable schema `1.0` packets and return strict schema `1.0` results. Local Python
+prepares and validates contracts but never impersonates an agent. A host without
+subagent controls returns `runtime_type=none` and
+`fallback_status=deterministic_only`. Deterministic tests and source provenance
+remain the evidence; model agreement is not evidence.
 
 ## Phase 3 MVP boundary
 
@@ -375,10 +394,34 @@ mutation. Exact methodology is in `docs/EQUITY_REVIEW.md`.
 The selected host remains local Codex. The canonical repo-local skill is also
 packaged in a self-contained Codex plugin with the deterministic Python core,
 schemas, synthetic examples, and operating documentation. The plugin is generated
-from an explicit tracked-file allowlist and exposed through the repo-local
+from an explicit public-file allowlist and exposed through the repo-local
 `steadyfolio-local` marketplace. Its manifest, skill structure, exact inventory,
-and isolated runtime import are tested. No general ChatGPT host, MCP service, live
-provider, or true multi-agent runtime is implemented or claimed.
+and isolated runtime import are tested. No general ChatGPT host, MCP service, or
+live provider is implemented. Phase 8 true multi-agent execution is provided only
+by Codex host-native subagent threads; it is not provided by the Python engine, an
+Agents API client, or the in-memory test backend. Plugin installation does not
+install the bundled Python package; the skill uses an explicit, validated `src`
+path for direct imports, and CI tests that documented bootstrap independently of
+repository source paths or ambient `PYTHONPATH`.
+
+## Phase 8 multi-agent equity-review boundary
+
+Phase 8 applies only to `equity_review`. `prepare_multi_agent_equity_review` calls
+the deterministic engine exactly once and creates separate packets for evidence,
+business quality, valuation, and portfolio risk. The host starts one isolated
+thread per packet, validates every result, starts one critic with only validated
+outputs, and performs one final synthesis. Invalid citations, malformed output,
+timeouts, unavailable agents, unsupported claims, and contradictions limit or
+close the result; there is no retry or debate loop.
+
+The public execution trace stores role, status, execution ID, runtime, bounds, and
+generic limitations, not prompts or raw responses. Real packets and derived
+results remain in memory or under ignored `private/`. Role-minimal facts are sent
+to the Codex model service, which adds hosted processing, token consumption, and
+latency. The implementation adds no API key, Agents SDK, Agents API client, MCP
+server, or third-party Python dependency. Runtime, attempt, isolation, and raw host
+execution identity are owned by the lead; model output cannot set them, and the
+trace stores only opaque digests for execution/result correlation.
 
 ## Verification strategy
 
@@ -419,3 +462,6 @@ license remains the only current distribution notice.
   of performance.
 - Review lenses reduce blind spots but do not create independent financial advice,
   factual verification, or regulatory approval.
+- Codex subagent isolation is a host capability, not an operating-system proof that
+  a model thread cannot access tools inherited from its parent. Role instructions
+  forbid tool use and file reads; the lead sends only the immutable packet.

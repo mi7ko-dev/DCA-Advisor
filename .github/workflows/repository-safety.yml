@@ -49,6 +49,7 @@ jobs:
           python tools/generate_synthetic_intelligence.py
           python tools/generate_synthetic_committee.py
           python tools/generate_synthetic_equity.py
+          python tools/generate_synthetic_multi_agent.py
           git diff --exit-code -- examples
 
       - name: Reproduce and smoke-test the installable plugin
@@ -60,6 +61,11 @@ jobs:
             .agents/plugins "$plugin_marketplace/.agents/plugins"
           diff --recursive --brief \
             plugins/steadyfolio "$plugin_marketplace/plugins/steadyfolio"
+          (
+            cd "$plugin_marketplace/plugins/steadyfolio"
+            python -S -c \
+              "import sys; from pathlib import Path; sys.path.insert(0, str(Path.cwd() / 'src')); import steadyfolio; assert callable(steadyfolio.run_committee_workflow); assert callable(steadyfolio.review_equity)"
+          )
           python -m pip install --disable-pip-version-check --no-deps \
             --target "$plugin_site" \
             "$plugin_marketplace/plugins/steadyfolio"

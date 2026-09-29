@@ -8,7 +8,7 @@ Use only the narrow route needed for the request.
 | Portfolio review | `analyze_portfolio`, optional `ResearchProvider.fetch`, `analyze_portfolio_intelligence` | Allocation/diversification and risk/cost/evidence | Once when conclusions materially differ or evidence is incomplete | Missing or stale evidence prevents the requested conclusion |
 | ETF thesis review | `ResearchProvider.fetch`, `review_investment_thesis` | Thesis-fit and evidence-quality | Once when conclusions materially differ | No active thesis, no dated evidence, or stale evidence prevents a conclusion |
 | Fund overlap | `analyze_portfolio`, `ResearchProvider.fetch`, `analyze_portfolio_intelligence` | Allocation/diversification and evidence-quality | Once for incomplete coverage | No dated holdings or incompatible coverage |
-| Individual equity review | `review_equity` over supplied `EquityReviewInput` | Equity-quality and valuation-evidence | No by default | Identity mismatch, stale or missing required evidence, failed FCF hard screen, or unavailable/conflicting valuation |
+| Individual equity review | `review_equity` exactly once over supplied `EquityReviewInput` | Four host-native Codex specialists: evidence, business quality, valuation, and portfolio risk | One separate critic execution | Identity mismatch, stale or missing required evidence, invalid agent output, runtime failure, failed FCF hard screen, or unavailable/conflicting valuation |
 | Explicit portfolio-policy check | `analyze_portfolio`, `evaluate_portfolio_policy` | None by default | No | Unknown instruments, invalid thresholds, or a denominator other than `invested_positions` |
 
 ## Required inputs
@@ -48,6 +48,9 @@ and instrument classifications and therefore belongs under ignored `private/`.
 
 ## Bounded execution
 
-The default and maximum Phase 5 bounds are one research pass, one critic pass, one
-revision, and zero live external calls. Do not retry a missing provider or broaden
-research silently. Report the missing evidence and the smallest useful next step.
+The Phase 8 equity route permits one execution for each of four specialists, one
+critic execution, one final synthesis, no retries, and zero live market-data
+calls. Contribution starts no agents. The remaining routes keep the Phase 5 bounds
+of one research pass, one critic pass, one revision, and zero live external calls.
+Do not retry a missing provider or broaden research silently. Report the missing
+evidence and the smallest useful next step.

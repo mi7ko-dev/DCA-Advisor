@@ -10,6 +10,39 @@ Real evidence, policy thresholds, exemptions, classifications, and generated
 reviews belong below the selected workspace's ignored `private/` directory. The
 tracked examples are fully synthetic.
 
+## Phase 8 agent envelope
+
+The deterministic equity calculation remains `EquityReviewResult` version `1.0`.
+Phase 8 does not redefine that contract. Instead, CommitteeResult version `2.0`
+wraps the deterministic result with a version `1.0` multi-agent trace.
+
+`prepare_multi_agent_equity_review` invokes `review_equity` exactly once and builds
+immutable role-minimal packets for:
+
+- evidence identity, sources, dates, freshness, and coverage;
+- business quality, hard screen, criteria, and owner earnings;
+- valuation method, conflicts, and margin of safety; and
+- supplied typed aggregate portfolio weights, limits, counts, and overlap facts.
+
+The Codex host starts one isolated thread per specialist and one later critic
+thread. Each returns schema `1.0` agent-output JSON with claims and evidence
+references. The lead attaches runtime, attempt, isolation, and opaque execution and
+result IDs from the actual host spawn; models cannot self-attest them. Unknown
+references, extra fields, malformed output, role drift, non-isolated metadata, or
+additional attempts are rejected. The critic receives only deterministic facts,
+validated claims, and generic execution status, never raw responses.
+
+The lead does not vote. Deterministic calculations override agent interpretation,
+and a deterministic `insufficient_evidence` result stays insufficient even if all
+agents agree. Business-quality and valuation disagreement remains visible. A
+missing runtime returns `deterministic_only`; a partial failure returns
+`partial_agent_failure`. Neither is presented as a complete multi-agent review.
+
+Production runtime is `codex_native_subagents`. The network-free
+`in_memory_test_backend` exists only for synthetic tests and demonstrations. A real
+Codex run sends each minimal packet to the Codex model service, adds token use and
+latency, and requires no API key or third-party Python dependency in SteadyFolio.
+
 ## Instrument identity
 
 `review_equity` validates the portfolio state before using evidence. It requires a

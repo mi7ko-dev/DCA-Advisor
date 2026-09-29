@@ -1,5 +1,9 @@
 # Maintenance Guide
 
+This guide is source-checkout-only. The installed plugin intentionally omits the
+repository tests, package builder, hooks, and repository-safety tooling referenced
+below.
+
 ## Change boundary
 
 Keep changes narrow and preserve the public/private split. Every tracked fixture,
@@ -47,6 +51,7 @@ python tools/generate_synthetic_example.py
 python tools/generate_synthetic_intelligence.py
 python tools/generate_synthetic_committee.py
 python tools/generate_synthetic_equity.py
+python tools/generate_synthetic_multi_agent.py
 git diff --exit-code -- examples
 python -m unittest discover -s tests -p "test_*.py"
 python tools/run_repository_checks.py --require-gitleaks

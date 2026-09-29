@@ -1,0 +1,324 @@
+{
+  "result": {
+    "agent_review": {
+      "critic_findings": [
+        {
+          "code": "quality-valuation-disagreement",
+          "description": "Business quality and valuation support different bounded actions.",
+          "evidence_references": [
+            "equity-review:synthetic-compute-company:2026-01-31"
+          ],
+          "related_roles": [
+            "business_quality",
+            "valuation"
+          ],
+          "severity": "warning"
+        }
+      ],
+      "deterministic_result_id": "equity-review:synthetic-compute-company:2026-01-31",
+      "disagreements": [
+        "Business quality and valuation reached different bounded conclusions: business_quality=supports, valuation=limits.",
+        "Deterministic overall stance=supports differs from the bounded valuation conclusion=limits; the deterministic result governs."
+      ],
+      "executed_agent_roles": [
+        "evidence",
+        "business_quality",
+        "valuation",
+        "portfolio_risk",
+        "critic"
+      ],
+      "executions": [
+        {
+          "attempt": 1,
+          "execution_id": "agent-execution:4537d618472ac1d4065f",
+          "isolated_context": true,
+          "result_id": "agent-result:evidence:8c621727b2f20e743b09",
+          "role": "evidence",
+          "status": "completed"
+        },
+        {
+          "attempt": 1,
+          "execution_id": "agent-execution:3aca80ae47a2165bb4e2",
+          "isolated_context": true,
+          "result_id": "agent-result:business_quality:231beb1f4979863504e6",
+          "role": "business_quality",
+          "status": "completed"
+        },
+        {
+          "attempt": 1,
+          "execution_id": "agent-execution:b227ad58fb071ea4e766",
+          "isolated_context": true,
+          "result_id": "agent-result:valuation:d6efb72c7086d4917af5",
+          "role": "valuation",
+          "status": "completed"
+        },
+        {
+          "attempt": 1,
+          "execution_id": "agent-execution:8fc9bdc47332fa74a9f1",
+          "isolated_context": true,
+          "result_id": "agent-result:portfolio_risk:1ae019a51db9563846b7",
+          "role": "portfolio_risk",
+          "status": "completed"
+        },
+        {
+          "attempt": 1,
+          "execution_id": "agent-execution:1b0c8649a343e7fd5725",
+          "isolated_context": true,
+          "result_id": "agent-result:critic:6d41c9d6c0b54153eb5f",
+          "role": "critic",
+          "status": "completed"
+        }
+      ],
+      "fallback_status": "not_used",
+      "final_synthesis": "The deterministic equity engine concluded eligible_for_consideration. Four isolated specialist executions and one critic execution completed; their interpretations do not override the deterministic result. The in-memory backend demonstrates contracts and bounds only; it is not a live Codex subagent execution.",
+      "mutation_performed": false,
+      "requested_agent_roles": [
+        "evidence",
+        "business_quality",
+        "valuation",
+        "portfolio_risk",
+        "critic"
+      ],
+      "runtime_type": "in_memory_test_backend",
+      "schema_version": "1.0",
+      "specialist_results": [
+        {
+          "claims": [
+            {
+              "claim_id": "synthetic.evidence",
+              "evidence_references": [
+                "equity-review:synthetic-compute-company:2026-01-31"
+              ],
+              "statement": "Synthetic evidence interpretation uses only packet evidence."
+            }
+          ],
+          "conclusion": "supports",
+          "confidence_basis": "Cited synthetic packet evidence only.",
+          "evidence_references": [
+            "equity-review:synthetic-compute-company:2026-01-31"
+          ],
+          "execution": {
+            "attempt": 1,
+            "execution_id": "agent-execution:4537d618472ac1d4065f",
+            "isolated_context": true,
+            "runtime_type": "in_memory_test_backend",
+            "status": "completed"
+          },
+          "findings": [],
+          "limitations": [
+            "Synthetic in-memory agent-contract demonstration."
+          ],
+          "packet_id": "agent-packet:evidence:0dd31ea66182d759643a",
+          "result_id": "agent-result:evidence:8c621727b2f20e743b09",
+          "role": "evidence",
+          "schema_version": "1.0",
+          "unsupported_claim": false
+        },
+        {
+          "claims": [
+            {
+              "claim_id": "synthetic.business_quality",
+              "evidence_references": [
+                "equity-review:synthetic-compute-company:2026-01-31"
+              ],
+              "statement": "Synthetic business_quality interpretation uses only packet evidence."
+            }
+          ],
+          "conclusion": "supports",
+          "confidence_basis": "Cited synthetic packet evidence only.",
+          "evidence_references": [
+            "equity-review:synthetic-compute-company:2026-01-31"
+          ],
+          "execution": {
+            "attempt": 1,
+            "execution_id": "agent-execution:3aca80ae47a2165bb4e2",
+            "isolated_context": true,
+            "runtime_type": "in_memory_test_backend",
+            "status": "completed"
+          },
+          "findings": [],
+          "limitations": [
+            "Synthetic in-memory agent-contract demonstration."
+          ],
+          "packet_id": "agent-packet:business_quality:3244a7c40373eb7b29ff",
+          "result_id": "agent-result:business_quality:231beb1f4979863504e6",
+          "role": "business_quality",
+          "schema_version": "1.0",
+          "unsupported_claim": false
+        },
+        {
+          "claims": [
+            {
+              "claim_id": "synthetic.valuation",
+              "evidence_references": [
+                "equity-review:synthetic-compute-company:2026-01-31"
+              ],
+              "statement": "Synthetic valuation interpretation uses only packet evidence."
+            }
+          ],
+          "conclusion": "limits",
+          "confidence_basis": "Cited synthetic packet evidence only.",
+          "evidence_references": [
+            "equity-review:synthetic-compute-company:2026-01-31"
+          ],
+          "execution": {
+            "attempt": 1,
+            "execution_id": "agent-execution:b227ad58fb071ea4e766",
+            "isolated_context": true,
+            "runtime_type": "in_memory_test_backend",
+            "status": "completed"
+          },
+          "findings": [],
+          "limitations": [
+            "Synthetic in-memory agent-contract demonstration."
+          ],
+          "packet_id": "agent-packet:valuation:0fc3edf9839a8d96adfa",
+          "result_id": "agent-result:valuation:d6efb72c7086d4917af5",
+          "role": "valuation",
+          "schema_version": "1.0",
+          "unsupported_claim": false
+        },
+        {
+          "claims": [
+            {
+              "claim_id": "synthetic.portfolio_risk",
+              "evidence_references": [
+                "equity-review:synthetic-compute-company:2026-01-31"
+              ],
+              "statement": "Synthetic portfolio_risk interpretation uses only packet evidence."
+            }
+          ],
+          "conclusion": "supports",
+          "confidence_basis": "Cited synthetic packet evidence only.",
+          "evidence_references": [
+            "equity-review:synthetic-compute-company:2026-01-31"
+          ],
+          "execution": {
+            "attempt": 1,
+            "execution_id": "agent-execution:8fc9bdc47332fa74a9f1",
+            "isolated_context": true,
+            "runtime_type": "in_memory_test_backend",
+            "status": "completed"
+          },
+          "findings": [],
+          "limitations": [
+            "Synthetic in-memory agent-contract demonstration."
+          ],
+          "packet_id": "agent-packet:portfolio_risk:e5531403a3ae9202a874",
+          "result_id": "agent-result:portfolio_risk:1ae019a51db9563846b7",
+          "role": "portfolio_risk",
+          "schema_version": "1.0",
+          "unsupported_claim": false
+        }
+      ],
+      "status": "limited"
+    },
+    "approval_reasons": [
+      "Any later transaction or policy change requires separate explicit approval."
+    ],
+    "as_of": "2026-01-31",
+    "assumptions": [
+      "The supplied evidence is structured and attributable.",
+      "Agent interpretations are secondary to deterministic calculations."
+    ],
+    "committee_version": "2.0",
+    "data_limitations": [
+      "Synthetic evidence for deterministic examples only."
+    ],
+    "deterministic_facts": [
+      "Instrument identity matched for synthetic-compute-company.",
+      "Free-cash-flow hard screen: passed.",
+      "Quality score: 100% (11 of 11 available points; 8 of 8 criteria).",
+      "Quality classification: quality.",
+      "Valuation status: acceptable using dcf."
+    ],
+    "disagreements": [
+      "Business quality and valuation reached different bounded conclusions: business_quality=supports, valuation=limits.",
+      "Deterministic overall stance=supports differs from the bounded valuation conclusion=limits; the deterministic result governs."
+    ],
+    "final_synthesis": "The deterministic equity engine concluded eligible_for_consideration. Four isolated specialist executions and one critic execution completed; their interpretations do not override the deterministic result. The in-memory backend demonstrates contracts and bounds only; it is not a live Codex subagent execution.",
+    "id": "committee:synthetic-phase8-review:2026-01-31",
+    "mutation_performed": false,
+    "proposed_next_actions": [
+      "The evidence supports further consideration, not trade execution."
+    ],
+    "request_id": "synthetic-phase8-review",
+    "request_text": "Analyze this synthetic stock with a bounded multi-agent equity review.",
+    "requires_user_approval": false,
+    "route": "equity_review",
+    "sources": [
+      {
+        "freshness": "fresh",
+        "limitations": [
+          "Synthetic evidence for deterministic examples only."
+        ],
+        "provider": "SteadyFolio Synthetic Equity Provider",
+        "reference": "examples/equity-evidence.example.json",
+        "retrieved_at": "2026-01-31T18:00:00+00:00",
+        "source_id": "synthetic-equity-source",
+        "value_time": "2026-01-31"
+      }
+    ],
+    "specialist_interpretations": [
+      {
+        "conclusion": "supports",
+        "evidence_references": [
+          "equity-review:synthetic-compute-company:2026-01-31"
+        ],
+        "interpretation": "Synthetic evidence interpretation uses only packet evidence.",
+        "limitations": [
+          "Synthetic in-memory agent-contract demonstration."
+        ],
+        "role": "evidence"
+      },
+      {
+        "conclusion": "supports",
+        "evidence_references": [
+          "equity-review:synthetic-compute-company:2026-01-31"
+        ],
+        "interpretation": "Synthetic business_quality interpretation uses only packet evidence.",
+        "limitations": [
+          "Synthetic in-memory agent-contract demonstration."
+        ],
+        "role": "business_quality"
+      },
+      {
+        "conclusion": "limits",
+        "evidence_references": [
+          "equity-review:synthetic-compute-company:2026-01-31"
+        ],
+        "interpretation": "Synthetic valuation interpretation uses only packet evidence.",
+        "limitations": [
+          "Synthetic in-memory agent-contract demonstration."
+        ],
+        "role": "valuation"
+      },
+      {
+        "conclusion": "supports",
+        "evidence_references": [
+          "equity-review:synthetic-compute-company:2026-01-31"
+        ],
+        "interpretation": "Synthetic portfolio_risk interpretation uses only packet evidence.",
+        "limitations": [
+          "Synthetic in-memory agent-contract demonstration."
+        ],
+        "role": "portfolio_risk"
+      }
+    ],
+    "status": "limited",
+    "trace": {
+      "critic_passes": 1,
+      "deterministic_tools": [
+        "review_equity"
+      ],
+      "execution_mode": "in-memory agent-contract test backend",
+      "external_calls": 0,
+      "provider_calls": 0,
+      "review_lenses": [],
+      "revisions": 0,
+      "route": "equity_review"
+    }
+  },
+  "runtime_disclosure": "in_memory_test_backend",
+  "synthetic": true
+}

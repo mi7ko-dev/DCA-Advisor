@@ -210,14 +210,13 @@ class CommitteeIntegrationTests(unittest.TestCase):
         )
 
         self.assertEqual(result.route, "equity_review")
-        self.assertEqual(result.status, "complete")
+        self.assertEqual(result.status, "limited")
         self.assertEqual(result.trace.deterministic_tools, ("review_equity",))
-        self.assertEqual(
-            result.trace.review_lenses,
-            ("equity-quality", "valuation-evidence"),
-        )
+        self.assertEqual(result.trace.review_lenses, ())
         self.assertEqual(result.trace.provider_calls, 0)
         self.assertEqual(result.trace.external_calls, 0)
+        self.assertEqual(result.agent_review.runtime_type, "none")
+        self.assertEqual(result.agent_review.fallback_status, "deterministic_only")
         self.assertFalse(result.mutation_performed)
 
     def test_equity_review_requires_request_and_evidence_dates_to_match(self) -> None:
@@ -262,6 +261,7 @@ class CommitteeIntegrationTests(unittest.TestCase):
         self.assertEqual(result.trace.review_lenses, ())
         self.assertEqual(result.trace.provider_calls, 0)
         self.assertEqual(result.trace.critic_passes, 0)
+        self.assertIsNone(result.agent_review)
         self.assertTrue(result.requires_user_approval)
         self.assertFalse(result.mutation_performed)
         self.assertTrue(

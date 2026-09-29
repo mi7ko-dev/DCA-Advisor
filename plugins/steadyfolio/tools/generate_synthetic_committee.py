@@ -39,10 +39,15 @@ def _read(path: Path) -> object:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def _write_text(path: Path, value: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8", newline="\n") as stream:
+        stream.write(value)
+
+
 def _write_json(path: Path, value: object) -> None:
-    path.write_text(
-        json.dumps(value, indent=2, ensure_ascii=True, sort_keys=True) + "\n",
-        encoding="utf-8",
+    _write_text(
+        path, json.dumps(value, indent=2, ensure_ascii=True, sort_keys=True) + "\n"
     )
 
 
@@ -110,9 +115,9 @@ def main() -> int:
         EXAMPLES / "results" / "committee-workflows.example.json",
         {"synthetic": True, "scenarios": results},
     )
-    (EXAMPLES / "reports" / "committee-workflows.md").write_text(
+    _write_text(
+        EXAMPLES / "reports" / "committee-workflows.md",
         "\n\n---\n\n".join(reports).rstrip() + "\n",
-        encoding="utf-8",
     )
     return 0
 

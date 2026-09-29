@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://steadyfolio.example/schemas/specialist-result.schema.json",
+  "title": "SteadyFolio Specialist Agent Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "result_id", "packet_id", "role", "conclusion", "claims", "evidence_references", "limitations", "confidence_basis", "unsupported_claim", "findings", "execution"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "result_id": {"$ref": "#/$defs/id"},
+    "packet_id": {"$ref": "#/$defs/id"},
+    "role": {"enum": ["evidence", "business_quality", "valuation", "portfolio_risk", "critic"]},
+    "conclusion": {"enum": ["supports", "limits", "insufficient_evidence", "rejects"]},
+    "claims": {"type": "array", "items": {"$ref": "#/$defs/claim"}},
+    "evidence_references": {"$ref": "#/$defs/idArray"},
+    "limitations": {"$ref": "#/$defs/stringArray"},
+    "confidence_basis": {"type": "string", "minLength": 1},
+    "unsupported_claim": {"type": "boolean"},
+    "findings": {"type": "array", "items": {"$ref": "#/$defs/finding"}},
+    "execution": {"$ref": "#/$defs/execution"}
+  },
+  "$defs": {
+    "agentOutput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "packet_id", "role", "conclusion", "claims", "evidence_references", "limitations", "confidence_basis", "unsupported_claim", "findings"],
+      "properties": {
+        "schema_version": {"const": "1.0"},
+        "packet_id": {"$ref": "#/$defs/id"},
+        "role": {"enum": ["evidence", "business_quality", "valuation", "portfolio_risk", "critic"]},
+        "conclusion": {"enum": ["supports", "limits", "insufficient_evidence", "rejects"]},
+        "claims": {"type": "array", "items": {"$ref": "#/$defs/claim"}},
+        "evidence_references": {"$ref": "#/$defs/idArray"},
+        "limitations": {"$ref": "#/$defs/stringArray"},
+        "confidence_basis": {"type": "string", "minLength": 1},
+        "unsupported_claim": {"type": "boolean"},
+        "findings": {"type": "array", "items": {"$ref": "#/$defs/finding"}}
+      }
+    },
+    "id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"},
+    "idArray": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/id"}},
+    "stringArray": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["claim_id", "statement", "evidence_references"],
+      "properties": {
+        "claim_id": {"$ref": "#/$defs/id"},
+        "statement": {"type": "string", "minLength": 1},
+        "evidence_references": {"$ref": "#/$defs/idArray"}
+      }
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "severity", "description", "related_roles", "evidence_references"],
+      "properties": {
+        "code": {"$ref": "#/$defs/id"},
+        "severity": {"enum": ["warning", "blocking"]},
+        "description": {"type": "string", "minLength": 1},
+        "related_roles": {"type": "array", "uniqueItems": true, "items": {"enum": ["evidence", "business_quality", "valuation", "portfolio_risk", "critic"]}},
+        "evidence_references": {"$ref": "#/$defs/idArray"}
+      }
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runtime_type", "execution_id", "status", "attempt", "isolated_context"],
+      "properties": {
+        "runtime_type": {"enum": ["codex_native_subagents", "in_memory_test_backend"]},
+        "execution_id": {"$ref": "#/$defs/id"},
+        "status": {"const": "completed"},
+        "attempt": {"const": 1},
+        "isolated_context": {"const": true}
+      }
+    }
+  }
+}
