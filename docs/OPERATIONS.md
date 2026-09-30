@@ -191,12 +191,15 @@ The skill may create new immutable research-cache and durable-context records
 without another prompt. Use `create_research_cache_record` with
 `save_research_cache_record`, or `create_durable_context_record` with
 `save_durable_context_record`; inspect them only through the corresponding
-`list_*` APIs. These functions choose timestamped collision-resistant filenames,
-verify ignored and untracked targets, reject symlinks, and never expose an
-overwrite option. Context records distinguish
+`list_*` APIs. These functions choose record-ID-derived collision-resistant
+filenames, reject a duplicate ID across the workspace even when timestamps differ,
+verify ignored and untracked targets, reject symlinks, and never expose an overwrite
+option. Context records distinguish
 `confirmed_fact`, `user_decision`, `temporary_assumption`, `proposal`, and
 `external_evidence`. A correction creates a superseding record; it does not
-rewrite history.
+rewrite history. A `temporary_assumption` or `proposal` accepts only
+non-authoritative statuses; confirmation creates a new `confirmed_fact` or
+`user_decision` record.
 
 When source terms prohibit retention but permit current access, analysis, and
 citation, use the verified evidence only in memory and disclose that it was not

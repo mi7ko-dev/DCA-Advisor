@@ -452,8 +452,10 @@ archive or marketplace.
 - **Consequence:** This standing authorization covers creation of new context and
   research records only. It does not authorize saving a review, changing holdings,
   transactions, theses, targets, or policy, or overwriting any private output.
-  Typed public create/save/list APIs choose collision-resistant filenames, reject
-  unsafe or non-ignored targets, and verify that a superseded context record exists.
+  Typed public create/save/list APIs choose record-ID-derived collision-resistant
+  filenames, reject duplicate identities, unsafe or non-ignored targets, and verify
+  that a superseded context record exists. Non-authoritative categories cannot use
+  approved or active statuses.
 
 ## D-029: Generalize bounded host-native perspectives for consequential reviews
 

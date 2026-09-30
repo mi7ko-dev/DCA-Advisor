@@ -50,14 +50,16 @@ private context, do not browse and report the evidence gap.
 Create a record with `create_research_cache_record` and persist it with
 `save_research_cache_record`; never write cache files directly, edit an earlier
 record, or choose the filename. The public API writes validated JSON under
-`private/research/` with a timestamped collision-resistant name and applies the
-storage layer's path, symlink, ignored/untracked-target, and exclusive-create
-checks. If that API is unavailable or fails, do not persist.
+`private/research/` with a record-ID-derived collision-resistant name and applies
+the storage layer's path, symlink, ignored/untracked-target, and exclusive-create
+checks. A record ID is unique across the workspace even when a copied record has
+a different timestamp. If that API is unavailable or fails, do not persist.
 
 Each record must include:
 
 - asset or public instrument identity, ticker when applicable, and currency;
-- data kind and the conclusion for which it was collected;
+- data kind and, when a derived summary may be retained, the conclusion for which
+  it was collected;
 - source title, publisher, direct reference, and whether it is primary;
 - source value/as-of date and timezone-aware retrieval time;
 - methodology, coverage, limitations, and explicit assumptions;
@@ -67,7 +69,8 @@ Each record must include:
   does not retain raw pages.
 
 If terms do not permit a derived summary, store only the minimum allowed citation
-and freshness metadata and retrieve the source again when needed. Unknown or
+and freshness metadata, with an empty conclusion and no facts, and retrieve the
+source again when needed. Unknown or
 ambiguous cache terms fail closed to citation metadata only; if even that retention
 is not clearly permitted, persist nothing. Inability to persist does not by itself
 invalidate the current review: verified evidence may remain in memory for that
@@ -103,6 +106,10 @@ Include the statement, recorded time, effective/as-of date when applicable,
 source kind, source reference when applicable, status, limitations, and an optional
 review-after date. Store only the minimum durable context; do not copy full prompts,
 credentials, account identifiers, raw provider responses, or transient reasoning.
+`temporary_assumption` may use only `pending`, `expired`, `rejected`, or
+`withdrawn`; `proposal` may use only `pending`, `rejected`, or `withdrawn`. An
+accepted proposal or confirmed assumption becomes a new `user_decision` or
+`confirmed_fact` record instead of changing the non-authoritative category.
 
 A `proposal` or `temporary_assumption` never becomes an active policy, approved
 target, or confirmed fact through reuse. A later correction creates a new record

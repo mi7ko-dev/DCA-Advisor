@@ -451,7 +451,8 @@ prohibit retention. The lead never converts
 missing data into a model estimate.
 
 Research and context records are created and saved only through typed public APIs
-that validate schemas, choose collision-resistant names, reuse ignored-target and
+that validate schemas, choose record-ID-derived collision-resistant names, reject
+duplicate identities even when copied timestamps differ, reuse ignored-target and
 symlink checks, and expose no overwrite option. The skill creates minimal append-only records below `private/context/` for
 durable confirmed facts, user decisions, temporary assumptions, proposals, and
 external evidence. Categories remain semantically distinct: a proposal or
@@ -466,7 +467,8 @@ receive role-minimal prepared evidence and may not use tools, read files,
 recalculate, or add facts. Equity review keeps the Phase 8 schema and four roles.
 Generic packets and outputs use separate version `1.0` schemas, route-specific
 role and aggregate allowlists, content-bound packet IDs, opaque user-owned
-identifiers, and packet-only contexts with no inherited history. Exact-field
+identifiers, review-bound source dates, private-context/prompt/path guards, and
+packet-only contexts with no inherited history. Exact-field
 parsers attach host-owned execution metadata and validate every evidence reference
 before critic or synthesis use. The generic critic builder accepts only validated
 specialist results. Packet, result, or isolation failure triggers fallback, and all

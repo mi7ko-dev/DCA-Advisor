@@ -55,10 +55,13 @@ record access path; they validate the record and apply the storage layer's path,
 symlink, ignored/untracked-target, and exclusive-create checks. Source terms govern
 whether a derived summary or only citation metadata may be retained; the generic
 API never stores raw pages. Unknown terms default to citation metadata only or no
-persistence. Evidence that permits current access, analysis, and citation may
-remain in memory for the current review even when retention is prohibited. A proposal or temporary
-assumption remains labelled as such and cannot authorize policy mutation. Existing
-private records are never overwritten without immediate explicit approval.
+persistence. Citation-metadata mode retains neither a conclusion nor facts.
+Record-ID-derived exclusive targets and workspace-wide ID validation reject copied
+records whose timestamps differ. Evidence that permits current access, analysis,
+and citation may remain in memory for the current review even when retention is
+prohibited. A proposal or temporary assumption remains labelled as such and cannot
+authorize policy mutation. Existing private records are never overwritten without
+immediate explicit approval.
 
 The selected Codex host provides the true subagent runtime. Equity review uses four
 role-minimal specialist packets and one critic packet under its strict schema.
@@ -77,8 +80,10 @@ lead cannot validate and redact a packet, no subagent starts.
 Generic non-equity packets and results use separate versioned JSON contracts.
 Packet IDs bind packet content; exact-field parsers attach host-owned execution
 metadata and reject unknown fields, unsupported evidence references, uncited
-claims, role drift, or non-isolated execution. The critic packet builder accepts
-only validated specialist results. Fewer than two valid generic specialist results
+claims, role drift, future-dated sources, explicit private-context or prompt/path
+markers, or non-isolated execution. The public packet constructor creates
+specialist packets only; the critic packet builder accepts only validated
+specialist results. Fewer than two valid generic specialist results
 forces the sequential fallback instead of a multi-agent claim.
 
 Agent packets and validated results containing real data remain in memory by

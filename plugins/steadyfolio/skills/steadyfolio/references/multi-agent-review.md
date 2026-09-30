@@ -34,7 +34,9 @@ deterministic portion and escalate only the disputed conclusion.
    - individual equity: use the strict four-role equity protocol.
 4. Give each role one clear question and create its immutable role-minimal packet
    with `create_generic_agent_packet`. Validate it with
-   `validate_generic_agent_packet`; reject every unknown field before spawning.
+   `validate_generic_agent_packet`; reject every unknown field, future-dated
+   source, multiline prompt-like value, explicit private-context marker, or source
+   path before spawning. The public constructor creates specialist packets only.
 5. Spawn each selected role once with no inherited conversation history
    (`fork_turns=none` or an equivalent packet-only context). If the host cannot
    guarantee that boundary, treat the runtime as unavailable and use the fallback.
@@ -51,7 +53,9 @@ deterministic portion and escalate only the disputed conclusion.
    new isolated critic, parse and validate its result through the same generic
    contract, and reject it on any contract failure. The critic checks unsupported
    claims, contradictions, missing evidence, and overstatement; it does not add
-   facts.
+   facts. Never construct a critic packet through `create_generic_agent_packet`;
+   the critic builder is the only supported construction path and admits only
+   validated results.
 8. Perform one lead synthesis using only deterministic output, attributable
    evidence, and validated generic results. Agreement, voting, and confidence
    percentages are not proof.

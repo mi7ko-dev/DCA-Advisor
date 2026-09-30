@@ -35,6 +35,24 @@ _IDENTIFIER = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$")
 _CONCLUSIONS = {"supports", "limits", "insufficient_evidence", "rejects"}
 _SEVERITIES = {"warning", "blocking"}
 _RUNTIMES = {CODEX_NATIVE_RUNTIME, IN_MEMORY_TEST_RUNTIME}
+_MAX_ROLE_MINIMAL_TEXT_LENGTH = 512
+_PROHIBITED_PACKET_TEXT = (
+    re.compile(
+        r"\b(?:account[ _-]?(?:id|identifier|number)|broker(?:age)?[ _-]?account|"
+        r"account[ _-]?balance|portfolio[ _-]?balance|holding[ _-]?(?:quantity|units)|"
+        r"transaction[ _-]?(?:history|id)|target[ _-]?(?:amount|weight|id)|"
+        r"full[ _-]?prompt|system[ _-]?prompt|developer[ _-]?message|private[ _-]?note|"
+        r"api[ _-]?key|access[ _-]?token|password|credential)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(?:ignore|disregard)\s+(?:all\s+|any\s+|the\s+)?"
+        r"(?:previous|prior|above)\s+instructions\b",
+        re.IGNORECASE,
+    ),
+    re.compile(r"\b(?:balance|holding|iban)\s*[:=]", re.IGNORECASE),
+    re.compile(r"(?:[A-Za-z]:\\|/(?:home|Users)/)"),
+)
 _AGGREGATE_KINDS = {
     "allocation_diversification": {
         "normalized_weight",
@@ -64,6 +82,20 @@ def _require_string(value: object, field: str) -> str:
     if not isinstance(value, str) or not value.strip():
         raise ValidationError(f"{field} must be a non-empty string.")
     return value
+
+
+def _require_role_minimal_text(value: object, field: str) -> str:
+    parsed = _require_string(value, field)
+    if (
+        len(parsed) > _MAX_ROLE_MINIMAL_TEXT_LENGTH
+        or "\n" in parsed
+        or "\r" in parsed
+        or any(pattern.search(parsed) for pattern in _PROHIBITED_PACKET_TEXT)
+    ):
+        raise ValidationError(
+            f"{field} contains prohibited private-context, prompt, or path content."
+        )
+    return parsed
 
 
 def _require_bool(value: object, field: str) -> bool:
@@ -206,7 +238,7 @@ def _packet_digest(packet: GenericAgentInputPacket) -> str:
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()[:20]
 
 
-def create_generic_agent_packet(
+def _create_generic_agent_packet(
     *,
     route: str,
     review_date: str,
@@ -254,6 +286,39 @@ def create_generic_agent_packet(
     return packet
 
 
+def create_generic_agent_packet(
+    *,
+    route: str,
+    review_date: str,
+    role: str,
+    question: str,
+    deterministic_result_id: str,
+    instrument_aliases: Sequence[str],
+    facts: Sequence[AgentEvidenceFact],
+    sources: Sequence[GenericAgentSourceReference],
+    assumptions: Sequence[str] = (),
+    aggregates: Sequence[GenericAgentAggregate] = (),
+) -> GenericAgentInputPacket:
+    """Create one validated specialist packet from role-minimal inputs."""
+
+    if role == GENERIC_CRITIC_ROLE:
+        raise ValidationError(
+            "Generic critic packets must be created by build_generic_critic_packet."
+        )
+    return _create_generic_agent_packet(
+        route=route,
+        review_date=review_date,
+        role=role,
+        question=question,
+        deterministic_result_id=deterministic_result_id,
+        instrument_aliases=instrument_aliases,
+        facts=facts,
+        sources=sources,
+        assumptions=assumptions,
+        aggregates=aggregates,
+    )
+
+
 def generic_agent_packet_from_dict(value: object) -> GenericAgentInputPacket:
     raw = _mapping(value, "generic_agent_packet")
     _exact_keys(
@@ -278,6 +343,11 @@ def generic_agent_packet_from_dict(value: object) -> GenericAgentInputPacket:
         },
         "generic_agent_packet",
     )
+    role = _require_string(raw["role"], "role")
+    if role == GENERIC_CRITIC_ROLE:
+        raise ValidationError(
+            "Generic critic packets must be created by build_generic_critic_packet."
+        )
     facts_raw = raw["facts"]
     sources_raw = raw["sources"]
     aggregates_raw = raw["aggregates"]
@@ -288,7 +358,7 @@ def generic_agent_packet_from_dict(value: object) -> GenericAgentInputPacket:
         packet_id=_require_identifier(raw["packet_id"], "packet_id"),
         route=_require_string(raw["route"], "route"),
         review_date=_require_string(raw["review_date"], "review_date"),
-        role=_require_string(raw["role"], "role"),
+        role=role,
         question=_require_string(raw["question"], "question"),
         deterministic_result_id=_require_identifier(
             raw["deterministic_result_id"], "deterministic_result_id"
@@ -327,9 +397,9 @@ def validate_generic_agent_packet(packet: GenericAgentInputPacket) -> None:
         ("deterministic_result_id", packet.deterministic_result_id),
     ):
         _require_identifier(value, field)
-    _require_string(packet.question, "question")
+    _require_role_minimal_text(packet.question, "question")
     try:
-        date.fromisoformat(packet.review_date)
+        review_date = date.fromisoformat(packet.review_date)
     except ValueError as error:
         raise ValidationError("review_date must be an ISO date.") from error
     if packet.mutation_allowed or packet.external_research_allowed:
@@ -351,7 +421,7 @@ def validate_generic_agent_packet(packet: GenericAgentInputPacket) -> None:
     if len(set(aliases)) != len(aliases):
         raise ValidationError("instrument_aliases must be unique.")
     for assumption in packet.assumptions:
-        _require_string(assumption, "assumptions[]")
+        _require_role_minimal_text(assumption, "assumptions[]")
     if len(set(packet.assumptions)) != len(packet.assumptions):
         raise ValidationError("assumptions must be unique.")
     for instruction in packet.instructions:
@@ -374,8 +444,8 @@ def validate_generic_agent_packet(packet: GenericAgentInputPacket) -> None:
         raise ValidationError("Generic packet allowed evidence references are inconsistent.")
     for fact in packet.facts:
         _require_identifier(fact.fact_id, "fact_id")
-        _require_string(fact.category, "fact.category")
-        _require_string(fact.statement, "fact.statement")
+        _require_role_minimal_text(fact.category, "fact.category")
+        _require_role_minimal_text(fact.statement, "fact.statement")
         if not fact.evidence_references or not set(fact.evidence_references) <= allowed:
             raise ValidationError("Generic packet fact cites unsupported evidence.")
         if len(set(fact.evidence_references)) != len(fact.evidence_references):
@@ -384,25 +454,27 @@ def validate_generic_agent_packet(packet: GenericAgentInputPacket) -> None:
         _require_identifier(source.source_id, "source_id")
         if source.freshness not in {"fresh", "stale"}:
             raise ValidationError("Generic source freshness is unsupported.")
-        _require_string(source.coverage, "source.coverage")
+        _require_role_minimal_text(source.coverage, "source.coverage")
         for limitation in source.limitations:
-            _require_string(limitation, "source.limitations[]")
+            _require_role_minimal_text(limitation, "source.limitations[]")
         if len(set(source.limitations)) != len(source.limitations):
             raise ValidationError("Generic source limitations must be unique.")
         try:
-            date.fromisoformat(source.as_of)
+            source_as_of = date.fromisoformat(source.as_of)
             parsed = datetime.fromisoformat(source.retrieved_at.replace("Z", "+00:00"))
         except ValueError as error:
             raise ValidationError("Generic source dates must be ISO values.") from error
         if parsed.tzinfo is None or parsed.utcoffset() is None:
             raise ValidationError("Generic source retrieved_at must include a timezone.")
+        if source_as_of > review_date or parsed.date() > review_date:
+            raise ValidationError("Generic source evidence cannot postdate review_date.")
     permitted_kinds = _AGGREGATE_KINDS[packet.role]
     for aggregate in packet.aggregates:
         _require_identifier(aggregate.aggregate_id, "aggregate_id")
         if aggregate.kind not in permitted_kinds:
             raise ValidationError("Generic packet aggregate kind is unsupported for its role.")
-        _require_string(aggregate.value, "aggregate.value")
-        _require_string(aggregate.unit, "aggregate.unit")
+        _require_role_minimal_text(aggregate.value, "aggregate.value")
+        _require_role_minimal_text(aggregate.unit, "aggregate.unit")
         if not aggregate.evidence_references or not set(aggregate.evidence_references) <= allowed:
             raise ValidationError("Generic packet aggregate cites unsupported evidence.")
 
@@ -672,7 +744,7 @@ def build_generic_critic_packet(
             assumption for packet in specialist_packets for assumption in packet.assumptions
         )
     )
-    return create_generic_agent_packet(
+    return _create_generic_agent_packet(
         route=next(iter(routes)),
         review_date=next(iter(review_dates)),
         role=GENERIC_CRITIC_ROLE,
