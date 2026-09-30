@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date, datetime, timezone
 import re
 from typing import Any, Mapping, Sequence
@@ -11,7 +11,9 @@ from uuid import uuid4
 from .errors import ValidationError
 
 
-PRIVATE_RECORD_SCHEMA_VERSION = "1.0"
+RESEARCH_CACHE_SCHEMA_VERSION = "1.1"
+LEGACY_RESEARCH_CACHE_SCHEMA_VERSION = "1.0"
+DURABLE_CONTEXT_SCHEMA_VERSION = "1.0"
 CONTEXT_CATEGORIES = frozenset(
     {
         "confirmed_fact",
@@ -188,7 +190,7 @@ def create_research_cache_record(
     """Create a validated cache record with a collision-resistant public id."""
 
     record = ResearchCacheRecord(
-        schema_version=PRIVATE_RECORD_SCHEMA_VERSION,
+        schema_version=RESEARCH_CACHE_SCHEMA_VERSION,
         record_id=_record_id("research"),
         asset_identity=asset_identity,
         ticker=ticker,
@@ -219,7 +221,7 @@ def create_research_cache_record(
 
 
 def validate_research_cache_record(record: ResearchCacheRecord) -> None:
-    if record.schema_version != PRIVATE_RECORD_SCHEMA_VERSION:
+    if record.schema_version != RESEARCH_CACHE_SCHEMA_VERSION:
         raise ValidationError("Unsupported research cache record version.")
     if not _RECORD_ID.fullmatch(record.record_id) or not record.record_id.startswith(
         "research:"
@@ -325,6 +327,19 @@ def research_cache_record_from_dict(value: object) -> ResearchCacheRecord:
             raw["redistribution_permitted"], "redistribution_permitted"
         ),
     )
+    if record.schema_version == LEGACY_RESEARCH_CACHE_SCHEMA_VERSION:
+        if record.cache_mode == "citation_metadata":
+            if record.facts:
+                raise ValidationError(
+                    "Legacy citation-metadata records cannot retain facts."
+                )
+            record = replace(
+                record,
+                schema_version=RESEARCH_CACHE_SCHEMA_VERSION,
+                conclusion="",
+            )
+        else:
+            record = replace(record, schema_version=RESEARCH_CACHE_SCHEMA_VERSION)
     validate_research_cache_record(record)
     return record
 
@@ -345,7 +360,7 @@ def create_durable_context_record(
     """Create a classified immutable context record with a unique public id."""
 
     record = DurableContextRecord(
-        schema_version=PRIVATE_RECORD_SCHEMA_VERSION,
+        schema_version=DURABLE_CONTEXT_SCHEMA_VERSION,
         record_id=_record_id("context"),
         category=category,
         statement=statement,
@@ -363,7 +378,7 @@ def create_durable_context_record(
 
 
 def validate_durable_context_record(record: DurableContextRecord) -> None:
-    if record.schema_version != PRIVATE_RECORD_SCHEMA_VERSION:
+    if record.schema_version != DURABLE_CONTEXT_SCHEMA_VERSION:
         raise ValidationError("Unsupported durable context record version.")
     if not _RECORD_ID.fullmatch(record.record_id) or not record.record_id.startswith(
         "context:"

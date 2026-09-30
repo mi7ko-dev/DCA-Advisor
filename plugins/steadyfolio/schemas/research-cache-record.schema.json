@@ -6,7 +6,7 @@
   "additionalProperties": false,
   "required": ["schema_version", "record_id", "asset_identity", "currency", "data_kind", "conclusion", "facts", "source_title", "publisher", "source_reference", "primary_source", "retrieved_at", "methodology", "coverage", "limitations", "assumptions", "freshness_basis", "terms_reference", "cache_mode", "redistribution_permitted"],
   "properties": {
-    "schema_version": {"const": "1.0"},
+    "schema_version": {"enum": ["1.0", "1.1"]},
     "record_id": {"type": "string", "pattern": "^research:[0-9a-f]{32}$"},
     "asset_identity": {"type": "string", "minLength": 1},
     "ticker": {"type": "string", "minLength": 1},
@@ -36,16 +36,35 @@
     {"required": ["source_as_of"]},
     {"required": ["source_period"]}
   ],
-  "allOf": [
+  "oneOf": [
     {
-      "if": {"properties": {"cache_mode": {"const": "citation_metadata"}}, "required": ["cache_mode"]},
-      "then": {
-        "properties": {
-          "conclusion": {"maxLength": 0},
-          "facts": {"maxItems": 0}
-        }
+      "properties": {
+        "schema_version": {"const": "1.0"},
+        "conclusion": {"minLength": 1}
       },
-      "else": {"properties": {"conclusion": {"pattern": "\\S"}}}
+      "required": ["schema_version"],
+      "allOf": [
+        {
+          "if": {"properties": {"cache_mode": {"const": "citation_metadata"}}, "required": ["cache_mode"]},
+          "then": {"properties": {"facts": {"maxItems": 0}}}
+        }
+      ]
+    },
+    {
+      "properties": {"schema_version": {"const": "1.1"}},
+      "required": ["schema_version"],
+      "allOf": [
+        {
+          "if": {"properties": {"cache_mode": {"const": "citation_metadata"}}, "required": ["cache_mode"]},
+          "then": {
+            "properties": {
+              "conclusion": {"maxLength": 0},
+              "facts": {"maxItems": 0}
+            }
+          },
+          "else": {"properties": {"conclusion": {"pattern": "\\S"}}}
+        }
+      ]
     }
   ],
   "$defs": {
