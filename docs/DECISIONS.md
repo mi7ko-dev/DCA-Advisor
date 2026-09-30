@@ -433,10 +433,12 @@ archive or marketplace.
   identifiers and dates, one pass is capped at four searches and eight documents,
   and unknown cache terms default to citation metadata only or no persistence.
   Research records are created, saved, and listed only through typed public APIs
-  with schema, ignored-target, symlink, and exclusive-create validation. Evidence
-  that permits current use and citation but prohibits retention may remain in
-  memory for the current review; missing, unusable, unverifiable, or conflicting
-  current evidence still ends in `insufficient_evidence`.
+  with schema, ignored-target, symlink, and exclusive-create validation. New
+  records use schema `1.1`; legacy `1.0` records are normalized only in memory,
+  never rewritten, and any legacy citation-metadata conclusion is cleared before
+  reuse. Evidence that permits current use and citation but prohibits retention
+  may remain in memory for the current review; missing, unusable, unverifiable, or
+  conflicting current evidence still ends in `insufficient_evidence`.
 
 ## D-028: Capture durable context as append-only classified private records
 

@@ -405,7 +405,7 @@ class GenericAgentContractTests(unittest.TestCase):
         self.assertEqual(result_schema["$defs"]["resultText"]["maxLength"], 384)
         self.assertEqual(
             result_schema["$defs"]["resultText"]["pattern"],
-            "^[^\\r\\n]*$",
+            "^(?![\\s\\S]*[\\r\\n])[\\s\\S]+$",
         )
         for definition in ("agentOutput", "result"):
             self.assertEqual(

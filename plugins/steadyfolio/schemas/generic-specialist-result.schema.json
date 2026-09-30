@@ -6,7 +6,7 @@
   "$defs": {
     "id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"},
     "idArray": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/id"}},
-    "resultText": {"type": "string", "minLength": 1, "maxLength": 384, "pattern": "^[^\\r\\n]*$"},
+    "resultText": {"type": "string", "minLength": 1, "maxLength": 384, "pattern": "^(?![\\s\\S]*[\\r\\n])[\\s\\S]+$"},
     "stringArray": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/resultText"}},
     "role": {"enum": ["allocation_diversification", "risk_cost", "evidence_quality", "thesis_fit", "critic"]},
     "supportingSpecialistClaims": {

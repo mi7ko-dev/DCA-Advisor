@@ -447,8 +447,11 @@ permission. Queries contain only public identifiers and dates; one pass is bound
 to four targeted searches and eight source documents. Unknown retention terms
 default to citation metadata only or no persistence. Evidence may still be used
 only in memory when its terms permit current access, analysis, and citation but
-prohibit retention. The lead never converts
-missing data into a model estimate.
+prohibit retention. New research-cache records use schema `1.1`, in which citation
+metadata retains neither facts nor a conclusion. The loader projects legacy `1.0`
+records into `1.1` in memory without rewriting their files and clears a legacy
+citation-only conclusion before reuse. The lead never converts missing data into
+a model estimate.
 
 Research and context records are created and saved only through typed public APIs
 that validate schemas, choose record-ID-derived collision-resistant names, reject
