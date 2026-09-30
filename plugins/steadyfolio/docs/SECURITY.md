@@ -56,6 +56,9 @@ symlink, ignored/untracked-target, and exclusive-create checks. Source terms gov
 whether a derived summary or only citation metadata may be retained; the generic
 API never stores raw pages. Unknown terms default to citation metadata only or no
 persistence. Citation-metadata mode retains neither a conclusion nor facts.
+Research-cache schema `1.1` enforces this rule for new records. The loader accepts
+legacy `1.0` records without rewriting them; it upgrades them only in memory and
+discards a legacy citation-metadata conclusion before the record can be reused.
 Record-ID-derived exclusive targets and workspace-wide ID validation reject copied
 records whose timestamps differ. Evidence that permits current access, analysis,
 and citation may remain in memory for the current review even when retention is
@@ -81,7 +84,11 @@ Generic non-equity packets and results use separate versioned JSON contracts.
 Packet IDs bind packet content; exact-field parsers attach host-owned execution
 metadata and reject unknown fields, unsupported evidence references, uncited
 claims, role drift, future-dated sources, explicit private-context or prompt/path
-markers, or non-isolated execution. The public packet constructor creates
+markers (including POSIX, Windows-drive, UNC, and `file:` absolute paths), or
+non-isolated execution. Specialist claim, limitation, confidence, and finding text
+is subject to the same guard and a 384-character bound before acceptance, so critic
+packet construction cannot discover a later 512-character packet-bound violation.
+The public packet constructor creates
 specialist packets only; the critic packet builder accepts only validated
 specialist results. Fewer than two valid generic specialist results
 forces the sequential fallback instead of a multi-agent claim.

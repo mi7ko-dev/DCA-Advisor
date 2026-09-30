@@ -79,6 +79,10 @@ terms reference or evidence used for any record. Do not store raw pages merely
 because they were retrieved. Provider content and derived records remain private
 and never become fixtures, logs, prompts in tracked files, or public examples.
 
+Use research-cache schema `1.1` for new records. Legacy `1.0` records are migrated
+only in memory; do not rewrite their files, and discard any legacy citation-only
+conclusion before reuse.
+
 ## Durable context records
 
 Create a new append-only record under `private/context/` when the conversation

@@ -35,8 +35,10 @@ deterministic portion and escalate only the disputed conclusion.
 4. Give each role one clear question and create its immutable role-minimal packet
    with `create_generic_agent_packet`. Validate it with
    `validate_generic_agent_packet`; reject every unknown field, future-dated
-   source, multiline prompt-like value, explicit private-context marker, or source
-   path before spawning. The public constructor creates specialist packets only.
+   source, multiline prompt-like value, explicit private-context marker, or absolute
+   POSIX, Windows-drive, UNC, or `file:` source path before spawning. Apply the same
+   guard and the specialist-result text bound before accepting output for the critic.
+   The public constructor creates specialist packets only.
 5. Spawn each selected role once with no inherited conversation history
    (`fork_turns=none` or an equivalent packet-only context). If the host cannot
    guarantee that boundary, treat the runtime as unavailable and use the fallback.

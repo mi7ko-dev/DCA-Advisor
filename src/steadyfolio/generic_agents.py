@@ -36,6 +36,7 @@ _CONCLUSIONS = {"supports", "limits", "insufficient_evidence", "rejects"}
 _SEVERITIES = {"warning", "blocking"}
 _RUNTIMES = {CODEX_NATIVE_RUNTIME, IN_MEMORY_TEST_RUNTIME}
 _MAX_ROLE_MINIMAL_TEXT_LENGTH = 512
+_MAX_SPECIALIST_RESULT_TEXT_LENGTH = 384
 _PROHIBITED_PACKET_TEXT = (
     re.compile(
         r"\b(?:account[ _-]?(?:id|identifier|number)|broker(?:age)?[ _-]?account|"
@@ -51,7 +52,12 @@ _PROHIBITED_PACKET_TEXT = (
         re.IGNORECASE,
     ),
     re.compile(r"\b(?:balance|holding|iban)\s*[:=]", re.IGNORECASE),
-    re.compile(r"(?:[A-Za-z]:\\|/(?:home|Users)/)"),
+    re.compile(
+        r"(?:\b[A-Za-z]:[\\/]|\\\\(?:\?\\)?[^\\\s]+\\|(?<!:)//[^/\s]+/|"
+        r"file:(?://)?/|(?<![/A-Za-z0-9])/(?!/)[^\s]+|"
+        r"(?<![\\A-Za-z0-9])\\(?!\\)[^\s]+)",
+        re.IGNORECASE,
+    ),
 )
 _AGGREGATE_KINDS = {
     "allocation_diversification": {
@@ -95,6 +101,13 @@ def _require_role_minimal_text(value: object, field: str) -> str:
         raise ValidationError(
             f"{field} contains prohibited private-context, prompt, or path content."
         )
+    return parsed
+
+
+def _require_specialist_result_text(value: object, field: str) -> str:
+    parsed = _require_role_minimal_text(value, field)
+    if len(parsed) > _MAX_SPECIALIST_RESULT_TEXT_LENGTH:
+        raise ValidationError(f"{field} exceeds the specialist result text bound.")
     return parsed
 
 
@@ -571,7 +584,7 @@ def validate_generic_agent_result(
         raise ValidationError("Generic result execution metadata exceeds its bound.")
     _require_identifier(result.result_id, "result_id")
     _require_identifier(result.execution.execution_id, "execution_id")
-    _require_string(result.confidence_basis, "confidence_basis")
+    _require_specialist_result_text(result.confidence_basis, "confidence_basis")
     _require_bool(result.unsupported_claim, "unsupported_claim")
     for field, value in (
         ("claims", result.claims),
@@ -582,7 +595,7 @@ def validate_generic_agent_result(
         if not isinstance(value, tuple):
             raise ValidationError(f"Generic result {field} must be an immutable tuple.")
     for limitation in result.limitations:
-        _require_string(limitation, "limitations[]")
+        _require_specialist_result_text(limitation, "limitations[]")
     if len(set(result.limitations)) != len(result.limitations):
         raise ValidationError("Generic result limitations must be unique.")
     allowed = set(packet.allowed_evidence_references)
@@ -597,7 +610,7 @@ def validate_generic_agent_result(
         raise ValidationError("A supporting generic specialist result requires a claim.")
     for claim in result.claims:
         _require_identifier(claim.claim_id, "claim.claim_id")
-        _require_string(claim.statement, "claim.statement")
+        _require_specialist_result_text(claim.statement, "claim.statement")
         if not claim.evidence_references or not set(claim.evidence_references) <= allowed:
             raise ValidationError("Generic specialist claim cites unsupported evidence.")
         if len(set(claim.evidence_references)) != len(claim.evidence_references):
@@ -609,7 +622,7 @@ def validate_generic_agent_result(
     allowed_roles = set(GENERIC_ROUTE_ROLES[packet.route]) | {GENERIC_CRITIC_ROLE}
     for finding in result.findings:
         _require_identifier(finding.code, "finding.code")
-        _require_string(finding.description, "finding.description")
+        _require_specialist_result_text(finding.description, "finding.description")
         if finding.severity not in _SEVERITIES:
             raise ValidationError("Generic critic finding severity is unsupported.")
         if not finding.related_roles or not set(finding.related_roles) <= allowed_roles:

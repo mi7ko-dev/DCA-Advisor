@@ -121,6 +121,29 @@ class PrivateRecordTests(unittest.TestCase):
         with self.assertRaisesRegex(ValidationError, "unknown fields"):
             research_cache_record_from_dict(payload)
 
+    def test_legacy_citation_metadata_is_migrated_without_rewriting(self) -> None:
+        current = _research_record(cache_mode="citation_metadata")
+        legacy_payload = {
+            **current.__dict__,
+            "schema_version": "1.0",
+            "conclusion": "Legacy citation-only conclusion must not be reused.",
+        }
+        with _git_workspace() as temporary:
+            workspace = Path(temporary)
+            directory = workspace / "private" / "research"
+            directory.mkdir(parents=True)
+            path = directory / f"research-{current.record_id.removeprefix('research:')}.json"
+            original = json.dumps(legacy_payload, indent=2, sort_keys=True) + "\n"
+            path.write_text(original, encoding="utf-8")
+
+            loaded = list_research_cache_records(workspace)
+
+            self.assertEqual(len(loaded), 1)
+            self.assertEqual(loaded[0].schema_version, "1.1")
+            self.assertEqual(loaded[0].conclusion, "")
+            self.assertEqual(loaded[0].record_id, current.record_id)
+            self.assertEqual(path.read_text(encoding="utf-8"), original)
+
     def test_research_cache_rejects_unignored_git_target_before_write(self) -> None:
         record = _research_record()
         with tempfile.TemporaryDirectory(prefix="steadyfolio-private-records-") as temporary:
@@ -193,7 +216,31 @@ class PrivateRecordTests(unittest.TestCase):
                 encoding="utf-8"
             )
         )
-        retention_rule = research_schema["allOf"][0]
+        self.assertEqual(
+            research_schema["properties"]["schema_version"]["enum"],
+            ["1.0", "1.1"],
+        )
+        legacy_rule = next(
+            rule
+            for rule in research_schema["oneOf"]
+            if rule["properties"]["schema_version"].get("const") == "1.0"
+        )
+        self.assertNotIn("conclusion", legacy_rule["properties"])
+        legacy_retention_rule = legacy_rule["allOf"][0]
+        self.assertEqual(
+            legacy_retention_rule["then"]["properties"]["facts"]["maxItems"],
+            0,
+        )
+        self.assertEqual(
+            legacy_retention_rule["else"]["properties"]["conclusion"]["pattern"],
+            "\\S",
+        )
+        current_rule = next(
+            rule
+            for rule in research_schema["oneOf"]
+            if rule["properties"]["schema_version"].get("const") == "1.1"
+        )
+        retention_rule = current_rule["allOf"][0]
         self.assertEqual(
             retention_rule["then"]["properties"]["conclusion"]["maxLength"],
             0,

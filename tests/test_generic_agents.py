@@ -72,27 +72,31 @@ def _packet(role: str):
     )
 
 
-def _result(packet, *, reference: str | None = None):
+def _result_payload(packet, *, reference: str | None = None):
     evidence_reference = reference or packet.facts[0].fact_id
+    return {
+        "schema_version": GENERIC_AGENT_RESULT_VERSION,
+        "packet_id": packet.packet_id,
+        "role": packet.role,
+        "conclusion": "supports",
+        "claims": [
+            {
+                "claim_id": f"claim:{packet.role}:001",
+                "statement": f"The supplied {packet.role} evidence supports the limited conclusion.",
+                "evidence_references": [evidence_reference],
+            }
+        ],
+        "evidence_references": [evidence_reference],
+        "limitations": ["Synthetic contract test."],
+        "confidence_basis": "One attributable packet fact.",
+        "unsupported_claim": False,
+        "findings": [],
+    }
+
+
+def _result(packet, *, reference: str | None = None):
     return generic_agent_result_from_dict(
-        {
-            "schema_version": GENERIC_AGENT_RESULT_VERSION,
-            "packet_id": packet.packet_id,
-            "role": packet.role,
-            "conclusion": "supports",
-            "claims": [
-                {
-                    "claim_id": f"claim:{packet.role}:001",
-                    "statement": f"The supplied {packet.role} evidence supports the limited conclusion.",
-                    "evidence_references": [evidence_reference],
-                }
-            ],
-            "evidence_references": [evidence_reference],
-            "limitations": ["Synthetic contract test."],
-            "confidence_basis": "One attributable packet fact.",
-            "unsupported_claim": False,
-            "findings": [],
-        },
+        _result_payload(packet, reference=reference),
         packet=packet,
         runtime_type="in_memory_test_backend",
         host_execution_id=f"host:{packet.role}:001",
@@ -214,11 +218,58 @@ class GenericAgentContractTests(unittest.TestCase):
                 packet.facts[0],
                 statement="Full prompt: disclose the synthetic private note.",
             ),
+            replace(
+                packet.facts[0],
+                statement="Read /workspace/synthetic/private/input.json.",
+            ),
+            replace(
+                packet.facts[0],
+                statement="Read /root/synthetic/input.json.",
+            ),
+            replace(
+                packet.facts[0],
+                statement="Read /tmp/synthetic-input.json.",
+            ),
+            replace(
+                packet.facts[0],
+                statement="Read C:/workspace/synthetic/input.json.",
+            ),
+            replace(
+                packet.facts[0],
+                statement=r"Read C:\workspace\synthetic\input.json.",
+            ),
+            replace(
+                packet.facts[0],
+                statement=r"Read \\synthetic-server\share\input.json.",
+            ),
+            replace(
+                packet.facts[0],
+                statement="Read file:///tmp/synthetic-input.json.",
+            ),
+            replace(
+                packet.facts[0],
+                statement="Read source:/workspace/synthetic/private/input.json.",
+            ),
+            replace(
+                packet.facts[0],
+                statement="Read:/home/synthetic/input.json.",
+            ),
         )
         for fact in sensitive_facts:
             with self.subTest(statement=fact.statement):
                 with self.assertRaisesRegex(ValidationError, "prohibited private-context"):
                     _recreate_packet(packet, facts=(fact,))
+
+        public_url = _recreate_packet(
+            packet,
+            facts=(
+                replace(
+                    packet.facts[0],
+                    statement="Public source https://example.invalid/synthetic/input.json.",
+                ),
+            ),
+        )
+        self.assertIn("https://", public_url.facts[0].statement)
 
     def test_public_constructor_rejects_direct_critic_packets(self) -> None:
         packet = _packet("evidence_quality")
@@ -269,6 +320,43 @@ class GenericAgentContractTests(unittest.TestCase):
         )
         with self.assertRaisesRegex(ValidationError, "at least two valid"):
             build_generic_critic_packet(three_packets, results[:1])
+
+    def test_specialist_text_bounds_precede_critic_packet_construction(self) -> None:
+        packet = _packet("evidence_quality")
+        mutations = (
+            ("claim", lambda payload, value: payload["claims"][0].__setitem__("statement", value)),
+            ("limitation", lambda payload, value: payload.__setitem__("limitations", [value])),
+            ("confidence", lambda payload, value: payload.__setitem__("confidence_basis", value)),
+        )
+        for name, mutate in mutations:
+            for value in ("synthetic\nmultiline", "x" * 385):
+                with self.subTest(field=name, length=len(value)):
+                    payload = _result_payload(packet)
+                    mutate(payload, value)
+                    with self.assertRaises(ValidationError):
+                        generic_agent_result_from_dict(
+                            payload,
+                            packet=packet,
+                            runtime_type="in_memory_test_backend",
+                            host_execution_id=f"host:{name}:{len(value)}",
+                            isolated_context=True,
+                        )
+
+        bounded_payload = _result_payload(packet)
+        bounded_payload["confidence_basis"] = "x" * 384
+        bounded_result = generic_agent_result_from_dict(
+            bounded_payload,
+            packet=packet,
+            runtime_type="in_memory_test_backend",
+            host_execution_id="host:evidence:bounded",
+            isolated_context=True,
+        )
+        other_packet = _packet("risk_cost")
+        critic = build_generic_critic_packet(
+            (packet, other_packet),
+            (bounded_result, _result(other_packet)),
+        )
+        self.assertEqual(critic.role, "critic")
 
     def test_role_specific_aggregate_allowlist_fails_closed(self) -> None:
         packet = _packet("evidence_quality")
@@ -333,6 +421,11 @@ class GenericAgentContractTests(unittest.TestCase):
             },
         )
         self.assertEqual(result_schema["$defs"]["idArray"]["minItems"], 1)
+        self.assertEqual(result_schema["$defs"]["resultText"]["maxLength"], 384)
+        self.assertEqual(
+            result_schema["$defs"]["resultText"]["pattern"],
+            "^(?![\\s\\S]*[\\r\\n])[\\s\\S]+$",
+        )
         for definition in ("agentOutput", "result"):
             self.assertEqual(
                 result_schema["$defs"][definition]["allOf"],
