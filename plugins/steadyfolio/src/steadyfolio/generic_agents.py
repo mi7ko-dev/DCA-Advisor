@@ -54,7 +54,7 @@ _PROHIBITED_PACKET_TEXT = (
     re.compile(r"\b(?:balance|holding|iban)\s*[:=]", re.IGNORECASE),
     re.compile(
         r"(?:\b[A-Za-z]:[\\/]|\\\\(?:\?\\)?[^\\\s]+\\|(?<!:)//[^/\s]+/|"
-        r"file:(?://)?/|(?<![:/A-Za-z0-9])/(?!/)[^\s]+|"
+        r"file:(?://)?/|(?<![/A-Za-z0-9])/(?!/)[^\s]+|"
         r"(?<![\\A-Za-z0-9])\\(?!\\)[^\s]+)",
         re.IGNORECASE,
     ),

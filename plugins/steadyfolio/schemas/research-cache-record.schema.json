@@ -39,14 +39,14 @@
   "oneOf": [
     {
       "properties": {
-        "schema_version": {"const": "1.0"},
-        "conclusion": {"minLength": 1}
+        "schema_version": {"const": "1.0"}
       },
       "required": ["schema_version"],
       "allOf": [
         {
           "if": {"properties": {"cache_mode": {"const": "citation_metadata"}}, "required": ["cache_mode"]},
-          "then": {"properties": {"facts": {"maxItems": 0}}}
+          "then": {"properties": {"facts": {"maxItems": 0}}},
+          "else": {"properties": {"conclusion": {"pattern": "\\S"}}}
         }
       ]
     },

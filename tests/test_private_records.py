@@ -220,6 +220,21 @@ class PrivateRecordTests(unittest.TestCase):
             research_schema["properties"]["schema_version"]["enum"],
             ["1.0", "1.1"],
         )
+        legacy_rule = next(
+            rule
+            for rule in research_schema["oneOf"]
+            if rule["properties"]["schema_version"].get("const") == "1.0"
+        )
+        self.assertNotIn("conclusion", legacy_rule["properties"])
+        legacy_retention_rule = legacy_rule["allOf"][0]
+        self.assertEqual(
+            legacy_retention_rule["then"]["properties"]["facts"]["maxItems"],
+            0,
+        )
+        self.assertEqual(
+            legacy_retention_rule["else"]["properties"]["conclusion"]["pattern"],
+            "\\S",
+        )
         current_rule = next(
             rule
             for rule in research_schema["oneOf"]

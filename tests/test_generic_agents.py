@@ -246,11 +246,30 @@ class GenericAgentContractTests(unittest.TestCase):
                 packet.facts[0],
                 statement="Read file:///tmp/synthetic-input.json.",
             ),
+            replace(
+                packet.facts[0],
+                statement="Read source:/workspace/synthetic/private/input.json.",
+            ),
+            replace(
+                packet.facts[0],
+                statement="Read:/home/synthetic/input.json.",
+            ),
         )
         for fact in sensitive_facts:
             with self.subTest(statement=fact.statement):
                 with self.assertRaisesRegex(ValidationError, "prohibited private-context"):
                     _recreate_packet(packet, facts=(fact,))
+
+        public_url = _recreate_packet(
+            packet,
+            facts=(
+                replace(
+                    packet.facts[0],
+                    statement="Public source https://example.invalid/synthetic/input.json.",
+                ),
+            ),
+        )
+        self.assertIn("https://", public_url.facts[0].statement)
 
     def test_public_constructor_rejects_direct_critic_packets(self) -> None:
         packet = _packet("evidence_quality")
