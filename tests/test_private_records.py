@@ -36,7 +36,11 @@ def _research_record(*, cache_mode: str = "derived_summary"):
         ticker="SYN",
         currency="EUR",
         data_kind="fund_fee",
-        conclusion="The disclosed synthetic fee is 0.20%.",
+        conclusion=(
+            "The disclosed synthetic fee is 0.20%."
+            if cache_mode == "derived_summary"
+            else ""
+        ),
         facts=() if cache_mode == "citation_metadata" else ("Fee: 0.20%.",),
         source_title="Synthetic factsheet",
         publisher="Synthetic issuer",
@@ -52,7 +56,11 @@ def _research_record(*, cache_mode: str = "derived_summary"):
         freshness_basis="Refresh after a newer factsheet.",
         refresh_after="2026-10-29T12:30:00+03:00",
         material_event_trigger="Issuer fee update.",
-        terms_reference="Synthetic source terms permit a derived summary.",
+        terms_reference=(
+            "Synthetic source terms permit a derived summary."
+            if cache_mode == "derived_summary"
+            else "Synthetic source terms permit citation metadata only."
+        ),
         cache_mode=cache_mode,
         redistribution_permitted=False,
     )
@@ -81,17 +89,31 @@ class PrivateRecordTests(unittest.TestCase):
             self.assertEqual(path.parent, workspace / "private" / "research")
             self.assertRegex(
                 path.name,
-                r"^research-\d{8}T\d{12}Z-[0-9a-f]{32}\.json$",
+                r"^research-[0-9a-f]{32}\.json$",
             )
             self.assertEqual(list_research_cache_records(workspace), (record,))
             with self.assertRaisesRegex(FileExistsError, "overwrite was not approved"):
                 save_research_cache_record(workspace, record)
+            with self.assertRaisesRegex(FileExistsError, "record_id already exists"):
+                save_research_cache_record(
+                    workspace,
+                    replace(record, retrieved_at="2026-09-29T12:31:00+03:00"),
+                )
 
     def test_research_cache_fails_closed_on_terms_and_unknown_fields(self) -> None:
         record = _research_record()
         with self.assertRaisesRegex(ValidationError, "cannot retain"):
             validate_research_cache_record(
                 replace(record, cache_mode="citation_metadata")
+            )
+        metadata_only = _research_record(cache_mode="citation_metadata")
+        validate_research_cache_record(metadata_only)
+        with self.assertRaisesRegex(ValidationError, "cannot retain"):
+            validate_research_cache_record(
+                replace(
+                    metadata_only,
+                    conclusion="The disclosed synthetic fee is 0.20%.",
+                )
             )
 
         payload = json.loads(json.dumps(record.__dict__))
@@ -136,6 +158,11 @@ class PrivateRecordTests(unittest.TestCase):
             with self.assertRaisesRegex(ValidationError, "existing record"):
                 save_durable_context_record(workspace, correction)
             first_path = save_durable_context_record(workspace, first)
+            with self.assertRaisesRegex(FileExistsError, "record_id already exists"):
+                save_durable_context_record(
+                    workspace,
+                    replace(first, recorded_at="2026-09-29T12:35:30+03:00"),
+                )
             correction_path = save_durable_context_record(workspace, correction)
 
             self.assertNotEqual(first_path, correction_path)
@@ -143,6 +170,52 @@ class PrivateRecordTests(unittest.TestCase):
                 list_durable_context_records(workspace),
                 (first, correction),
             )
+
+    def test_non_authoritative_context_categories_reject_active_statuses(self) -> None:
+        for category in ("temporary_assumption", "proposal"):
+            for status in ("active", "approved", "confirmed"):
+                with self.subTest(category=category, status=status):
+                    with self.assertRaisesRegex(
+                        ValidationError,
+                        "cannot represent approved or active policy",
+                    ):
+                        create_durable_context_record(
+                            category=category,
+                            statement="Synthetic unapproved context.",
+                            source_kind="user_message",
+                            status=status,
+                            recorded_at="2026-09-29T12:35:00+03:00",
+                        )
+
+    def test_private_record_schemas_match_retention_and_status_rules(self) -> None:
+        research_schema = json.loads(
+            (REPOSITORY_ROOT / "schemas" / "research-cache-record.schema.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        retention_rule = research_schema["allOf"][0]
+        self.assertEqual(
+            retention_rule["then"]["properties"]["conclusion"]["maxLength"],
+            0,
+        )
+        self.assertEqual(
+            retention_rule["then"]["properties"]["facts"]["maxItems"],
+            0,
+        )
+
+        context_schema = json.loads(
+            (REPOSITORY_ROOT / "schemas" / "durable-context-record.schema.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        statuses_by_category = {
+            rule["if"]["properties"]["category"]["const"]: set(
+                rule["then"]["properties"]["status"]["enum"]
+            )
+            for rule in context_schema["allOf"]
+        }
+        self.assertNotIn("active", statuses_by_category["temporary_assumption"])
+        self.assertNotIn("approved", statuses_by_category["proposal"])
 
     def test_context_directory_symlink_is_rejected(self) -> None:
         record = create_durable_context_record(
@@ -172,6 +245,22 @@ class PrivateRecordTests(unittest.TestCase):
             directory.mkdir(parents=True)
             path = directory / ("research-20260929T123000000000Z-" + "0" * 32 + ".json")
             path.write_text('{"schema_version":"1.0"}\n', encoding="utf-8")
+            with self.assertRaisesRegex(ValidationError, "cannot be reused"):
+                list_research_cache_records(workspace)
+
+    def test_loaded_duplicate_record_id_is_never_reused(self) -> None:
+        record = _research_record()
+        duplicate = replace(record, retrieved_at="2026-09-29T12:31:00+03:00")
+        with _git_workspace() as temporary:
+            workspace = Path(temporary)
+            path = save_research_cache_record(workspace, record)
+            duplicate_path = path.with_name(
+                "research-20260929T123100000000Z-" + path.name.removeprefix("research-")
+            )
+            duplicate_path.write_text(
+                json.dumps(duplicate.__dict__) + "\n",
+                encoding="utf-8",
+            )
             with self.assertRaisesRegex(ValidationError, "cannot be reused"):
                 list_research_cache_records(workspace)
 

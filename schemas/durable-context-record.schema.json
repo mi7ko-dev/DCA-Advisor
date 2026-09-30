@@ -18,5 +18,15 @@
     "limitations": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
     "review_after": {"type": "string", "format": "date"},
     "supersedes_record_id": {"type": "string", "pattern": "^context:[0-9a-f]{32}$"}
-  }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"category": {"const": "temporary_assumption"}}, "required": ["category"]},
+      "then": {"properties": {"status": {"enum": ["pending", "expired", "rejected", "withdrawn"]}}}
+    },
+    {
+      "if": {"properties": {"category": {"const": "proposal"}}, "required": ["category"]},
+      "then": {"properties": {"status": {"enum": ["pending", "rejected", "withdrawn"]}}}
+    }
+  ]
 }

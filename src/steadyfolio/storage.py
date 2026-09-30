@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime
 import json
 import os
 from pathlib import Path
@@ -190,11 +190,13 @@ def _json_text(value: Any) -> str:
     return json.dumps(value, indent=2, ensure_ascii=True, sort_keys=True) + "\n"
 
 
-def _append_only_record_filename(prefix: str, timestamp: str, record_id: str) -> str:
-    parsed = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
-    utc = parsed.astimezone(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
+def _append_only_record_filename(prefix: str, record_id: str) -> str:
     suffix = record_id.split(":", maxsplit=1)[1]
-    return f"{prefix}-{utc}-{suffix}.json"
+    return f"{prefix}-{suffix}.json"
+
+
+def _record_sort_key(timestamp: str, record_id: str) -> tuple[datetime, str]:
+    return datetime.fromisoformat(timestamp.replace("Z", "+00:00")), record_id
 
 
 def _private_record_paths(
@@ -376,9 +378,14 @@ def save_research_cache_record(
     if not isinstance(record, ResearchCacheRecord):
         raise ValidationError("record must be a ResearchCacheRecord.")
     validate_research_cache_record(record)
-    filename = _append_only_record_filename(
-        "research", record.retrieved_at, record.record_id
-    )
+    existing_ids = {
+        item.record_id for item in list_research_cache_records(workspace_root)
+    }
+    if record.record_id in existing_ids:
+        raise FileExistsError(
+            "Private record_id already exists; overwrite was not approved."
+        )
+    filename = _append_only_record_filename("research", record.record_id)
     target = _safe_target(workspace_root, "research", filename)
     return _atomic_write_text(
         target,
@@ -393,6 +400,7 @@ def list_research_cache_records(
     """Load validated append-only research records without creating directories."""
 
     records: list[ResearchCacheRecord] = []
+    record_ids: set[str] = set()
     for path in _private_record_paths(
         workspace_root,
         category="research",
@@ -400,11 +408,16 @@ def list_research_cache_records(
     ):
         try:
             raw = json.loads(path.read_text(encoding="utf-8"))
-            records.append(research_cache_record_from_dict(raw))
+            record = research_cache_record_from_dict(raw)
+            if record.record_id in record_ids:
+                raise ValidationError("Private research record_id values must be unique.")
+            record_ids.add(record.record_id)
+            records.append(record)
         except (OSError, json.JSONDecodeError, ValidationError) as error:
             raise ValidationError(
                 "A private research cache record is invalid and cannot be reused."
             ) from error
+    records.sort(key=lambda item: _record_sort_key(item.retrieved_at, item.record_id))
     return tuple(records)
 
 
@@ -417,17 +430,18 @@ def save_durable_context_record(
     if not isinstance(record, DurableContextRecord):
         raise ValidationError("record must be a DurableContextRecord.")
     validate_durable_context_record(record)
+    existing_records = list_durable_context_records(workspace_root)
+    existing_ids = {item.record_id for item in existing_records}
+    if record.record_id in existing_ids:
+        raise FileExistsError(
+            "Private record_id already exists; overwrite was not approved."
+        )
     if record.supersedes_record_id is not None:
-        existing_ids = {
-            item.record_id for item in list_durable_context_records(workspace_root)
-        }
         if record.supersedes_record_id not in existing_ids:
             raise ValidationError(
                 "A superseding context record must reference an existing record."
             )
-    filename = _append_only_record_filename(
-        "context", record.recorded_at, record.record_id
-    )
+    filename = _append_only_record_filename("context", record.record_id)
     target = _safe_target(workspace_root, "context", filename)
     return _atomic_write_text(
         target,
@@ -442,6 +456,7 @@ def list_durable_context_records(
     """Load validated append-only durable context without creating directories."""
 
     records: list[DurableContextRecord] = []
+    record_ids: set[str] = set()
     for path in _private_record_paths(
         workspace_root,
         category="context",
@@ -449,11 +464,16 @@ def list_durable_context_records(
     ):
         try:
             raw = json.loads(path.read_text(encoding="utf-8"))
-            records.append(durable_context_record_from_dict(raw))
+            record = durable_context_record_from_dict(raw)
+            if record.record_id in record_ids:
+                raise ValidationError("Private context record_id values must be unique.")
+            record_ids.add(record.record_id)
+            records.append(record)
         except (OSError, json.JSONDecodeError, ValidationError) as error:
             raise ValidationError(
                 "A private durable context record is invalid and cannot be reused."
             ) from error
+    records.sort(key=lambda item: _record_sort_key(item.recorded_at, item.record_id))
     return tuple(records)
 
 

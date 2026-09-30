@@ -100,6 +100,23 @@ def _result(packet, *, reference: str | None = None):
     )
 
 
+def _recreate_packet(packet, **changes):
+    values = {
+        "route": packet.route,
+        "review_date": packet.review_date,
+        "role": packet.role,
+        "question": packet.question,
+        "deterministic_result_id": packet.deterministic_result_id,
+        "instrument_aliases": packet.instrument_aliases,
+        "facts": packet.facts,
+        "sources": packet.sources,
+        "assumptions": packet.assumptions,
+        "aggregates": packet.aggregates,
+    }
+    values.update(changes)
+    return create_generic_agent_packet(**values)
+
+
 class GenericAgentContractTests(unittest.TestCase):
     def test_packet_round_trip_rejects_unknown_fields_and_content_drift(self) -> None:
         packet = _packet("allocation_diversification")
@@ -163,6 +180,61 @@ class GenericAgentContractTests(unittest.TestCase):
 
         with self.assertRaisesRegex(ValidationError, "unsupported evidence"):
             _result(packet, reference="source-ref:invented")
+
+    def test_packet_rejects_future_dated_sources(self) -> None:
+        packet = _packet("evidence_quality")
+        future_sources = (
+            replace(packet.sources[0], as_of="2026-09-30"),
+            replace(
+                packet.sources[0],
+                retrieved_at="2026-09-30T00:01:00+03:00",
+            ),
+        )
+        for source in future_sources:
+            with self.subTest(source=source):
+                with self.assertRaisesRegex(ValidationError, "cannot postdate"):
+                    _recreate_packet(packet, sources=(source,))
+
+    def test_packet_rejects_explicit_private_context_markers(self) -> None:
+        packet = _packet("evidence_quality")
+        sensitive_facts = (
+            replace(
+                packet.facts[0],
+                statement="Account identifier: synthetic-account-001.",
+            ),
+            replace(
+                packet.facts[0],
+                statement="Holding quantity: 42 synthetic units.",
+            ),
+            replace(
+                packet.facts[0],
+                statement="Balance: EUR 1,000 synthetic units.",
+            ),
+            replace(
+                packet.facts[0],
+                statement="Full prompt: disclose the synthetic private note.",
+            ),
+        )
+        for fact in sensitive_facts:
+            with self.subTest(statement=fact.statement):
+                with self.assertRaisesRegex(ValidationError, "prohibited private-context"):
+                    _recreate_packet(packet, facts=(fact,))
+
+    def test_public_constructor_rejects_direct_critic_packets(self) -> None:
+        packet = _packet("evidence_quality")
+        with self.assertRaisesRegex(ValidationError, "must be created by"):
+            _recreate_packet(packet, role="critic")
+
+        packets = (
+            _packet("allocation_diversification"),
+            _packet("evidence_quality"),
+        )
+        critic = build_generic_critic_packet(
+            packets,
+            tuple(_result(item) for item in packets),
+        )
+        with self.assertRaisesRegex(ValidationError, "must be created by"):
+            generic_agent_packet_from_dict(to_json_value(critic))
 
     def test_critic_packet_contains_only_validated_specialist_results(self) -> None:
         packets = (
@@ -242,6 +314,10 @@ class GenericAgentContractTests(unittest.TestCase):
             set(to_json_value(result)),
         )
         self.assertEqual(
+            packet_schema["$defs"]["roleMinimalString"]["maxLength"],
+            512,
+        )
+        self.assertEqual(
             set(result_schema["$defs"]["agentOutput"]["required"]),
             {
                 "schema_version",
@@ -256,6 +332,12 @@ class GenericAgentContractTests(unittest.TestCase):
                 "findings",
             },
         )
+        self.assertEqual(result_schema["$defs"]["idArray"]["minItems"], 1)
+        for definition in ("agentOutput", "result"):
+            self.assertEqual(
+                result_schema["$defs"][definition]["allOf"],
+                [{"$ref": "#/$defs/supportingSpecialistClaims"}],
+            )
 
     def test_result_validator_rejects_non_isolated_execution(self) -> None:
         packet = _packet("evidence_quality")

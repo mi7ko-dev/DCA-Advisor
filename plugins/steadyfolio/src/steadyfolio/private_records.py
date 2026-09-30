@@ -22,6 +22,10 @@ CONTEXT_CATEGORIES = frozenset(
     }
 )
 RESEARCH_CACHE_MODES = frozenset({"derived_summary", "citation_metadata"})
+NON_AUTHORITATIVE_CONTEXT_STATUSES = {
+    "temporary_assumption": frozenset({"pending", "expired", "rejected", "withdrawn"}),
+    "proposal": frozenset({"pending", "rejected", "withdrawn"}),
+}
 
 _RECORD_ID = re.compile(r"^(research|context):[0-9a-f]{32}$")
 _CURRENCY = re.compile(r"^[A-Z]{3}$")
@@ -72,12 +76,19 @@ class DurableContextRecord:
     supersedes_record_id: str | None
 
 
-def _require_string(value: object, field: str) -> str:
-    if not isinstance(value, str) or not value.strip():
-        raise ValidationError(f"{field} must be a non-empty string.")
+def _require_text(value: object, field: str) -> str:
+    if not isinstance(value, str):
+        raise ValidationError(f"{field} must be a string.")
     if "\x00" in value:
         raise ValidationError(f"{field} cannot contain null bytes.")
     return value
+
+
+def _require_string(value: object, field: str) -> str:
+    parsed = _require_text(value, field)
+    if not parsed.strip():
+        raise ValidationError(f"{field} must be a non-empty string.")
+    return parsed
 
 
 def _optional_string(value: object, field: str) -> str | None:
@@ -217,7 +228,6 @@ def validate_research_cache_record(record: ResearchCacheRecord) -> None:
     for field, value in (
         ("asset_identity", record.asset_identity),
         ("data_kind", record.data_kind),
-        ("conclusion", record.conclusion),
         ("source_title", record.source_title),
         ("publisher", record.publisher),
         ("source_reference", record.source_reference),
@@ -244,9 +254,11 @@ def validate_research_cache_record(record: ResearchCacheRecord) -> None:
     _string_tuple(record.assumptions, "assumptions")
     if record.cache_mode not in RESEARCH_CACHE_MODES:
         raise ValidationError("Research cache_mode is unsupported.")
-    if record.cache_mode == "citation_metadata" and record.facts:
+    if record.cache_mode == "derived_summary":
+        _require_string(record.conclusion, "conclusion")
+    elif record.conclusion != "" or record.facts:
         raise ValidationError(
-            "Citation-metadata-only records cannot retain source-derived facts."
+            "Citation-metadata-only records cannot retain a conclusion or facts."
         )
 
 
@@ -289,7 +301,7 @@ def research_cache_record_from_dict(value: object) -> ResearchCacheRecord:
         ticker=_optional_string(raw.get("ticker"), "ticker"),
         currency=_require_string(raw["currency"], "currency"),
         data_kind=_require_string(raw["data_kind"], "data_kind"),
-        conclusion=_require_string(raw["conclusion"], "conclusion"),
+        conclusion=_require_text(raw["conclusion"], "conclusion"),
         facts=_string_tuple(raw["facts"], "facts"),
         source_title=_require_string(raw["source_title"], "source_title"),
         publisher=_require_string(raw["publisher"], "publisher"),
@@ -365,6 +377,11 @@ def validate_durable_context_record(record: DurableContextRecord) -> None:
         ("status", record.status),
     ):
         _require_string(value, field)
+    allowed_statuses = NON_AUTHORITATIVE_CONTEXT_STATUSES.get(record.category)
+    if allowed_statuses is not None and record.status not in allowed_statuses:
+        raise ValidationError(
+            f"{record.category} status cannot represent approved or active policy."
+        )
     _require_aware_datetime(record.recorded_at, "recorded_at")
     _require_iso_date(record.effective_as_of, "effective_as_of")
     _require_iso_date(record.review_after, "review_after")
